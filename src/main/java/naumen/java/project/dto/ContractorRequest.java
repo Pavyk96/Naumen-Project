@@ -10,9 +10,9 @@ import jakarta.validation.constraints.Size;
  * @author Daniil Mezev
  */
 public record ContractorRequest(
-        @NotBlank @Size(min = 1, max = 36) String id,
-        @NotBlank @Size(min = 1, max = 256) String name,
-        @NotBlank @Size(min = 2, max = 3) String countryId,
-        @NotNull @Size(min = 1, max = 10) Long industryId,
-        @NotNull @Size(min = 1, max = 10) String orgFormId
+        @NotBlank String id,
+        @NotBlank String name,
+        @NotBlank String countryId,
+        @NotNull Long industryId,
+        @NotNull String orgFormId
 ) { }

@@ -9,6 +9,6 @@ import jakarta.validation.constraints.Size;
  * @author Daniil Mezev
  */
 public record CountryRequest(
-        @NotBlank @Size(min = 2, max = 3) String id,
+        @NotBlank String id,
         @NotBlank String name
 ) { }

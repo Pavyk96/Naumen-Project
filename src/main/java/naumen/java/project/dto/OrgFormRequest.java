@@ -9,6 +9,6 @@ import jakarta.validation.constraints.Size;
  * @author Daniil Mezev
  */
 public record OrgFormRequest(
-        @NotBlank @Size(min = 1, max = 10) String id,
+        @NotBlank String id,
         @NotBlank String name
 ) { }
