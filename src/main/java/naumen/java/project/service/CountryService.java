@@ -2,6 +2,7 @@ package naumen.java.project.service;
 
 import naumen.java.project.dto.CountryRequest;
 import naumen.java.project.dto.CountryResponse;
+import naumen.java.project.model.Country;
 
 import java.util.List;
 
@@ -13,16 +14,16 @@ import java.util.List;
 public interface CountryService {
 
     /** Возвращает все страны */
-    List<CountryResponse> findAll();
+    List<Country> findAll();
 
     /** Возвращает страну по идентификатору */
-    CountryResponse findById(String id);
+    Country findById(String id);
 
     /** Создаёт новую страну */
-    CountryResponse create(CountryRequest request);
+    Country create(CountryRequest request);
 
     /** Обновляет страну по идентификатору */
-    CountryResponse update(String id, CountryRequest request);
+    Country update(String id, CountryRequest request);
 
     /** Удаляет страну по идентификатору */
     void delete(String id);

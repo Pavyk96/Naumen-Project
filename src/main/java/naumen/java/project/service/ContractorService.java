@@ -1,5 +1,6 @@
 package naumen.java.project.service;
 
+import naumen.java.project.dto.ContractorRequest;
 import naumen.java.project.dto.ContractorResponse;
 import naumen.java.project.model.Contractor;
 
@@ -13,16 +14,16 @@ import java.util.List;
 public interface ContractorService {
 
     /** Возвращает всех контрагентов */
-    List<ContractorResponse> findAll();
+    List<Contractor> findAll();
 
     /** Возвращает контрагента по идентификатору */
-    ContractorResponse findById(String id);
+    Contractor findById(String id);
 
     /** Создаёт нового контрагента */
-    ContractorResponse create(Contractor contractor);
+    Contractor create(ContractorRequest contractor);
 
     /** Обновляет существующего контрагента по id переданными данными сущности */
-    ContractorResponse update(String id, Contractor contractor);
+    Contractor update(String id, ContractorRequest contractor);
 
     /** Удаляет контрагента */
     void delete(String id);

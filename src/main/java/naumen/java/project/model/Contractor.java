@@ -36,11 +36,11 @@ public class Contractor {
 
     @NotNull
     @Column(name = "org_form_id", nullable = false)
-    private Long orgFormId;
+    private String orgFormId;
 
     public Contractor() { }
 
-    public Contractor(String id, String name, String countryId, Long industryId, Long orgFormId) {
+    public Contractor(String id, String name, String countryId, Long industryId, String orgFormId) {
         this.id = id;
         this.name = name;
         this.countryId = countryId;
@@ -60,6 +60,7 @@ public class Contractor {
     public Long getIndustryId() { return industryId; }
     public void setIndustryId(Long industryId) { this.industryId = industryId; }
 
-    public Long getOrgFormId() { return orgFormId; }
-    public void setOrgFormId(Long orgFormId) { this.orgFormId = orgFormId; }
+    public String getOrgFormId() { return orgFormId; }
+    public void setOrgFormId(String orgFormId) { this.orgFormId = orgFormId; }
+
 }

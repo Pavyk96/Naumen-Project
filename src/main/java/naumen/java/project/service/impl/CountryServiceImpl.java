@@ -1,9 +1,8 @@
 package naumen.java.project.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import naumen.java.project.dto.CountryRequest;
-import naumen.java.project.dto.CountryResponse;
-import naumen.java.project.mapper.CountryMapper;
 import naumen.java.project.model.Country;
 import naumen.java.project.repository.CountryRepository;
 import naumen.java.project.service.CountryService;
@@ -17,70 +16,64 @@ import java.util.List;
  * @author Daniil Mezev
  */
 @Service
+@Transactional
 public class CountryServiceImpl implements CountryService {
 
     private final CountryRepository repository;
-    private final CountryMapper mapper;
 
-    public CountryServiceImpl(CountryRepository repository, CountryMapper mapper) {
+    public CountryServiceImpl(CountryRepository repository) {
         this.repository = repository;
-        this.mapper = mapper;
     }
 
     @Override
-    public List<CountryResponse> findAll() {
-        List<Country> entities = repository.findAll();
-        List<CountryResponse> responses = entities.stream()
-                .map(mapper::toResponse)
-                .toList();
-        return responses;
+    public List<Country> findAll() {
+        return repository.findAll();
     }
 
     @Override
-    public CountryResponse findById(String id) {
-        String normId = id.toUpperCase();
-        Country entity = repository.findById(normId)
+    public Country findById(String id) {
+        String normId = normalize(id);
+        return repository.findById(normId)
                 .orElseThrow(() -> new EntityNotFoundException("Country not found: " + normId));
-        CountryResponse response = mapper.toResponse(entity);
-        return response;
     }
 
     @Override
-    public CountryResponse create(CountryRequest request) {
-        String normId = request.id().toUpperCase();
-        boolean exists = repository.existsById(normId);
-        if (exists) {
+    public Country create(CountryRequest request) {
+        String normId = normalize(request.id());
+        if (repository.existsById(normId)) {
             throw new IllegalArgumentException("Country already exists: " + normId);
         }
-
-        Country entityToSave = mapper.toEntity(request);
-        Country saved = repository.save(entityToSave);
-        CountryResponse response = mapper.toResponse(saved);
-        return response;
+        Country entity = new Country(normId, request.name());
+        return repository.save(entity);
     }
 
     @Override
-    public CountryResponse update(String id, CountryRequest request) {
-        String normId = id.toUpperCase();
-        Country existing = repository.findById(normId)
-                .orElseThrow(() -> new EntityNotFoundException("Country not found: " + normId));
+    public Country update(String id, CountryRequest request) {
+        String normPathId = normalize(id);
+        String normBodyId = normalize(request.id());
+        if (!normPathId.equals(normBodyId)) {
+            throw new IllegalArgumentException("Path id and body id must be equal");
+        }
 
-        String newName = request.name();
-        existing.setName(newName);
+        Country existing = repository.findById(normPathId)
+                .orElseThrow(() -> new EntityNotFoundException("Country not found: " + normPathId));
 
-        Country saved = repository.save(existing);
-        CountryResponse response = mapper.toResponse(saved);
-        return response;
+        existing.setName(request.name());
+        return repository.save(existing);
     }
 
     @Override
     public void delete(String id) {
-        String normId = id.toUpperCase();
-        boolean exists = repository.existsById(normId);
-        if (!exists) {
+        String normId = normalize(id);
+        if (!repository.existsById(normId)) {
             throw new EntityNotFoundException("Country not found: " + normId);
         }
         repository.deleteById(normId);
+    }
+
+    /** Нормализация айди */
+    private static String normalize(String id) {
+        return id == null ? null : id.trim().toUpperCase();
     }
 
 }

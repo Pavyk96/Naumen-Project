@@ -1,96 +1,78 @@
 package naumen.java.project.service.impl;
 
-import naumen.java.project.dto.ContractorResponse;
-import naumen.java.project.mapper.ContractorMapper;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import naumen.java.project.dto.ContractorRequest;
 import naumen.java.project.model.Contractor;
-import naumen.java.project.model.Country;
-import naumen.java.project.model.Industry;
-import naumen.java.project.model.OrgForm;
 import naumen.java.project.repository.ContractorRepository;
-import naumen.java.project.repository.CountryRepository;
-import naumen.java.project.repository.IndustryRepository;
-import naumen.java.project.repository.OrgFormRepository;
 import naumen.java.project.service.ContractorService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
- * Реализация сервиса для управления контрагентами
+ * Реализация сервиса для управления контрагентами (без маппера; маппинг перенесён в контроллер)
  *
  * @author Daniil Mezev
  */
 @Service
+@Transactional
 public class ContractorServiceImpl implements ContractorService {
 
-    private final ContractorRepository contractorRepository;
-    private final CountryRepository countryRepository;
-    private final IndustryRepository industryRepository;
-    private final OrgFormRepository orgFormRepository;
+    private final ContractorRepository repository;
 
-    private final ContractorMapper mapper;
-
-    public ContractorServiceImpl(ContractorRepository contractorRepository,
-                                 CountryRepository countryRepository,
-                                 IndustryRepository industryRepository,
-                                 OrgFormRepository orgFormRepository,
-                                 ContractorMapper mapper) {
-        this.contractorRepository = contractorRepository;
-        this.countryRepository = countryRepository;
-        this.industryRepository = industryRepository;
-        this.orgFormRepository = orgFormRepository;
-        this.mapper = mapper;
+    public ContractorServiceImpl(ContractorRepository repository) {
+        this.repository = repository;
     }
 
     @Override
-    public List<ContractorResponse> findAll() {
-        List<Contractor> contractors = contractorRepository.findAll();
-        List<ContractorResponse> responses = contractors.stream()
-                .map(this::buildResponse)
-                .toList();
-        return responses;
+    public List<Contractor> findAll() {
+        return repository.findAll();
     }
 
     @Override
-    public ContractorResponse findById(String id) {
-        Contractor contractor = contractorRepository.findById(id).orElseThrow();
-        ContractorResponse response = buildResponse(contractor);
-        return response;
+    public Contractor findById(String id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Contractor not found: " + id));
     }
 
     @Override
-    public ContractorResponse create(Contractor contractor) {
-        Contractor saved = contractorRepository.save(contractor);
-        ContractorResponse response = buildResponse(saved);
-        return response;
+    public Contractor create(ContractorRequest req) {
+        if (repository.existsById(req.id())) {
+            throw new IllegalArgumentException("Contractor already exists: " + req.id());
+        }
+        Contractor entity = new Contractor(
+                req.id(),
+                req.name(),
+                req.countryId(),
+                req.industryId(),
+                req.orgFormId()
+        );
+        return repository.save(entity);
     }
 
     @Override
-    public ContractorResponse update(String id, Contractor contractor) {
-        Contractor existing = contractorRepository.findById(id).orElseThrow();
+    public Contractor update(String id, ContractorRequest req) {
+        if (!id.equals(req.id())) {
+            throw new IllegalArgumentException("Path id and body id must be equal");
+        }
+        Contractor existing = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Contractor not found: " + id));
 
-        existing.setName(contractor.getName());
-        existing.setCountryId(contractor.getCountryId());
-        existing.setIndustryId(contractor.getIndustryId());
-        existing.setOrgFormId(contractor.getOrgFormId());
+        existing.setName(req.name());
+        existing.setCountryId(req.countryId());
+        existing.setIndustryId(req.industryId());
+        existing.setOrgFormId(req.orgFormId());
 
-        Contractor saved = contractorRepository.save(existing);
-        ContractorResponse response = buildResponse(saved);
-        return response;
+        return repository.save(existing);
     }
 
     @Override
     public void delete(String id) {
-        contractorRepository.deleteById(id);
-    }
-
-    private ContractorResponse buildResponse(Contractor contractor) {
-        Country country = countryRepository.findById(contractor.getCountryId()).orElseThrow();
-        Industry industry = industryRepository.findById(contractor.getIndustryId()).orElseThrow();
-        OrgForm orgForm = orgFormRepository.findById(contractor.getOrgFormId().toString()).orElseThrow();
-
-        ContractorResponse response = mapper.toResponse(contractor, country, industry, orgForm);
-        return response;
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("Contractor not found: " + id);
+        }
+        repository.deleteById(id);
     }
 
 }

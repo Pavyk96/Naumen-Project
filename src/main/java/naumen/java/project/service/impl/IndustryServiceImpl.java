@@ -1,9 +1,8 @@
 package naumen.java.project.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import naumen.java.project.dto.IndustryRequest;
-import naumen.java.project.dto.IndustryResponse;
-import naumen.java.project.mapper.IndustryMapper;
 import naumen.java.project.model.Industry;
 import naumen.java.project.repository.IndustryRepository;
 import naumen.java.project.service.IndustryService;
@@ -17,65 +16,53 @@ import java.util.List;
  * @author Daniil Mezev
  */
 @Service
+@Transactional
 public class IndustryServiceImpl implements IndustryService {
 
     private final IndustryRepository repository;
-    private final IndustryMapper mapper;
 
-    public IndustryServiceImpl(IndustryRepository repository, IndustryMapper mapper) {
+    public IndustryServiceImpl(IndustryRepository repository) {
         this.repository = repository;
-        this.mapper = mapper;
     }
 
     @Override
-    public List<IndustryResponse> findAll() {
-        List<Industry> entities = repository.findAll();
-        List<IndustryResponse> responses = entities.stream()
-                .map(mapper::toResponse)
-                .toList();
-        return responses;
+    public List<Industry> findAll() {
+        return repository.findAll();
     }
 
     @Override
-    public IndustryResponse findById(Long id) {
-        Industry entity = repository.findById(id)
+    public Industry findById(Long id) {
+        return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Industry not found: " + id));
-        IndustryResponse response = mapper.toResponse(entity);
-        return response;
     }
 
     @Override
-    public IndustryResponse create(IndustryRequest request) {
-        Long reqId = request.id();
-        boolean exists = repository.existsById(reqId);
-        if (exists) {
-            throw new IllegalArgumentException("Industry already exists: " + reqId);
+    public Industry create(IndustryRequest request) {
+        // Важно: при IDENTITY игнорируем request.id()
+        Industry toSave = new Industry(request.name());
+        return repository.save(toSave);
+    }
+
+    @Override
+    public Industry update(Long id, IndustryRequest request) {
+        // Строго требуем совпадение id из path и тела, чтобы не допустить смену PK через тело
+        if (!id.equals(request.id())) {
+            throw new IllegalArgumentException("Path id and body id must be equal");
         }
 
-        Industry toSave = mapper.toEntity(request);
-        Industry saved = repository.save(toSave);
-        IndustryResponse response = mapper.toResponse(saved);
-        return response;
-    }
-
-    @Override
-    public IndustryResponse update(Long id, IndustryRequest request) {
         Industry existing = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Industry not found: " + id));
 
-        String newName = request.name();
-        existing.setName(newName);
-
-        Industry saved = repository.save(existing);
-        IndustryResponse response = mapper.toResponse(saved);
-        return response;
+        existing.setName(request.name());
+        return repository.save(existing);
     }
 
     @Override
     public void delete(Long id) {
-        Industry existing = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Industry not found: " + id));
-        repository.delete(existing);
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("Industry not found: " + id);
+        }
+        repository.deleteById(id);
     }
 
 }

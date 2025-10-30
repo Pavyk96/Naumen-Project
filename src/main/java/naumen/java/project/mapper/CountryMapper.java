@@ -13,11 +13,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class CountryMapper {
 
-    /** Конвертация DTO-запроса в сущность */
-    public Country toEntity(CountryRequest req) {
-        return new Country(req.id().toUpperCase(), req.name());
-    }
-
     /** Конвертация сущности в DTO-ответ */
     public CountryResponse toResponse(Country entity) {
         return new CountryResponse(entity.getId(), entity.getName());

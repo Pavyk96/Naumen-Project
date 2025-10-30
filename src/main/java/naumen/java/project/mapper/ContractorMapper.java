@@ -19,17 +19,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class ContractorMapper {
 
-    /** Конвертация DTO-запроса в сущность */
-    public Contractor toEntity(ContractorRequest req) {
-        return new Contractor(
-                req.id(),
-                req.name(),
-                req.countryId(),
-                req.industryId(),
-                req.orgFormId()
-        );
-    }
-
     /** Конвертация сущности в DTO-ответ */
     public ContractorResponse toResponse(Contractor entity, Country country, Industry industry, OrgForm orgForm) {
         return new ContractorResponse(

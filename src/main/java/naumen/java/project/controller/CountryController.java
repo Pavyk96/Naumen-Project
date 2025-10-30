@@ -1,9 +1,11 @@
 package naumen.java.project.controller;
 
+import jakarta.validation.Valid;
 import naumen.java.project.dto.CountryRequest;
 import naumen.java.project.dto.CountryResponse;
+import naumen.java.project.mapper.CountryMapper;
+import naumen.java.project.model.Country;
 import naumen.java.project.service.CountryService;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,47 +21,49 @@ import java.util.List;
 public class CountryController {
 
     private final CountryService service;
+    private final CountryMapper mapper;
 
-    public CountryController(CountryService service) {
+    public CountryController(CountryService service, CountryMapper mapper) {
         this.service = service;
+        this.mapper = mapper;
     }
 
     /** Возвращает список всех стран из справочника. */
     @GetMapping("/all")
     public ResponseEntity<List<CountryResponse>> getAll() {
-        List<CountryResponse> responses = service.findAll();
+        List<Country> entities = service.findAll();
+        List<CountryResponse> responses = entities.stream()
+                .map(mapper::toResponse)
+                .toList();
         return ResponseEntity.ok(responses);
     }
 
     /** Возвращает страну по её идентификатору. */
     @GetMapping("/{id}")
     public ResponseEntity<CountryResponse> getById(@PathVariable String id) {
-        String normId = id.toUpperCase();
-        CountryResponse response = service.findById(normId);
-        return ResponseEntity.ok(response);
+        Country entity = service.findById(id);
+        return ResponseEntity.ok(mapper.toResponse(entity));
     }
 
     /** Создаёт новую запись страны в справочнике. */
     @PostMapping
     public ResponseEntity<CountryResponse> create(@Valid @RequestBody CountryRequest req) {
-        CountryResponse created = service.create(req);
-        return ResponseEntity.ok(created);
+        Country created = service.create(req);
+        return ResponseEntity.ok(mapper.toResponse(created));
     }
 
     /** Обновляет существующую запись страны по идентификатору. */
     @PutMapping("/{id}")
     public ResponseEntity<CountryResponse> update(@PathVariable String id,
                                                   @Valid @RequestBody CountryRequest req) {
-        String normId = id.toUpperCase();
-        CountryResponse updated = service.update(normId, req);
-        return ResponseEntity.ok(updated);
+        Country updated = service.update(id, req);
+        return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
     /** Удаляет запись страны по идентификатору. */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
-        String normId = id.toUpperCase();
-        service.delete(normId);
+        service.delete(id);
         return ResponseEntity.ok().build();
     }
 
