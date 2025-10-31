@@ -5,7 +5,6 @@ import naumen.java.project.dto.OrgFormRequest;
 import naumen.java.project.dto.OrgFormResponse;
 import naumen.java.project.mapper.OrgFormMapper;
 import naumen.java.project.model.OrgForm;
-import naumen.java.project.service.OrgFormService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import naumen.java.project.service.OrgFormService;
 
 import java.util.List;
 
@@ -44,6 +44,7 @@ class OrgFormControllerTest {
     private OrgForm entity(String id, String name) { return new OrgForm(id, name); }
     private OrgFormResponse dto(String id, String name) { return new OrgFormResponse(id, name); }
 
+    /** Проверяет корректную работу получения списка объектов */
     @Test
     @DisplayName("GET /org_form/all")
     void getAll_minimal() throws Exception {
@@ -59,6 +60,7 @@ class OrgFormControllerTest {
         verify(service).findAll();
     }
 
+    /** Проверяет корректную работу получения объекта по идентификатору */
     @Test
     @DisplayName("GET /org_form/{id}")
     void getById_minimal() throws Exception {
@@ -74,6 +76,7 @@ class OrgFormControllerTest {
         verify(service).findById(ID);
     }
 
+    /** Проверяет корректное создание нового объекта */
     @Test
     @DisplayName("POST /org_form")
     void create_minimal() throws Exception {
@@ -92,6 +95,7 @@ class OrgFormControllerTest {
         verify(service).create(any(OrgFormRequest.class));
     }
 
+    /** Проверяет корректное обновление существующего объекта */
     @Test
     @DisplayName("PUT /org_form/{id}")
     void update_minimal() throws Exception {
@@ -110,6 +114,7 @@ class OrgFormControllerTest {
         verify(service).update(eq(ID), any(OrgFormRequest.class));
     }
 
+    /** Проверяет корректное удаление объекта */
     @Test
     @DisplayName("DELETE /org_form/delete/{id}")
     void delete_minimal() throws Exception {

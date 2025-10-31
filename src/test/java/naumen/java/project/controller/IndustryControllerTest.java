@@ -5,7 +5,6 @@ import naumen.java.project.dto.IndustryRequest;
 import naumen.java.project.dto.IndustryResponse;
 import naumen.java.project.mapper.IndustryMapper;
 import naumen.java.project.model.Industry;
-import naumen.java.project.service.IndustryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import naumen.java.project.service.IndustryService;
 
 import java.util.List;
 
@@ -49,6 +49,7 @@ class IndustryControllerTest {
         return new IndustryResponse(id, name);
     }
 
+    /** Проверяет корректную работу получения списка объектов */
     @Test
     @DisplayName("GET /industry/all")
     void getAll_minimal() throws Exception {
@@ -64,6 +65,7 @@ class IndustryControllerTest {
         verify(service).findAll();
     }
 
+    /** Проверяет корректную работу получения объекта по идентификатору */
     @Test
     @DisplayName("GET /industry/{id}")
     void getById_minimal() throws Exception {
@@ -79,6 +81,7 @@ class IndustryControllerTest {
         verify(service).findById(ID);
     }
 
+    /** Проверяет корректное создание нового объекта */
     @Test
     @DisplayName("POST /industry")
     void create_minimal() throws Exception {
@@ -97,6 +100,7 @@ class IndustryControllerTest {
         verify(service).create(any(IndustryRequest.class));
     }
 
+    /** Проверяет корректное обновление существующего объекта */
     @Test
     @DisplayName("PUT /industry/{id}")
     void update_minimal() throws Exception {
@@ -115,6 +119,7 @@ class IndustryControllerTest {
         verify(service).update(eq(ID), any(IndustryRequest.class));
     }
 
+    /** Проверяет корректное удаление объекта */
     @Test
     @DisplayName("DELETE /industry/delete/{id}")
     void delete_minimal() throws Exception {

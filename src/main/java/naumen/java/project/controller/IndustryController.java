@@ -5,9 +5,9 @@ import naumen.java.project.dto.IndustryRequest;
 import naumen.java.project.dto.IndustryResponse;
 import naumen.java.project.mapper.IndustryMapper;
 import naumen.java.project.model.Industry;
-import naumen.java.project.service.IndustryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import naumen.java.project.service.IndustryService;
 
 import java.util.List;
 

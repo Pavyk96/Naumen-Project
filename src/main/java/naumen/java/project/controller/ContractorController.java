@@ -10,8 +10,8 @@ import naumen.java.project.model.Industry;
 import naumen.java.project.model.OrgForm;
 import naumen.java.project.service.ContractorService;
 import naumen.java.project.service.CountryService;
-import naumen.java.project.service.IndustryService;
 import naumen.java.project.service.OrgFormService;
+import naumen.java.project.service.IndustryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

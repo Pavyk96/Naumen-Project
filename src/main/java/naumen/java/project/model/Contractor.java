@@ -48,19 +48,34 @@ public class Contractor {
         this.orgFormId = orgFormId;
     }
 
+    /** Возвращает идентификатор */
     public String getId() { return id; }
+
+    /** Устанавливает идентификатор */
     public void setId(String id) { this.id = id; }
 
+    /** Возвращает название */
     public String getName() { return name; }
+
+    /** Устанавливает название */
     public void setName(String name) { this.name = name; }
 
+    /** Возвращает идентификатор страны */
     public String getCountryId() { return countryId; }
+
+    /** Устанавливает идентификатор страны */
     public void setCountryId(String countryId) { this.countryId = countryId; }
 
+    /** Возвращает идентификатор отрасли */
     public Long getIndustryId() { return industryId; }
+
+    /** Устанавливает идентификатор отрасли */
     public void setIndustryId(Long industryId) { this.industryId = industryId; }
 
+    /** Возвращает идентификатор формы организации */
     public String getOrgFormId() { return orgFormId; }
+
+    /** Устанавливает идентификатор формы организации */
     public void setOrgFormId(String orgFormId) { this.orgFormId = orgFormId; }
 
 }

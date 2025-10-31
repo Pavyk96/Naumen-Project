@@ -1,10 +1,9 @@
-package naumen.java.project.serviceImpl;
+package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import naumen.java.project.dto.CountryRequest;
-import naumen.java.project.model.Country;
-import naumen.java.project.repository.CountryRepository;
-import naumen.java.project.service.impl.CountryServiceImpl;
+import naumen.java.project.dto.OrgFormRequest;
+import naumen.java.project.model.OrgForm;
+import naumen.java.project.repository.OrgFormRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,33 +19,28 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class CountryServiceImplTest {
+class OrgFormServiceTest {
 
     @Mock
-    private CountryRepository repository;
+    private OrgFormRepository repository;
 
     @InjectMocks
-    private CountryServiceImpl service;
+    private OrgFormService service;
 
-    private static final String ID_RAW = " ru ";
-    private static final String ID_NORM = "RU";
-    private static final String NAME = "Russia";
-    private static final String NAME_UPDATED = "Russian Federation";
+    private static final String ID_RAW = " ooo ";
+    private static final String ID_NORM = "OOO";
+    private static final String NAME = "Общество с ограниченной ответственностью";
+    private static final String NAME_UPDATED = "ООО (обновлено)";
 
-    private Country entity(String id, String name) {
-        return new Country(id, name);
-    }
-
-    private CountryRequest req(String id, String name) {
-        return new CountryRequest(id, name);
-    }
+    private OrgForm entity(String id, String name) { return new OrgForm(id, name); }
+    private OrgFormRequest req(String id, String name) { return new OrgFormRequest(id, name); }
 
     @Test
     @DisplayName("findAll: проксирование в репозиторий")
     void findAll_ok() {
         when(repository.findAll()).thenReturn(List.of(entity(ID_NORM, NAME)));
 
-        List<Country> all = service.findAll();
+        List<OrgForm> all = service.findAll();
 
         assertEquals(1, all.size());
         assertEquals(ID_NORM, all.get(0).getId());
@@ -54,13 +48,13 @@ class CountryServiceImplTest {
     }
 
     @Test
-    @DisplayName("findById: нормализует id и возвращает страну")
-    void findById_ok_withNormalization() {
+    @DisplayName("findById: нормализует id и возвращает сущность")
+    void findById_ok_normalized() {
         when(repository.findById(ID_NORM)).thenReturn(Optional.of(entity(ID_NORM, NAME)));
 
-        Country c = service.findById(ID_RAW);
+        OrgForm of = service.findById(ID_RAW);
 
-        assertEquals(ID_NORM, c.getId());
+        assertEquals(ID_NORM, of.getId());
         verify(repository).findById(ID_NORM);
     }
 
@@ -91,28 +85,29 @@ class CountryServiceImplTest {
     @DisplayName("create: нормализует id и сохраняет")
     void create_ok() {
         when(repository.existsById(ID_NORM)).thenReturn(false);
-        when(repository.save(any(Country.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.save(any(OrgForm.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Country created = service.create(req(ID_RAW, NAME));
+        OrgForm saved = service.create(req(ID_RAW, NAME));
 
-        ArgumentCaptor<Country> captor = ArgumentCaptor.forClass(Country.class);
+        ArgumentCaptor<OrgForm> captor = ArgumentCaptor.forClass(OrgForm.class);
         verify(repository).save(captor.capture());
-        Country toSave = captor.getValue();
+        OrgForm toSave = captor.getValue();
 
         assertEquals(ID_NORM, toSave.getId());
         assertEquals(NAME, toSave.getName());
-        assertEquals(ID_NORM, created.getId());
+        assertEquals(ID_NORM, saved.getId());
     }
 
     @Test
-    @DisplayName("update: несовпадение path/body после нормализации -> IllegalArgumentException")
+    @DisplayName("update: несовпадение path/body (после нормализации) -> IllegalArgumentException")
     void update_idMismatch() {
-        CountryRequest body = req("us", NAME_UPDATED);
+        OrgFormRequest body = req("pjsc", NAME_UPDATED); // нормализуется в PJSC
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> service.update(ID_RAW, body));
+                () -> service.update(ID_RAW, body)); // path -> OOO
         assertTrue(ex.getMessage().contains("Path id and body id must be equal"));
         verify(repository, never()).findById(anyString());
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -128,13 +123,13 @@ class CountryServiceImplTest {
     }
 
     @Test
-    @DisplayName("update: обновляет имя и сохраняет")
+    @DisplayName("update: обновляет name и сохраняет")
     void update_ok() {
-        Country existing = entity(ID_NORM, NAME);
+        OrgForm existing = entity(ID_NORM, NAME);
         when(repository.findById(ID_NORM)).thenReturn(Optional.of(existing));
-        when(repository.save(any(Country.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.save(any(OrgForm.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Country updated = service.update(ID_RAW, req(ID_RAW, NAME_UPDATED));
+        OrgForm updated = service.update(ID_RAW, req(ID_RAW, NAME_UPDATED));
 
         assertEquals(ID_NORM, updated.getId());
         assertEquals(NAME_UPDATED, updated.getName());

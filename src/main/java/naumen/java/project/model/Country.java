@@ -29,9 +29,15 @@ public class Country {
         this.name = name;
     }
 
+    /** Возвращает идентификатор */
     public String getId() { return id; }
+
+    /** Устанавливает идентификатор */
     public void setId(String id) { this.id = id; }
 
+    /** Возвращает название */
     public String getName() { return name; }
+
+    /** Устанавливает название */
     public void setName(String name) { this.name = name; }
 }

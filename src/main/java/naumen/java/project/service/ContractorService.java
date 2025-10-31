@@ -1,31 +1,77 @@
 package naumen.java.project.service;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import naumen.java.project.dto.ContractorRequest;
-import naumen.java.project.dto.ContractorResponse;
 import naumen.java.project.model.Contractor;
+import naumen.java.project.repository.ContractorRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
- * Сервис для управления контрагентами
+ * Реализация сервиса для управления контрагентами (без маппера; маппинг перенесён в контроллер)
  *
  * @author Daniil Mezev
  */
-public interface ContractorService {
+@Service
+@Transactional
+public class ContractorService {
+
+    private final ContractorRepository repository;
+
+    public ContractorService(ContractorRepository repository) {
+        this.repository = repository;
+    }
 
     /** Возвращает всех контрагентов */
-    List<Contractor> findAll();
+    public List<Contractor> findAll() {
+        return repository.findAll();
+    }
 
     /** Возвращает контрагента по идентификатору */
-    Contractor findById(String id);
+    public Contractor findById(String id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Contractor not found: " + id));
+    }
 
     /** Создаёт нового контрагента */
-    Contractor create(ContractorRequest contractor);
+    public Contractor create(ContractorRequest req) {
+        if (repository.existsById(req.id())) {
+            throw new IllegalArgumentException("Contractor already exists: " + req.id());
+        }
+        Contractor entity = new Contractor(
+                req.id(),
+                req.name(),
+                req.countryId(),
+                req.industryId(),
+                req.orgFormId()
+        );
+        return repository.save(entity);
+    }
 
     /** Обновляет существующего контрагента по id переданными данными сущности */
-    Contractor update(String id, ContractorRequest contractor);
+    public Contractor update(String id, ContractorRequest req) {
+        if (!id.equals(req.id())) {
+            throw new IllegalArgumentException("Path id and body id must be equal");
+        }
+        Contractor existing = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Contractor not found: " + id));
+
+        existing.setName(req.name());
+        existing.setCountryId(req.countryId());
+        existing.setIndustryId(req.industryId());
+        existing.setOrgFormId(req.orgFormId());
+
+        return repository.save(existing);
+    }
 
     /** Удаляет контрагента */
-    void delete(String id);
+    public void delete(String id) {
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("Contractor not found: " + id);
+        }
+        repository.deleteById(id);
+    }
 
 }

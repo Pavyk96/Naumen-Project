@@ -1,7 +1,6 @@
 package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import naumen.java.project.dto.ContractorRequest;
 import naumen.java.project.dto.ContractorResponse;
 import naumen.java.project.dto.CountryResponse;
@@ -12,10 +11,6 @@ import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Country;
 import naumen.java.project.model.Industry;
 import naumen.java.project.model.OrgForm;
-import naumen.java.project.service.ContractorService;
-import naumen.java.project.service.CountryService;
-import naumen.java.project.service.IndustryService;
-import naumen.java.project.service.OrgFormService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +18,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import naumen.java.project.service.ContractorService;
+import naumen.java.project.service.CountryService;
+import naumen.java.project.service.OrgFormService;
+import naumen.java.project.service.IndustryService;
 
 import java.util.List;
 
@@ -80,6 +79,7 @@ class ContractorControllerTest {
                 ));
     }
 
+    /** Проверяет корректную работу получения списка объектов */
     @Test
     @DisplayName("GET /contractor/all")
     void getAll_ok_minimal() throws Exception {
@@ -99,6 +99,7 @@ class ContractorControllerTest {
         verify(mapper, atLeastOnce()).toResponse(any(), any(), any(), any());
     }
 
+    /** Проверяет корректную работу получения объекта по идентификатору */
     @Test
     @DisplayName("GET /contractor/{id}")
     void getById_ok_minimal() throws Exception {
@@ -112,6 +113,7 @@ class ContractorControllerTest {
                 .andExpect(jsonPath("$.name").value(NAME));
     }
 
+    /** Проверяет корректное создание нового объекта */
     @Test
     @DisplayName("POST /contractor")
     void create_ok_minimal() throws Exception {
@@ -128,6 +130,7 @@ class ContractorControllerTest {
                 .andExpect(jsonPath("$.name").value(NAME));
     }
 
+    /** Проверяет корректное обновление существующего объекта */
     @Test
     @DisplayName("PUT /contractor/{id}")
     void update_ok_checkOnlyChangedField() throws Exception {
@@ -144,6 +147,7 @@ class ContractorControllerTest {
                 .andExpect(jsonPath("$.name").value(NAME_UPDATED));
     }
 
+    /** Проверяет корректное удаление объекта */
     @Test
     @DisplayName("DELETE /contractor/delete/{id}")
     void delete_ok() throws Exception {

@@ -1,11 +1,9 @@
-package naumen.java.project.serviceImpl;
+package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import naumen.java.project.dto.ContractorRequest;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.repository.ContractorRepository;
-import naumen.java.project.service.ContractorService;
-import naumen.java.project.service.impl.ContractorServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,13 +19,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ContractorServiceImplTest {
+class ContractorServiceTest {
 
     @Mock
     private ContractorRepository repository;
 
     @InjectMocks
-    private ContractorServiceImpl service;
+    private ContractorService service;
 
     private static final String ID = "c-1";
     private static final String NAME = "Acme LLC";
@@ -40,6 +38,9 @@ class ContractorServiceImplTest {
         return new Contractor(ID, name, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
     }
 
+    /**
+     * Создание реквеста
+     */
     private ContractorRequest req(String name) {
         return new ContractorRequest(ID, name, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
     }

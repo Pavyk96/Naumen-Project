@@ -1,31 +1,65 @@
 package naumen.java.project.service;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import naumen.java.project.dto.IndustryRequest;
-import naumen.java.project.dto.IndustryResponse;
 import naumen.java.project.model.Industry;
+import naumen.java.project.repository.IndustryRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
- * Сервис для работы со справочником индустрий
+ * Сервис для управления индустриями
  *
  * @author Daniil Mezev
  */
-public interface IndustryService {
+@Service
+@Transactional
+public class IndustryService {
+
+    private final IndustryRepository repository;
+
+    public IndustryService(IndustryRepository repository) {
+        this.repository = repository;
+    }
 
     /** Возвращает все индустрии */
-    List<Industry> findAll();
+    public List<Industry> findAll() {
+        return repository.findAll();
+    }
 
     /** Возвращает индустрию по идентификатору */
-    Industry findById(Long id);
+    public Industry findById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Industry not found: " + id));
+    }
 
     /** Создаёт новую индустрию */
-    Industry create(IndustryRequest request);
+    public Industry create(IndustryRequest request) {
+        Industry toSave = new Industry(request.name());
+        return repository.save(toSave);
+    }
 
     /** Обновляет индустрию по идентификатору */
-    Industry update(Long id, IndustryRequest request);
+    public Industry update(Long id, IndustryRequest request) {
+        if (!id.equals(request.id())) {
+            throw new IllegalArgumentException("Path id and body id must be equal");
+        }
+
+        Industry existing = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Industry not found: " + id));
+
+        existing.setName(request.name());
+        return repository.save(existing);
+    }
 
     /** Удаляет индустрию по идентификатору */
-    void delete(Long id);
+    public void delete(Long id) {
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("Industry not found: " + id);
+        }
+        repository.deleteById(id);
+    }
 
 }

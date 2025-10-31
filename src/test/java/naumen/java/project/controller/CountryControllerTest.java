@@ -5,7 +5,6 @@ import naumen.java.project.dto.CountryRequest;
 import naumen.java.project.dto.CountryResponse;
 import naumen.java.project.mapper.CountryMapper;
 import naumen.java.project.model.Country;
-import naumen.java.project.service.CountryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import naumen.java.project.service.CountryService;
 
 import java.util.List;
 
@@ -49,6 +49,7 @@ class CountryControllerTest {
         return new CountryResponse(id, name);
     }
 
+    /** Проверяет корректную работу получения списка объектов */
     @Test
     @DisplayName("GET /country/all")
     void getAll_ok_minimal() throws Exception {
@@ -64,6 +65,7 @@ class CountryControllerTest {
         verify(service).findAll();
     }
 
+    /** Проверяет корректную работу получения объекта по идентификатору */
     @Test
     @DisplayName("GET /country/{id}")
     void getById_ok_minimal() throws Exception {
@@ -79,6 +81,7 @@ class CountryControllerTest {
         verify(service).findById(ID);
     }
 
+    /** Проверяет корректное создание нового объекта */
     @Test
     @DisplayName("POST /country")
     void create_ok_minimal() throws Exception {
@@ -97,6 +100,7 @@ class CountryControllerTest {
         verify(service).create(any(CountryRequest.class));
     }
 
+    /** Проверяет корректное обновление существующего объекта */
     @Test
     @DisplayName("PUT /country/{id}")
     void update_ok_checkOnlyChangedField() throws Exception {
@@ -115,6 +119,7 @@ class CountryControllerTest {
         verify(service).update(eq(ID), any(CountryRequest.class));
     }
 
+    /** Проверяет корректное удаление объекта */
     @Test
     @DisplayName("DELETE /country/delete/{id}")
     void delete_ok() throws Exception {

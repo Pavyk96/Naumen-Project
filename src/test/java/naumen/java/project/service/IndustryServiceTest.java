@@ -1,14 +1,12 @@
-package naumen.java.project.serviceImpl;
+package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import naumen.java.project.dto.IndustryRequest;
 import naumen.java.project.model.Industry;
 import naumen.java.project.repository.IndustryRepository;
-import naumen.java.project.service.impl.IndustryServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,13 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class IndustryServiceImplTest {
+class IndustryServiceTest {
 
     @Mock
     private IndustryRepository repository;
 
     @InjectMocks
-    private IndustryServiceImpl service;
+    private IndustryService service;
 
     private static final Long ID = 10L;
     private static final String NAME = "IT";
