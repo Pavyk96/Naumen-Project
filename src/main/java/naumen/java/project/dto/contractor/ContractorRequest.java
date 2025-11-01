@@ -1,4 +1,4 @@
-package naumen.java.project.dto;
+package naumen.java.project.dto.contractor;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

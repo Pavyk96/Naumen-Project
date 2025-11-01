@@ -1,4 +1,8 @@
-package naumen.java.project.dto;
+package naumen.java.project.dto.contractor;
+
+import naumen.java.project.dto.CountryResponse;
+import naumen.java.project.dto.IndustryResponse;
+import naumen.java.project.dto.OrgFormResponse;
 
 /**
  * DTO-ответ с полной информацией о контрагенте

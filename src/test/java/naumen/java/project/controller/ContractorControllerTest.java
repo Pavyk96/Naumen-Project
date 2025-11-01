@@ -1,8 +1,8 @@
 package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import naumen.java.project.dto.ContractorRequest;
-import naumen.java.project.dto.ContractorResponse;
+import naumen.java.project.dto.contractor.ContractorRequest;
+import naumen.java.project.dto.contractor.ContractorResponse;
 import naumen.java.project.dto.CountryResponse;
 import naumen.java.project.dto.IndustryResponse;
 import naumen.java.project.dto.OrgFormResponse;

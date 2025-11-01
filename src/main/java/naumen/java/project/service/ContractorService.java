@@ -2,7 +2,7 @@ package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import naumen.java.project.dto.ContractorRequest;
+import naumen.java.project.dto.contractor.ContractorRequest;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.repository.ContractorRepository;
 import org.springframework.stereotype.Service;
@@ -32,6 +32,14 @@ public class ContractorService {
     /** Возвращает контрагента по идентификатору */
     public Contractor findById(String id) {
         return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Contractor not found: " + id));
+    }
+
+    /**
+     * Возвращает контрагента по идентификатору с сделками
+     */
+    public Contractor findByIdWithDeals(String id) {
+        return repository.findWithDealsById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Contractor not found: " + id));
     }
 
@@ -70,6 +78,9 @@ public class ContractorService {
     public void delete(String id) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Contractor not found: " + id);
+        }
+        if (!findByIdWithDeals(id).getDeals().isEmpty()) {
+            throw new IllegalStateException("Contractor use in deal");
         }
         repository.deleteById(id);
     }

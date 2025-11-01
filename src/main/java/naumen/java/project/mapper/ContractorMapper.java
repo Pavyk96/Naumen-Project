@@ -1,7 +1,6 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.ContractorRequest;
-import naumen.java.project.dto.ContractorResponse;
+import naumen.java.project.dto.contractor.ContractorResponse;
 import naumen.java.project.dto.CountryResponse;
 import naumen.java.project.dto.IndustryResponse;
 import naumen.java.project.dto.OrgFormResponse;
