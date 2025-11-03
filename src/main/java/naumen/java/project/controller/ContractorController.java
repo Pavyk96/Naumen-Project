@@ -1,8 +1,8 @@
 package naumen.java.project.controller;
 
 import jakarta.validation.Valid;
-import naumen.java.project.dto.ContractorRequest;
-import naumen.java.project.dto.ContractorResponse;
+import naumen.java.project.dto.contractor.ContractorRequest;
+import naumen.java.project.dto.contractor.ContractorResponse;
 import naumen.java.project.mapper.ContractorMapper;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Country;

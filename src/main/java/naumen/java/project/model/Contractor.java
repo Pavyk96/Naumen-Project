@@ -1,12 +1,12 @@
 package naumen.java.project.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Контрагент для работы со сделками
@@ -37,6 +37,9 @@ public class Contractor {
     @NotNull
     @Column(name = "org_form_id", nullable = false)
     private String orgFormId;
+
+    @ManyToMany(mappedBy = "contractors", fetch = FetchType.LAZY)
+    private Set<Deal> deals = new HashSet<>();
 
     public Contractor() { }
 
@@ -78,4 +81,6 @@ public class Contractor {
     /** Устанавливает идентификатор формы организации */
     public void setOrgFormId(String orgFormId) { this.orgFormId = orgFormId; }
 
+    /** Возвращает сделки */
+    public Set<Deal> getDeals() { return deals; }
 }

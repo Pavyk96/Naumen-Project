@@ -1,7 +1,7 @@
 package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import naumen.java.project.dto.ContractorRequest;
+import naumen.java.project.dto.contractor.ContractorRequest;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.repository.ContractorRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -166,6 +166,7 @@ class ContractorServiceTest {
     @DisplayName("delete: удаляет по id")
     void delete_ok() {
         when(repository.existsById(ID)).thenReturn(true);
+        when(repository.findWithDealsById(ID)).thenReturn(Optional.of(entity(NAME)));
 
         service.delete(ID);
 
