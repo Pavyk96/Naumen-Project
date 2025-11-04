@@ -6,8 +6,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class OrgFormMapperTest {
+class OrgFormMapperTest {
 
+    /**
+     * Конвертация в ДТО респонс
+     */
     @Test
     void toResponse_mapsFields() {
         OrgFormMapper mapper = new OrgFormMapper();

@@ -1,11 +1,11 @@
 package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import naumen.java.project.dto.CountryRequest;
 import naumen.java.project.model.Country;
 import naumen.java.project.repository.CountryRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,7 +15,6 @@ import java.util.List;
  * @author Daniil Mezev
  */
 @Service
-@Transactional
 public class CountryService {
 
     private final CountryRepository repository;
@@ -25,11 +24,13 @@ public class CountryService {
     }
 
     /** Возвращает все страны */
+    @Transactional(readOnly = true)
     public List<Country> findAll() {
         return repository.findAll();
     }
 
     /** Возвращает страну по идентификатору */
+    @Transactional(readOnly = true)
     public Country findById(String id) {
         String normId = normalize(id);
         return repository.findById(normId)
@@ -37,6 +38,7 @@ public class CountryService {
     }
 
     /** Создаёт новую страну */
+    @Transactional
     public Country create(CountryRequest request) {
         String normId = normalize(request.id());
         if (repository.existsById(normId)) {
@@ -47,6 +49,7 @@ public class CountryService {
     }
 
     /** Обновляет страну по идентификатору */
+    @Transactional
     public Country update(String id, CountryRequest request) {
         String normPathId = normalize(id);
         String normBodyId = normalize(request.id());
@@ -62,6 +65,7 @@ public class CountryService {
     }
 
     /** Удаляет страну по идентификатору */
+    @Transactional
     public void delete(String id) {
         String normId = normalize(id);
         if (!repository.existsById(normId)) {

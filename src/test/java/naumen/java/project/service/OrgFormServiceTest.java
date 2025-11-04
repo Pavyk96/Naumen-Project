@@ -35,8 +35,9 @@ class OrgFormServiceTest {
     private OrgForm entity(String id, String name) { return new OrgForm(id, name); }
     private OrgFormRequest req(String id, String name) { return new OrgFormRequest(id, name); }
 
+    /** Вернуть все записи */
     @Test
-    @DisplayName("findAll: проксирование в репозиторий")
+    @DisplayName("findAll: вернуть все записи")
     void findAll_ok() {
         when(repository.findAll()).thenReturn(List.of(entity(ID_NORM, NAME)));
 
@@ -47,6 +48,7 @@ class OrgFormServiceTest {
         verify(repository).findAll();
     }
 
+    /** Вернуть запись по id */
     @Test
     @DisplayName("findById: нормализует id и возвращает сущность")
     void findById_ok_normalized() {
@@ -58,6 +60,7 @@ class OrgFormServiceTest {
         verify(repository).findById(ID_NORM);
     }
 
+    /** Вернуть запись по id — не существует id */
     @Test
     @DisplayName("findById: не найден -> EntityNotFoundException")
     void findById_notFound() {
@@ -69,6 +72,7 @@ class OrgFormServiceTest {
         verify(repository).findById(ID_NORM);
     }
 
+    /** Создать запись — если id уже существует */
     @Test
     @DisplayName("create: конфликт id -> IllegalArgumentException")
     void create_conflict() {
@@ -81,6 +85,7 @@ class OrgFormServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Создать запись */
     @Test
     @DisplayName("create: нормализует id и сохраняет")
     void create_ok() {
@@ -98,6 +103,7 @@ class OrgFormServiceTest {
         assertEquals(ID_NORM, saved.getId());
     }
 
+    /** Обновить запись — если id не совпадает */
     @Test
     @DisplayName("update: несовпадение path/body (после нормализации) -> IllegalArgumentException")
     void update_idMismatch() {
@@ -110,6 +116,7 @@ class OrgFormServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Обновить запись — если id не существует */
     @Test
     @DisplayName("update: не найден -> EntityNotFoundException")
     void update_notFound() {
@@ -122,6 +129,7 @@ class OrgFormServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Обновить запись */
     @Test
     @DisplayName("update: обновляет name и сохраняет")
     void update_ok() {
@@ -137,6 +145,7 @@ class OrgFormServiceTest {
         verify(repository).save(existing);
     }
 
+    /** Удалить запись — если id не существует */
     @Test
     @DisplayName("delete: не найден -> EntityNotFoundException")
     void delete_notFound() {
@@ -149,6 +158,7 @@ class OrgFormServiceTest {
         verify(repository, never()).deleteById(anyString());
     }
 
+    /** Удалить запись */
     @Test
     @DisplayName("delete: нормализует id и удаляет")
     void delete_ok() {

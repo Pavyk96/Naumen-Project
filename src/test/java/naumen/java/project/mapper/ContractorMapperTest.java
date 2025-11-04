@@ -9,8 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ContractorMapperTest {
-
+class ContractorMapperTest {
+    /**
+     * Конвертация в ДТО респонс
+     */
     @Test
     void toResponse_mapsFields() {
         ContractorMapper mapper = new ContractorMapper();

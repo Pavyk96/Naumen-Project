@@ -38,8 +38,9 @@ class IndustryServiceTest {
         return new IndustryRequest(id, name);
     }
 
+    /** Вернуть все записи */
     @Test
-    @DisplayName("findAll: проксирование в репозиторий")
+    @DisplayName("findAll: вернуть все записи")
     void findAll_ok() {
         when(repository.findAll()).thenReturn(List.of(entity(ID, NAME)));
 
@@ -50,6 +51,7 @@ class IndustryServiceTest {
         verify(repository).findAll();
     }
 
+    /** Вернуть запись по id (если найдено) */
     @Test
     @DisplayName("findById: найден")
     void findById_found() {
@@ -62,6 +64,7 @@ class IndustryServiceTest {
         verify(repository).findById(ID);
     }
 
+    /** Вернуть запись по id — иначе ошибка EntityNotFoundException */
     @Test
     @DisplayName("findById: не найден -> EntityNotFoundException")
     void findById_notFound() {
@@ -72,6 +75,7 @@ class IndustryServiceTest {
         verify(repository).findById(ID);
     }
 
+    /** Обновить запись — если id не совпадает */
     @Test
     @DisplayName("update: несовпадение path/body -> IllegalArgumentException")
     void update_idMismatch() {
@@ -84,6 +88,7 @@ class IndustryServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Обновить запись — если id не существует */
     @Test
     @DisplayName("update: не найден -> EntityNotFoundException")
     void update_notFound() {
@@ -96,6 +101,7 @@ class IndustryServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Обновить запись */
     @Test
     @DisplayName("update: обновляет имя и сохраняет")
     void update_ok() {
@@ -111,6 +117,7 @@ class IndustryServiceTest {
         verify(repository).save(existing);
     }
 
+    /** Удалить запись — если id не существует */
     @Test
     @DisplayName("delete: не существует -> EntityNotFoundException")
     void delete_notFound() {
@@ -122,6 +129,7 @@ class IndustryServiceTest {
         verify(repository, never()).deleteById(anyLong());
     }
 
+    /** Удалить запись */
     @Test
     @DisplayName("delete: удаляет по id")
     void delete_ok() {
@@ -132,5 +140,4 @@ class IndustryServiceTest {
         verify(repository).existsById(ID);
         verify(repository).deleteById(ID);
     }
-
 }

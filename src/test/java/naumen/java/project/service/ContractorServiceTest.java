@@ -45,8 +45,9 @@ class ContractorServiceTest {
         return new ContractorRequest(ID, name, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
     }
 
+    /** Вернуть все записи */
     @Test
-    @DisplayName("findAll: проксирует вызов репозитория")
+    @DisplayName("findAll: вернуть все записи")
     void findAll_ok() {
         when(repository.findAll()).thenReturn(List.of(entity(NAME)));
 
@@ -57,6 +58,7 @@ class ContractorServiceTest {
         verify(repository).findAll();
     }
 
+    /** Вернуть запись по id (если найдено) */
     @Test
     @DisplayName("findById: найден")
     void findById_found() {
@@ -69,6 +71,7 @@ class ContractorServiceTest {
         verify(repository).findById(ID);
     }
 
+    /** Вернуть запись по id — иначе ошибка EntityNotFoundException */
     @Test
     @DisplayName("findById: не найден -> EntityNotFoundException")
     void findById_notFound() {
@@ -79,6 +82,7 @@ class ContractorServiceTest {
         verify(repository).findById(ID);
     }
 
+    /** Создать запись — если id уже существует */
     @Test
     @DisplayName("create: если id уже существует -> IllegalArgumentException")
     void create_alreadyExists() {
@@ -90,6 +94,7 @@ class ContractorServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Создать запись */
     @Test
     @DisplayName("create: сохраняет сущность, собранную из DTO")
     void create_ok() {
@@ -110,6 +115,7 @@ class ContractorServiceTest {
         assertEquals(NAME, created.getName());
     }
 
+    /** Обновить запись — если id не совпадает */
     @Test
     @DisplayName("update: если path id != body id -> IllegalArgumentException")
     void update_idMismatch() {
@@ -122,6 +128,7 @@ class ContractorServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Обновить запись — если id не существует */
     @Test
     @DisplayName("update: когда не найден -> EntityNotFoundException")
     void update_notFound() {
@@ -134,6 +141,7 @@ class ContractorServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Обновить запись */
     @Test
     @DisplayName("update: обновляет изменяемые поля и сохраняет")
     void update_ok() {
@@ -151,6 +159,7 @@ class ContractorServiceTest {
         verify(repository).save(existing);
     }
 
+    /** Удалить запись — если id не существует */
     @Test
     @DisplayName("delete: когда не существует -> EntityNotFoundException")
     void delete_notFound() {
@@ -162,6 +171,7 @@ class ContractorServiceTest {
         verify(repository, never()).deleteById(any());
     }
 
+    /** Удалить запись */
     @Test
     @DisplayName("delete: удаляет по id")
     void delete_ok() {

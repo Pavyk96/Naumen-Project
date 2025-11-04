@@ -40,8 +40,9 @@ class CountryServiceTest {
         return new CountryRequest(id, name);
     }
 
+    /** Вернуть все записи */
     @Test
-    @DisplayName("findAll: проксирование в репозиторий")
+    @DisplayName("findAll: вернуть все записи")
     void findAll_ok() {
         when(repository.findAll()).thenReturn(List.of(entity(ID_NORM, NAME)));
 
@@ -52,6 +53,7 @@ class CountryServiceTest {
         verify(repository).findAll();
     }
 
+    /** Вернуть запись по id (если найдено) */
     @Test
     @DisplayName("findById: нормализует id и возвращает страну")
     void findById_ok_withNormalization() {
@@ -63,6 +65,7 @@ class CountryServiceTest {
         verify(repository).findById(ID_NORM);
     }
 
+    /** Вернуть запись по id — иначе ошибка EntityNotFoundException */
     @Test
     @DisplayName("findById: не найден -> EntityNotFoundException")
     void findById_notFound() {
@@ -74,6 +77,7 @@ class CountryServiceTest {
         verify(repository).findById(ID_NORM);
     }
 
+    /** Создать запись — если id уже существует */
     @Test
     @DisplayName("create: конфликт id -> IllegalArgumentException")
     void create_conflict() {
@@ -86,6 +90,7 @@ class CountryServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Создать запись */
     @Test
     @DisplayName("create: нормализует id и сохраняет")
     void create_ok() {
@@ -103,6 +108,7 @@ class CountryServiceTest {
         assertEquals(ID_NORM, created.getId());
     }
 
+    /** Обновить запись — если id не совпадает */
     @Test
     @DisplayName("update: несовпадение path/body после нормализации -> IllegalArgumentException")
     void update_idMismatch() {
@@ -114,6 +120,7 @@ class CountryServiceTest {
         verify(repository, never()).findById(anyString());
     }
 
+    /** Обновить запись — если id не существует */
     @Test
     @DisplayName("update: не найден -> EntityNotFoundException")
     void update_notFound() {
@@ -126,6 +133,7 @@ class CountryServiceTest {
         verify(repository, never()).save(any());
     }
 
+    /** Обновить запись */
     @Test
     @DisplayName("update: обновляет имя и сохраняет")
     void update_ok() {
@@ -141,6 +149,7 @@ class CountryServiceTest {
         verify(repository).save(existing);
     }
 
+    /** Удалить запись — если id не существует */
     @Test
     @DisplayName("delete: не найден -> EntityNotFoundException")
     void delete_notFound() {
@@ -153,6 +162,7 @@ class CountryServiceTest {
         verify(repository, never()).deleteById(anyString());
     }
 
+    /** Удалить запись */
     @Test
     @DisplayName("delete: нормализует id и удаляет")
     void delete_ok() {

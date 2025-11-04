@@ -6,8 +6,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class IndustryMapperTest {
+class IndustryMapperTest {
 
+    /**
+     * Конвертация в ДТО респонс
+     */
     @Test
     void toResponse_mapsFields() {
         IndustryMapper mapper = new IndustryMapper();

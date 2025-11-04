@@ -1,11 +1,11 @@
 package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import naumen.java.project.dto.OrgFormRequest;
 import naumen.java.project.model.OrgForm;
 import naumen.java.project.repository.OrgFormRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,7 +15,6 @@ import java.util.List;
  * @author Daniil Mezev
  */
 @Service
-@Transactional
 public class OrgFormService {
 
     private final OrgFormRepository repository;
@@ -25,11 +24,13 @@ public class OrgFormService {
     }
 
     /** Возвращает все организационно-правовые формы */
+    @Transactional(readOnly = true)
     public List<OrgForm> findAll() {
         return repository.findAll();
     }
 
     /** Ищет организационно-правовую форму по идентификатору */
+    @Transactional(readOnly = true)
     public OrgForm findById(String id) {
         String normId = normalize(id);
         return repository.findById(normId)
@@ -37,6 +38,7 @@ public class OrgFormService {
     }
 
     /** Создаёт новую организационно-правовую форму */
+    @Transactional
     public OrgForm create(OrgFormRequest request) {
         String normId = normalize(request.id());
         if (repository.existsById(normId)) {
@@ -47,6 +49,7 @@ public class OrgFormService {
     }
 
     /** Обновляет существующую организационно-правовую форму */
+    @Transactional
     public OrgForm update(String id, OrgFormRequest request) {
         String normPathId = normalize(id);
         String normBodyId = normalize(request.id());
@@ -62,6 +65,7 @@ public class OrgFormService {
     }
 
     /** Удаляет организационно-правовую форму */
+    @Transactional
     public void delete(String id) {
         String normId = normalize(id);
         if (!repository.existsById(normId)) {

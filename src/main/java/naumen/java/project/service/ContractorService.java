@@ -1,11 +1,11 @@
 package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import naumen.java.project.dto.contractor.ContractorRequest;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.repository.ContractorRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,7 +15,6 @@ import java.util.List;
  * @author Daniil Mezev
  */
 @Service
-@Transactional
 public class ContractorService {
 
     private final ContractorRepository repository;
@@ -25,11 +24,13 @@ public class ContractorService {
     }
 
     /** Возвращает всех контрагентов */
+    @Transactional(readOnly = true)
     public List<Contractor> findAll() {
         return repository.findAll();
     }
 
     /** Возвращает контрагента по идентификатору */
+    @Transactional(readOnly = true)
     public Contractor findById(String id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Contractor not found: " + id));
