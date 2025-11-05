@@ -9,11 +9,11 @@ import jakarta.validation.constraints.NotBlank;
  * @author Daniil Mezev
  */
 @Entity
-@Table(name = "ref_industry")
+@Table(name = "industry")
 public class Industry {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", length = 10, nullable = false, unique = true)
     private Long id;
 
     @NotBlank

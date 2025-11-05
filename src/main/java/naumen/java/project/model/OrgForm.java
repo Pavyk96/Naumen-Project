@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotBlank;
  * @author Daniil Mezev
  */
 @Entity
-@Table(name = "ref_org_form")
+@Table(name = "org_form")
 public class OrgForm {
 
     @Id

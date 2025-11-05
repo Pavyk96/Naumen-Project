@@ -39,7 +39,7 @@ public class IndustryService {
     /** Создаёт новую индустрию */
     @Transactional
     public Industry create(IndustryRequest request) {
-        Industry toSave = new Industry(request.name());
+        Industry toSave = new Industry(request.id(), request.name());
         return repository.save(toSave);
     }
 
