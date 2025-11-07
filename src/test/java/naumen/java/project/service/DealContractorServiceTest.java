@@ -7,16 +7,14 @@ import naumen.java.project.model.Deal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Assertions;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Тесты для DealContractorService
@@ -41,21 +39,22 @@ class DealContractorServiceTest {
     @Test
     @DisplayName("addContractorToDeal - успешное добавление контрагента")
     void addContractorToDealTest() {
-        DealContractorRequest request = testHelperDeal.createDealContractorRequest(testHelperDeal.getDealId(), testHelperDeal.getContractorId());
+        DealContractorRequest request = testHelperDeal.createDealContractorRequest(
+                testHelperDeal.getDealId(), testHelperDeal.getContractorId());
         Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), new HashSet<>());
         Contractor contractor = testHelperDeal.createContractor(testHelperDeal.getContractorId(), "Контрагент 1");
         Deal savedDeal = testHelperDeal.createDeal(testHelperDeal.getDealId(), Set.of(contractor));
 
-        when(dealService.findByIdWithContractors(testHelperDeal.getDealId())).thenReturn(deal);
-        when(contractorService.findById(testHelperDeal.getContractorId())).thenReturn(contractor);
-        when(dealService.save(deal)).thenReturn(savedDeal);
+        Mockito.when(dealService.findByIdWithContractors(testHelperDeal.getDealId())).thenReturn(deal);
+        Mockito.when(contractorService.findById(testHelperDeal.getContractorId())).thenReturn(contractor);
+        Mockito.when(dealService.save(deal)).thenReturn(savedDeal);
 
         Deal result = dealContractorService.addContractorToDeal(request);
 
-        assertEquals(savedDeal, result);
-        verify(dealService).findByIdWithContractors(testHelperDeal.getDealId());
-        verify(contractorService).findById(testHelperDeal.getContractorId());
-        verify(dealService).save(deal);
+        Assertions.assertEquals(savedDeal, result);
+        Mockito.verify(dealService).findByIdWithContractors(testHelperDeal.getDealId());
+        Mockito.verify(contractorService).findById(testHelperDeal.getContractorId());
+        Mockito.verify(dealService).save(deal);
     }
 
     /**
@@ -64,20 +63,22 @@ class DealContractorServiceTest {
     @Test
     @DisplayName("deleteContractorFromDeal - успешное удаление контрагента")
     void deleteContractorFromDealTest() {
-        DealContractorRequest request = testHelperDeal.createDealContractorRequest(testHelperDeal.getDealId(), testHelperDeal.getContractorId());
+        DealContractorRequest request = testHelperDeal.createDealContractorRequest(
+                testHelperDeal.getDealId(), testHelperDeal.getContractorId());
         Contractor contractor = testHelperDeal.createContractor(testHelperDeal.getContractorId(), "Контрагент 1");
         Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), new HashSet<>(Set.of(contractor)));
         Deal savedDeal = testHelperDeal.createDeal(testHelperDeal.getDealId(), new HashSet<>());
 
-        when(dealService.findByIdWithContractors(testHelperDeal.getDealId())).thenReturn(deal);
-        when(contractorService.findById(testHelperDeal.getContractorId())).thenReturn(contractor);
-        when(dealService.save(deal)).thenReturn(savedDeal);
+        Mockito.when(dealService.findByIdWithContractors(testHelperDeal.getDealId())).thenReturn(deal);
+        Mockito.when(contractorService.findById(testHelperDeal.getContractorId())).thenReturn(contractor);
+        Mockito.when(dealService.save(deal)).thenReturn(savedDeal);
 
         Deal result = dealContractorService.deleteContractorFromDeal(request);
 
-        assertEquals(savedDeal, result);
-        verify(dealService).findByIdWithContractors(testHelperDeal.getDealId());
-        verify(contractorService).findById(testHelperDeal.getContractorId());
-        verify(dealService).save(deal);
+        Assertions.assertEquals(savedDeal, result);
+        Mockito.verify(dealService).findByIdWithContractors(testHelperDeal.getDealId());
+        Mockito.verify(contractorService).findById(testHelperDeal.getContractorId());
+        Mockito.verify(dealService).save(deal);
     }
+
 }

@@ -9,17 +9,17 @@ import naumen.java.project.repository.DealRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Assertions;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
 /**
  * Тесты для DealService
@@ -45,12 +45,12 @@ class DealServiceTest {
     @DisplayName("save - сохранение сделки")
     void saveTest() {
         Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
-        when(repository.save(deal)).thenReturn(deal);
+        Mockito.when(repository.save(deal)).thenReturn(deal);
 
         Deal result = dealService.save(deal);
 
-        assertEquals(deal, result);
-        verify(repository).save(deal);
+        Assertions.assertEquals(deal, result);
+        Mockito.verify(repository).save(deal);
     }
 
     /**
@@ -60,12 +60,12 @@ class DealServiceTest {
     @DisplayName("findById - получение сделки")
     void findByIdTest() {
         Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
-        when(repository.findById(testHelperDeal.getDealId())).thenReturn(Optional.of(deal));
+        Mockito.when(repository.findById(testHelperDeal.getDealId())).thenReturn(Optional.of(deal));
 
         Deal result = dealService.findById(testHelperDeal.getDealId());
 
-        assertEquals(deal, result);
-        verify(repository).findById(testHelperDeal.getDealId());
+        Assertions.assertEquals(deal, result);
+        Mockito.verify(repository).findById(testHelperDeal.getDealId());
     }
 
     /**
@@ -78,13 +78,13 @@ class DealServiceTest {
                 testHelperDeal.createDeal(testHelperDeal.getDealId(), "Сделка 1", DealStatus.DRAFT),
                 testHelperDeal.createDeal(UUID.randomUUID(), "Сделка 2", DealStatus.ACTIVE)
         );
-        when(repository.findAll()).thenReturn(deals);
+        Mockito.when(repository.findAll()).thenReturn(deals);
 
         List<Deal> result = dealService.findAll();
 
-        assertEquals(2, result.size());
-        assertEquals(deals, result);
-        verify(repository).findAll();
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertEquals(deals, result);
+        Mockito.verify(repository).findAll();
     }
 
     /**
@@ -97,15 +97,15 @@ class DealServiceTest {
         Deal newDeal = testHelperDeal.createDeal(null, testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
         Deal savedDeal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
 
-        when(mapper.toEntity(request)).thenReturn(newDeal);
-        when(repository.save(newDeal)).thenReturn(savedDeal);
+        Mockito.when(mapper.toEntity(request)).thenReturn(newDeal);
+        Mockito.when(repository.save(newDeal)).thenReturn(savedDeal);
 
         Deal result = dealService.createOrUpdate(request);
 
-        assertEquals(savedDeal, result);
-        verify(mapper).toEntity(request);
-        verify(repository).save(newDeal);
-        verify(repository, never()).findById(any());
+        Assertions.assertEquals(savedDeal, result);
+        Mockito.verify(mapper).toEntity(request);
+        Mockito.verify(repository).save(newDeal);
+        Mockito.verify(repository, Mockito.never()).findById(ArgumentMatchers.any());
     }
 
     /**
@@ -119,16 +119,16 @@ class DealServiceTest {
         Deal updatedDeal = testHelperDeal.createDeal(testHelperDeal.getDealId(), "Новое описание", DealStatus.ACTIVE);
         Deal savedDeal = testHelperDeal.createDeal(testHelperDeal.getDealId(), "Новое описание", DealStatus.ACTIVE);
 
-        when(repository.findById(testHelperDeal.getDealId())).thenReturn(Optional.of(existingDeal));
-        when(mapper.toEntity(existingDeal, request)).thenReturn(updatedDeal);
-        when(repository.save(updatedDeal)).thenReturn(savedDeal);
+        Mockito.when(repository.findById(testHelperDeal.getDealId())).thenReturn(Optional.of(existingDeal));
+        Mockito.when(mapper.toEntity(existingDeal, request)).thenReturn(updatedDeal);
+        Mockito.when(repository.save(updatedDeal)).thenReturn(savedDeal);
 
         Deal result = dealService.createOrUpdate(request);
 
-        assertEquals(savedDeal, result);
-        verify(repository).findById(testHelperDeal.getDealId());
-        verify(mapper).toEntity(existingDeal, request);
-        verify(repository).save(updatedDeal);
+        Assertions.assertEquals(savedDeal, result);
+        Mockito.verify(repository).findById(testHelperDeal.getDealId());
+        Mockito.verify(mapper).toEntity(existingDeal, request);
+        Mockito.verify(repository).save(updatedDeal);
     }
 
     /**
@@ -138,12 +138,12 @@ class DealServiceTest {
     @DisplayName("findByIdWithContractors - получение сделки с контрагентами")
     void findByIdWithContractorsTest() {
         Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
-        when(repository.findWithContractorsById(testHelperDeal.getDealId())).thenReturn(Optional.of(deal));
+        Mockito.when(repository.findWithContractorsById(testHelperDeal.getDealId())).thenReturn(Optional.of(deal));
 
         Deal result = dealService.findByIdWithContractors(testHelperDeal.getDealId());
 
-        assertEquals(deal, result);
-        verify(repository).findWithContractorsById(testHelperDeal.getDealId());
+        Assertions.assertEquals(deal, result);
+        Mockito.verify(repository).findWithContractorsById(testHelperDeal.getDealId());
     }
 
     /**
@@ -156,13 +156,13 @@ class DealServiceTest {
                 testHelperDeal.createDeal(testHelperDeal.getDealId(), "Сделка 1", DealStatus.DRAFT),
                 testHelperDeal.createDeal(UUID.randomUUID(), "Сделка 2", DealStatus.ACTIVE)
         );
-        when(repository.findAllWithContractors()).thenReturn(deals);
+        Mockito.when(repository.findAllWithContractors()).thenReturn(deals);
 
         List<Deal> result = dealService.findAllWithContractors();
 
-        assertEquals(2, result.size());
-        assertEquals(deals, result);
-        verify(repository).findAllWithContractors();
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertEquals(deals, result);
+        Mockito.verify(repository).findAllWithContractors();
     }
 
     /**
@@ -174,15 +174,15 @@ class DealServiceTest {
         Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), DealStatus.DRAFT);
         Deal savedDeal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
 
-        when(repository.findWithContractorsById(testHelperDeal.getDealId())).thenReturn(Optional.of(deal));
-        when(repository.save(deal)).thenReturn(savedDeal);
+        Mockito.when(repository.findWithContractorsById(testHelperDeal.getDealId())).thenReturn(Optional.of(deal));
+        Mockito.when(repository.save(deal)).thenReturn(savedDeal);
 
         Deal result = dealService.changeStatus(testHelperDeal.getDealId(), testHelperDeal.getDealStatus());
 
-        assertEquals(savedDeal, result);
-        assertEquals(testHelperDeal.getDealStatus(), deal.getStatus());
-        verify(repository).findWithContractorsById(testHelperDeal.getDealId());
-        verify(repository).save(deal);
+        Assertions.assertEquals(savedDeal, result);
+        Assertions.assertEquals(testHelperDeal.getDealStatus(), deal.getStatus());
+        Mockito.verify(repository).findWithContractorsById(testHelperDeal.getDealId());
+        Mockito.verify(repository).save(deal);
     }
 
     /**
@@ -194,13 +194,13 @@ class DealServiceTest {
         Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
         deal.setContractors(new HashSet<>());
 
-        when(repository.existsById(testHelperDeal.getDealId())).thenReturn(true);
-        when(repository.findWithContractorsById(testHelperDeal.getDealId())).thenReturn(Optional.of(deal));
+        Mockito.when(repository.existsById(testHelperDeal.getDealId())).thenReturn(true);
+        Mockito.when(repository.findWithContractorsById(testHelperDeal.getDealId())).thenReturn(Optional.of(deal));
 
         dealService.delete(testHelperDeal.getDealId());
 
-        verify(repository).existsById(testHelperDeal.getDealId());
-        verify(repository).findWithContractorsById(testHelperDeal.getDealId());
-        verify(repository).deleteById(testHelperDeal.getDealId());
+        Mockito.verify(repository).existsById(testHelperDeal.getDealId());
+        Mockito.verify(repository).findWithContractorsById(testHelperDeal.getDealId());
+        Mockito.verify(repository).deleteById(testHelperDeal.getDealId());
     }
 }

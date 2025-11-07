@@ -7,15 +7,15 @@ import naumen.java.project.repository.IndustryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Assertions;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IndustryServiceTest {
@@ -42,37 +42,38 @@ class IndustryServiceTest {
     @Test
     @DisplayName("findAll: вернуть все записи")
     void findAll_ok() {
-        when(repository.findAll()).thenReturn(List.of(entity(ID, NAME)));
+        Mockito.when(repository.findAll()).thenReturn(List.of(entity(ID, NAME)));
 
         List<Industry> all = service.findAll();
 
-        assertEquals(1, all.size());
-        assertEquals(ID, all.get(0).getId());
-        verify(repository).findAll();
+        Assertions.assertEquals(1, all.size());
+        Assertions.assertEquals(ID, all.get(0).getId());
+        Mockito.verify(repository).findAll();
     }
 
     /** Вернуть запись по id (если найдено) */
     @Test
     @DisplayName("findById: найден")
     void findById_found() {
-        when(repository.findById(ID)).thenReturn(Optional.of(entity(ID, NAME)));
+        Mockito.when(repository.findById(ID)).thenReturn(Optional.of(entity(ID, NAME)));
 
         Industry result = service.findById(ID);
 
-        assertEquals(ID, result.getId());
-        assertEquals(NAME, result.getName());
-        verify(repository).findById(ID);
+        Assertions.assertEquals(ID, result.getId());
+        Assertions.assertEquals(NAME, result.getName());
+        Mockito.verify(repository).findById(ID);
     }
 
     /** Вернуть запись по id — иначе ошибка EntityNotFoundException */
     @Test
     @DisplayName("findById: не найден -> EntityNotFoundException")
     void findById_notFound() {
-        when(repository.findById(ID)).thenReturn(Optional.empty());
+        Mockito.when(repository.findById(ID)).thenReturn(Optional.empty());
 
-        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> service.findById(ID));
-        assertTrue(ex.getMessage().contains(String.valueOf(ID)));
-        verify(repository).findById(ID);
+        EntityNotFoundException ex =
+                Assertions.assertThrows(EntityNotFoundException.class, () -> service.findById(ID));
+        Assertions.assertTrue(ex.getMessage().contains(String.valueOf(ID)));
+        Mockito.verify(repository).findById(ID);
     }
 
     /** Обновить запись — если id не совпадает */
@@ -81,24 +82,24 @@ class IndustryServiceTest {
     void update_idMismatch() {
         IndustryRequest body = req(777L, NAME_UPDATED);
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> service.update(ID, body));
-        assertTrue(ex.getMessage().contains("Path id and body id must be equal"));
-        verify(repository, never()).findById(anyLong());
-        verify(repository, never()).save(any());
+        IllegalArgumentException ex =
+                Assertions.assertThrows(IllegalArgumentException.class, () -> service.update(ID, body));
+        Assertions.assertTrue(ex.getMessage().contains("Path id and body id must be equal"));
+        Mockito.verify(repository, Mockito.never()).findById(ArgumentMatchers.anyLong());
+        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     /** Обновить запись — если id не существует */
     @Test
     @DisplayName("update: не найден -> EntityNotFoundException")
     void update_notFound() {
-        when(repository.findById(ID)).thenReturn(Optional.empty());
+        Mockito.when(repository.findById(ID)).thenReturn(Optional.empty());
 
-        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
-                () -> service.update(ID, req(ID, NAME_UPDATED)));
-        assertTrue(ex.getMessage().contains(String.valueOf(ID)));
-        verify(repository).findById(ID);
-        verify(repository, never()).save(any());
+        EntityNotFoundException ex =
+                Assertions.assertThrows(EntityNotFoundException.class, () -> service.update(ID, req(ID, NAME_UPDATED)));
+        Assertions.assertTrue(ex.getMessage().contains(String.valueOf(ID)));
+        Mockito.verify(repository).findById(ID);
+        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     /** Обновить запись */
@@ -106,38 +107,41 @@ class IndustryServiceTest {
     @DisplayName("update: обновляет имя и сохраняет")
     void update_ok() {
         Industry existing = entity(ID, NAME);
-        when(repository.findById(ID)).thenReturn(Optional.of(existing));
-        when(repository.save(any(Industry.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(repository.findById(ID)).thenReturn(Optional.of(existing));
+        Mockito.when(repository.save(ArgumentMatchers.any(Industry.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
         Industry updated = service.update(ID, req(ID, NAME_UPDATED));
 
-        assertEquals(ID, updated.getId());
-        assertEquals(NAME_UPDATED, updated.getName());
-        verify(repository).findById(ID);
-        verify(repository).save(existing);
+        Assertions.assertEquals(ID, updated.getId());
+        Assertions.assertEquals(NAME_UPDATED, updated.getName());
+        Mockito.verify(repository).findById(ID);
+        Mockito.verify(repository).save(existing);
     }
 
     /** Удалить запись — если id не существует */
     @Test
     @DisplayName("delete: не существует -> EntityNotFoundException")
     void delete_notFound() {
-        when(repository.existsById(ID)).thenReturn(false);
+        Mockito.when(repository.existsById(ID)).thenReturn(false);
 
-        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> service.delete(ID));
-        assertTrue(ex.getMessage().contains(String.valueOf(ID)));
-        verify(repository).existsById(ID);
-        verify(repository, never()).deleteById(anyLong());
+        EntityNotFoundException ex =
+                Assertions.assertThrows(EntityNotFoundException.class, () -> service.delete(ID));
+        Assertions.assertTrue(ex.getMessage().contains(String.valueOf(ID)));
+        Mockito.verify(repository).existsById(ID);
+        Mockito.verify(repository, Mockito.never()).deleteById(ArgumentMatchers.anyLong());
     }
 
     /** Удалить запись */
     @Test
     @DisplayName("delete: удаляет по id")
     void delete_ok() {
-        when(repository.existsById(ID)).thenReturn(true);
+        Mockito.when(repository.existsById(ID)).thenReturn(true);
 
         service.delete(ID);
 
-        verify(repository).existsById(ID);
-        verify(repository).deleteById(ID);
+        Mockito.verify(repository).existsById(ID);
+        Mockito.verify(repository).deleteById(ID);
     }
+
 }

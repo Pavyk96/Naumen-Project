@@ -7,16 +7,16 @@ import naumen.java.project.repository.CountryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Assertions;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CountryServiceTest {
@@ -44,68 +44,68 @@ class CountryServiceTest {
     @Test
     @DisplayName("findAll: вернуть все записи")
     void findAll_ok() {
-        when(repository.findAll()).thenReturn(List.of(entity(ID_NORM, NAME)));
+        Mockito.when(repository.findAll()).thenReturn(List.of(entity(ID_NORM, NAME)));
 
         List<Country> all = service.findAll();
 
-        assertEquals(1, all.size());
-        assertEquals(ID_NORM, all.get(0).getId());
-        verify(repository).findAll();
+        Assertions.assertEquals(1, all.size());
+        Assertions.assertEquals(ID_NORM, all.get(0).getId());
+        Mockito.verify(repository).findAll();
     }
 
     /** Вернуть запись по id (если найдено) */
     @Test
     @DisplayName("findById: нормализует id и возвращает страну")
     void findById_ok_withNormalization() {
-        when(repository.findById(ID_NORM)).thenReturn(Optional.of(entity(ID_NORM, NAME)));
+        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.of(entity(ID_NORM, NAME)));
 
         Country c = service.findById(ID_RAW);
 
-        assertEquals(ID_NORM, c.getId());
-        verify(repository).findById(ID_NORM);
+        Assertions.assertEquals(ID_NORM, c.getId());
+        Mockito.verify(repository).findById(ID_NORM);
     }
 
     /** Вернуть запись по id — иначе ошибка EntityNotFoundException */
     @Test
     @DisplayName("findById: не найден -> EntityNotFoundException")
     void findById_notFound() {
-        when(repository.findById(ID_NORM)).thenReturn(Optional.empty());
+        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.empty());
 
-        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+        EntityNotFoundException ex = Assertions.assertThrows(EntityNotFoundException.class,
                 () -> service.findById(ID_RAW));
-        assertTrue(ex.getMessage().contains(ID_NORM));
-        verify(repository).findById(ID_NORM);
+        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
+        Mockito.verify(repository).findById(ID_NORM);
     }
 
     /** Создать запись — если id уже существует */
     @Test
     @DisplayName("create: конфликт id -> IllegalArgumentException")
     void create_conflict() {
-        when(repository.existsById(ID_NORM)).thenReturn(true);
+        Mockito.when(repository.existsById(ID_NORM)).thenReturn(true);
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class,
                 () -> service.create(req(ID_RAW, NAME)));
-        assertTrue(ex.getMessage().contains(ID_NORM));
-        verify(repository).existsById(ID_NORM);
-        verify(repository, never()).save(any());
+        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
+        Mockito.verify(repository).existsById(ID_NORM);
+        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     /** Создать запись */
     @Test
     @DisplayName("create: нормализует id и сохраняет")
     void create_ok() {
-        when(repository.existsById(ID_NORM)).thenReturn(false);
-        when(repository.save(any(Country.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(repository.existsById(ID_NORM)).thenReturn(false);
+        Mockito.when(repository.save(ArgumentMatchers.any(Country.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Country created = service.create(req(ID_RAW, NAME));
 
         ArgumentCaptor<Country> captor = ArgumentCaptor.forClass(Country.class);
-        verify(repository).save(captor.capture());
+        Mockito.verify(repository).save(captor.capture());
         Country toSave = captor.getValue();
 
-        assertEquals(ID_NORM, toSave.getId());
-        assertEquals(NAME, toSave.getName());
-        assertEquals(ID_NORM, created.getId());
+        Assertions.assertEquals(ID_NORM, toSave.getId());
+        Assertions.assertEquals(NAME, toSave.getName());
+        Assertions.assertEquals(ID_NORM, created.getId());
     }
 
     /** Обновить запись — если id не совпадает */
@@ -114,23 +114,23 @@ class CountryServiceTest {
     void update_idMismatch() {
         CountryRequest body = req("us", NAME_UPDATED);
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class,
                 () -> service.update(ID_RAW, body));
-        assertTrue(ex.getMessage().contains("Path id and body id must be equal"));
-        verify(repository, never()).findById(anyString());
+        Assertions.assertTrue(ex.getMessage().contains("Path id and body id must be equal"));
+        Mockito.verify(repository, Mockito.never()).findById(ArgumentMatchers.anyString());
     }
 
     /** Обновить запись — если id не существует */
     @Test
     @DisplayName("update: не найден -> EntityNotFoundException")
     void update_notFound() {
-        when(repository.findById(ID_NORM)).thenReturn(Optional.empty());
+        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.empty());
 
-        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+        EntityNotFoundException ex = Assertions.assertThrows(EntityNotFoundException.class,
                 () -> service.update(ID_RAW, req(ID_RAW, NAME_UPDATED)));
-        assertTrue(ex.getMessage().contains(ID_NORM));
-        verify(repository).findById(ID_NORM);
-        verify(repository, never()).save(any());
+        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
+        Mockito.verify(repository).findById(ID_NORM);
+        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     /** Обновить запись */
@@ -138,40 +138,40 @@ class CountryServiceTest {
     @DisplayName("update: обновляет имя и сохраняет")
     void update_ok() {
         Country existing = entity(ID_NORM, NAME);
-        when(repository.findById(ID_NORM)).thenReturn(Optional.of(existing));
-        when(repository.save(any(Country.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.of(existing));
+        Mockito.when(repository.save(ArgumentMatchers.any(Country.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Country updated = service.update(ID_RAW, req(ID_RAW, NAME_UPDATED));
 
-        assertEquals(ID_NORM, updated.getId());
-        assertEquals(NAME_UPDATED, updated.getName());
-        verify(repository).findById(ID_NORM);
-        verify(repository).save(existing);
+        Assertions.assertEquals(ID_NORM, updated.getId());
+        Assertions.assertEquals(NAME_UPDATED, updated.getName());
+        Mockito.verify(repository).findById(ID_NORM);
+        Mockito.verify(repository).save(existing);
     }
 
     /** Удалить запись — если id не существует */
     @Test
     @DisplayName("delete: не найден -> EntityNotFoundException")
     void delete_notFound() {
-        when(repository.existsById(ID_NORM)).thenReturn(false);
+        Mockito.when(repository.existsById(ID_NORM)).thenReturn(false);
 
-        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+        EntityNotFoundException ex = Assertions.assertThrows(EntityNotFoundException.class,
                 () -> service.delete(ID_RAW));
-        assertTrue(ex.getMessage().contains(ID_NORM));
-        verify(repository).existsById(ID_NORM);
-        verify(repository, never()).deleteById(anyString());
+        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
+        Mockito.verify(repository).existsById(ID_NORM);
+        Mockito.verify(repository, Mockito.never()).deleteById(ArgumentMatchers.anyString());
     }
 
     /** Удалить запись */
     @Test
     @DisplayName("delete: нормализует id и удаляет")
     void delete_ok() {
-        when(repository.existsById(ID_NORM)).thenReturn(true);
+        Mockito.when(repository.existsById(ID_NORM)).thenReturn(true);
 
         service.delete(ID_RAW);
 
-        verify(repository).existsById(ID_NORM);
-        verify(repository).deleteById(ID_NORM);
+        Mockito.verify(repository).existsById(ID_NORM);
+        Mockito.verify(repository).deleteById(ID_NORM);
     }
 
 }
