@@ -11,25 +11,23 @@ import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Country;
 import naumen.java.project.model.Industry;
 import naumen.java.project.model.OrgForm;
+import naumen.java.project.service.ContractorService;
+import naumen.java.project.service.CountryService;
+import naumen.java.project.service.OrgFormService;
+import naumen.java.project.service.IndustryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import naumen.java.project.service.ContractorService;
-import naumen.java.project.service.CountryService;
-import naumen.java.project.service.OrgFormService;
-import naumen.java.project.service.IndustryService;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Тесты для ContractorController
@@ -65,18 +63,24 @@ class ContractorControllerTest {
         Industry industry = new Industry(INDUSTRY_ID, "IT");
         OrgForm orgForm = new OrgForm(ORGFORM_ID, "ООО"); // id строка
 
-        when(countryService.findById(COUNTRY_ID)).thenReturn(country);
-        when(industryService.findById(INDUSTRY_ID)).thenReturn(industry);
-        when(orgFormService.findById(ORGFORM_ID)).thenReturn(orgForm);
+        Mockito.when(countryService.findById(COUNTRY_ID)).thenReturn(country);
+        Mockito.when(industryService.findById(INDUSTRY_ID)).thenReturn(industry);
+        Mockito.when(orgFormService.findById(ORGFORM_ID)).thenReturn(orgForm);
 
-        when(mapper.toResponse(eq(entity), eq(country), eq(industry), eq(orgForm)))
-                .thenAnswer(inv -> new ContractorResponse(
-                        entity.getId(),
-                        entity.getName(),
-                        new CountryResponse(country.getId(), country.getName()),
-                        new IndustryResponse(industry.getId(), industry.getName()),
-                        new OrgFormResponse(orgForm.getId(), orgForm.getName())
-                ));
+        Mockito.when(
+                mapper.toResponse(
+                        ArgumentMatchers.eq(entity),
+                        ArgumentMatchers.eq(country),
+                        ArgumentMatchers.eq(industry),
+                        ArgumentMatchers.eq(orgForm)
+                )
+        ).thenAnswer(inv -> new ContractorResponse(
+                entity.getId(),
+                entity.getName(),
+                new CountryResponse(country.getId(), country.getName()),
+                new IndustryResponse(industry.getId(), industry.getName()),
+                new OrgFormResponse(orgForm.getId(), orgForm.getName())
+        ));
     }
 
     /** Проверяет корректную работу получения списка объектов */
@@ -84,19 +88,24 @@ class ContractorControllerTest {
     @DisplayName("GET /contractor/all")
     void getAll_ok_minimal() throws Exception {
         Contractor entity = contractor(NAME);
-        when(contractorService.findAll()).thenReturn(List.of(entity));
+        Mockito.when(contractorService.findAll()).thenReturn(List.of(entity));
         stubMapping(entity);
 
-        mockMvc.perform(get("/contractor/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(ID))
-                .andExpect(jsonPath("$[0].name").value(NAME))
-                .andExpect(jsonPath("$[0].country.id").value(COUNTRY_ID))
-                .andExpect(jsonPath("$[0].industry.id").value(INDUSTRY_ID.intValue()))
-                .andExpect(jsonPath("$[0].orgForm.id").value(ORGFORM_ID));
+        mockMvc.perform(MockMvcRequestBuilders.get("/contractor/all"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(NAME))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].country.id").value(COUNTRY_ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].industry.id").value(INDUSTRY_ID.intValue()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].orgForm.id").value(ORGFORM_ID));
 
-        verify(contractorService).findAll();
-        verify(mapper, atLeastOnce()).toResponse(any(), any(), any(), any());
+        Mockito.verify(contractorService).findAll();
+        Mockito.verify(mapper, Mockito.atLeastOnce()).toResponse(
+                ArgumentMatchers.any(),
+                ArgumentMatchers.any(),
+                ArgumentMatchers.any(),
+                ArgumentMatchers.any()
+        );
     }
 
     /** Проверяет корректную работу получения объекта по идентификатору */
@@ -104,13 +113,13 @@ class ContractorControllerTest {
     @DisplayName("GET /contractor/{id}")
     void getById_ok_minimal() throws Exception {
         Contractor entity = contractor(NAME);
-        when(contractorService.findById(ID)).thenReturn(entity);
+        Mockito.when(contractorService.findById(ID)).thenReturn(entity);
         stubMapping(entity);
 
-        mockMvc.perform(get("/contractor/{id}", ID))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ID))
-                .andExpect(jsonPath("$.name").value(NAME));
+        mockMvc.perform(MockMvcRequestBuilders.get("/contractor/{id}", ID))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
     }
 
     /** Проверяет корректное создание нового объекта */
@@ -119,15 +128,15 @@ class ContractorControllerTest {
     void create_ok_minimal() throws Exception {
         ContractorRequest req = new ContractorRequest(ID, NAME, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
         Contractor created = contractor(NAME);
-        when(contractorService.create(any(ContractorRequest.class))).thenReturn(created);
+        Mockito.when(contractorService.create(ArgumentMatchers.any(ContractorRequest.class))).thenReturn(created);
         stubMapping(created);
 
-        mockMvc.perform(post("/contractor")
+        mockMvc.perform(MockMvcRequestBuilders.post("/contractor")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ID))
-                .andExpect(jsonPath("$.name").value(NAME));
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
     }
 
     /** Проверяет корректное обновление существующего объекта */
@@ -136,27 +145,27 @@ class ContractorControllerTest {
     void update_ok_checkOnlyChangedField() throws Exception {
         ContractorRequest req = new ContractorRequest(ID, NAME_UPDATED, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
         Contractor updated = contractor(NAME_UPDATED);
-        when(contractorService.update(eq(ID), any(ContractorRequest.class))).thenReturn(updated);
+        Mockito.when(contractorService.update(ArgumentMatchers.eq(ID), ArgumentMatchers.any(ContractorRequest.class)))
+                .thenReturn(updated);
         stubMapping(updated);
 
-        mockMvc.perform(put("/contractor/{id}", ID)
+        mockMvc.perform(MockMvcRequestBuilders.put("/contractor/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ID))
-                .andExpect(jsonPath("$.name").value(NAME_UPDATED));
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME_UPDATED));
     }
 
     /** Проверяет корректное удаление объекта */
     @Test
     @DisplayName("DELETE /contractor/delete/{id}")
     void delete_ok() throws Exception {
-        mockMvc.perform(delete("/contractor/delete/{id}", ID))
-                .andExpect(status().isOk())
-                .andExpect(content().string(""));
+        mockMvc.perform(MockMvcRequestBuilders.delete("/contractor/delete/{id}", ID))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string(""));
 
-        verify(contractorService).delete(ID);
-        verifyNoInteractions(countryService, industryService, orgFormService, mapper);
+        Mockito.verify(contractorService).delete(ID);
+        Mockito.verifyNoInteractions(countryService, industryService, orgFormService, mapper);
     }
-
 }

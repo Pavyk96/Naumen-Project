@@ -5,23 +5,20 @@ import naumen.java.project.dto.OrgFormRequest;
 import naumen.java.project.dto.OrgFormResponse;
 import naumen.java.project.mapper.OrgFormMapper;
 import naumen.java.project.model.OrgForm;
+import naumen.java.project.service.OrgFormService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import naumen.java.project.service.OrgFormService;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Тесты OrgFormController
@@ -49,15 +46,15 @@ class OrgFormControllerTest {
     @DisplayName("GET /org_form/all")
     void getAll_minimal() throws Exception {
         OrgForm e = entity(ID, NAME);
-        when(service.findAll()).thenReturn(List.of(e));
-        when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
+        Mockito.when(service.findAll()).thenReturn(List.of(e));
+        Mockito.when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
 
-        mockMvc.perform(get("/org_form/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(ID))
-                .andExpect(jsonPath("$[0].name").value(NAME));
+        mockMvc.perform(MockMvcRequestBuilders.get("/org_form/all"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(NAME));
 
-        verify(service).findAll();
+        Mockito.verify(service).findAll();
     }
 
     /** Проверяет корректную работу получения объекта по идентификатору */
@@ -65,15 +62,15 @@ class OrgFormControllerTest {
     @DisplayName("GET /org_form/{id}")
     void getById_minimal() throws Exception {
         OrgForm e = entity(ID, NAME);
-        when(service.findById(ID)).thenReturn(e);
-        when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
+        Mockito.when(service.findById(ID)).thenReturn(e);
+        Mockito.when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
 
-        mockMvc.perform(get("/org_form/{id}", ID))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ID))
-                .andExpect(jsonPath("$.name").value(NAME));
+        mockMvc.perform(MockMvcRequestBuilders.get("/org_form/{id}", ID))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
 
-        verify(service).findById(ID);
+        Mockito.verify(service).findById(ID);
     }
 
     /** Проверяет корректное создание нового объекта */
@@ -82,17 +79,17 @@ class OrgFormControllerTest {
     void create_minimal() throws Exception {
         OrgFormRequest req = new OrgFormRequest(ID, NAME);
         OrgForm created = entity(ID, NAME);
-        when(service.create(any(OrgFormRequest.class))).thenReturn(created);
-        when(mapper.toResponse(created)).thenReturn(dto(ID, NAME));
+        Mockito.when(service.create(ArgumentMatchers.any(OrgFormRequest.class))).thenReturn(created);
+        Mockito.when(mapper.toResponse(created)).thenReturn(dto(ID, NAME));
 
-        mockMvc.perform(post("/org_form")
+        mockMvc.perform(MockMvcRequestBuilders.post("/org_form")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ID))
-                .andExpect(jsonPath("$.name").value(NAME));
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
 
-        verify(service).create(any(OrgFormRequest.class));
+        Mockito.verify(service).create(ArgumentMatchers.any(OrgFormRequest.class));
     }
 
     /** Проверяет корректное обновление существующего объекта */
@@ -101,28 +98,31 @@ class OrgFormControllerTest {
     void update_minimal() throws Exception {
         OrgFormRequest req = new OrgFormRequest(ID, NAME_UPDATED);
         OrgForm updated = entity(ID, NAME_UPDATED);
-        when(service.update(eq(ID), any(OrgFormRequest.class))).thenReturn(updated);
-        when(mapper.toResponse(updated)).thenReturn(dto(ID, NAME_UPDATED));
+        Mockito.when(service.update(
+                ArgumentMatchers.eq(ID),
+                ArgumentMatchers.any(OrgFormRequest.class)
+        )).thenReturn(updated);
+        Mockito.when(mapper.toResponse(updated)).thenReturn(dto(ID, NAME_UPDATED));
 
-        mockMvc.perform(put("/org_form/{id}", ID)
+        mockMvc.perform(MockMvcRequestBuilders.put("/org_form/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ID))
-                .andExpect(jsonPath("$.name").value(NAME_UPDATED));
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME_UPDATED));
 
-        verify(service).update(eq(ID), any(OrgFormRequest.class));
+        Mockito.verify(service).update(ArgumentMatchers.eq(ID), ArgumentMatchers.any(OrgFormRequest.class));
     }
 
     /** Проверяет корректное удаление объекта */
     @Test
     @DisplayName("DELETE /org_form/delete/{id}")
     void delete_minimal() throws Exception {
-        mockMvc.perform(delete("/org_form/delete/{id}", ID))
-                .andExpect(status().isOk())
-                .andExpect(content().string(""));
+        mockMvc.perform(MockMvcRequestBuilders.delete("/org_form/delete/{id}", ID))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string(""));
 
-        verify(service).delete(ID);
+        Mockito.verify(service).delete(ID);
     }
 
 }

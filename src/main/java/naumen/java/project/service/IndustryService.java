@@ -39,7 +39,11 @@ public class IndustryService {
     /** Создаёт новую индустрию */
     @Transactional
     public Industry create(IndustryRequest request) {
-        Industry toSave = new Industry(request.id(), request.name());
+        Long id = request.id();
+        if (repository.existsById(id)) {
+            throw new IllegalArgumentException("Industry already exists: " + id);
+        }
+        Industry toSave = new Industry(id, request.name());
         return repository.save(toSave);
     }
 
