@@ -39,6 +39,7 @@ public class ContractorService {
     /**
      * Возвращает контрагента по идентификатору с сделками
      */
+    @Transactional(readOnly = true)
     public Contractor findByIdWithDeals(String id) {
         return repository.findWithDealsById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Contractor not found: " + id));

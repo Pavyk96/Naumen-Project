@@ -1,6 +1,7 @@
 package naumen.java.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import naumen.java.project.validation.ValidUuid;
 
 /**
  * DTO-запрос для создания связи сделка-контрагент
@@ -8,7 +9,7 @@ import jakarta.validation.constraints.NotBlank;
  * @author Daria
  */
 public record DealContractorRequest(
-        @NotBlank String dealId,
+        @NotBlank @ValidUuid String dealId,
         @NotBlank String contractorId
 ) {
 }

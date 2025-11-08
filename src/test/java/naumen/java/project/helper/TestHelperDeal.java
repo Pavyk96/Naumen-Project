@@ -45,9 +45,7 @@ public class TestHelperDeal {
                 dealType,
                 status
         );
-        if (contractors != null) {
-            deal.setContractors(contractors);
-        }
+        deal.setContractors(contractors);
         return deal;
     }
 

@@ -19,4 +19,12 @@ public enum DealType {
     public String getDisplayName() {
         return displayName;
     }
+
+    public static DealType fromString(String type) {
+        try {
+            return valueOf(type.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Such type does not exist");
+        }
+    }
 }

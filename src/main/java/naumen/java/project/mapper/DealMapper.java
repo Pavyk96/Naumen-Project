@@ -120,15 +120,7 @@ public class DealMapper {
 
     /** Парсит DealType */
     private DealType parseDealType(String typeString) {
-        if (typeString == null || typeString.isBlank()) {
-            throw new IllegalArgumentException("type cannot be null or empty");
-        }
-        try {
-            return DealType.valueOf(typeString);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid deal type: " + typeString +
-                    ". Valid values: " + Arrays.toString(DealType.values()));
-        }
+        return DealType.fromString(typeString);
     }
 
     /** Парсит DealStatus */
@@ -136,11 +128,6 @@ public class DealMapper {
         if (statusString == null || statusString.isBlank()) {
             return DealStatus.DRAFT;
         }
-        try {
-            return DealStatus.valueOf(statusString);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid deal status: " + statusString +
-                    ". Valid values: " + Arrays.toString(DealStatus.values()));
-        }
+        return DealStatus.fromString(statusString);
     }
 }

@@ -21,4 +21,12 @@ public enum DealStatus {
     public String getDisplayName() {
         return displayName;
     }
+
+    public static DealStatus fromString(String status) {
+        try {
+            return valueOf(status.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Such status does not exist");
+        }
+    }
 }

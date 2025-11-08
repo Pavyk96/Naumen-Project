@@ -31,8 +31,8 @@ public class DealContractorService {
      */
     @Transactional
     public Deal addContractorToDeal(DealContractorRequest request) {
-        UUID dealId = UUID.fromString(request.dealId());
         String contractorId = request.contractorId();
+        UUID dealId = UUID.fromString(request.dealId());
 
         Deal deal = dealService.findByIdWithContractors(dealId);
         Contractor contractor = contractorService.findById(contractorId);
@@ -41,7 +41,7 @@ public class DealContractorService {
             deal.addContractor(contractor);
             return dealService.save(deal);
         }
-        throw new IllegalStateException("Contractor " + contractorId + " is already exists in deal " + dealId);
+        throw new IllegalStateException("Contractor is already exists in deal");
     }
 
     /**
@@ -49,8 +49,8 @@ public class DealContractorService {
      */
     @Transactional
     public Deal deleteContractorFromDeal(DealContractorRequest request) {
-        UUID dealId = UUID.fromString(request.dealId());
         String contractorId = request.contractorId();
+        UUID dealId = UUID.fromString(request.dealId());
 
         Deal deal = dealService.findByIdWithContractors(dealId);
         Contractor contractor = contractorService.findById(contractorId);
@@ -59,7 +59,7 @@ public class DealContractorService {
             deal.removeContractor(contractor);
             return dealService.save(deal);
         }
-        throw new EntityNotFoundException("Contractor " + contractorId + " not found in deal " + dealId);
+        throw new EntityNotFoundException("Contractor not found in deal");
     }
 
     /**

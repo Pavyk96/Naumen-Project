@@ -1,13 +1,14 @@
 package naumen.java.project.controller;
 
 import jakarta.validation.Valid;
-import naumen.java.project.dto.deal.DealResponse;
 import naumen.java.project.dto.deal.DealRequest;
+import naumen.java.project.dto.deal.DealResponse;
 import naumen.java.project.dto.deal.DealShortResponse;
 import naumen.java.project.mapper.DealMapper;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
 import naumen.java.project.service.DealService;
+import naumen.java.project.validation.ValidUuid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,8 +46,8 @@ public class DealController {
      * Возвращает информацию о сделке
      */
     @GetMapping("/{id}")
-    public ResponseEntity<DealResponse> getById(@PathVariable UUID id) {
-        Deal deal = dealService.findByIdWithContractors(id);
+    public ResponseEntity<DealResponse> getById(@PathVariable @ValidUuid String id) {
+        Deal deal = dealService.findByIdWithContractors(UUID.fromString(id));
         DealResponse dealResponse = dealMapper.tolResponse(deal);
         return ResponseEntity.ok(dealResponse);
     }
@@ -55,8 +56,8 @@ public class DealController {
      * Удаляет сделку
      */
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        dealService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        dealService.delete(UUID.fromString(id));
         return ResponseEntity.ok().build();
     }
 
@@ -74,9 +75,9 @@ public class DealController {
      * Меняет статус сделки
      */
     @PatchMapping("/change/status/{id}/{status}")
-    public ResponseEntity<DealResponse> changeStatus(@PathVariable UUID id,
-                                                     @PathVariable DealStatus status) {
-        Deal deal = dealService.changeStatus(id, status);
+    public ResponseEntity<DealResponse> changeStatus(@PathVariable @ValidUuid String id,
+                                                     @PathVariable String status) {
+        Deal deal = dealService.changeStatus(UUID.fromString(id), DealStatus.fromString(status));
         DealResponse dealResponse = dealMapper.tolResponse(deal);
         return ResponseEntity.ok(dealResponse);
     }

@@ -1,7 +1,6 @@
 package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ValidationException;
 import naumen.java.project.dto.deal.DealRequest;
 import naumen.java.project.mapper.DealMapper;
 import naumen.java.project.model.Deal;
@@ -39,7 +38,7 @@ public class DealService {
     @Transactional(readOnly = true)
     public Deal findById(UUID id) {
         return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Deal not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Deal not found"));
     }
 
     /** Возвращает все сделки */
@@ -52,7 +51,7 @@ public class DealService {
     @Transactional
     public void delete(UUID id) {
         if (!repository.existsById(id)) {
-            throw new EntityNotFoundException("Deal not found: " + id);
+            throw new EntityNotFoundException("Deal not found");
         }
         if (!findByIdWithContractors(id).getContractors().isEmpty()) {
             throw new IllegalStateException("Deal use in contractor");
@@ -62,18 +61,13 @@ public class DealService {
 
     /** Сохраняет сделку (создание или обновление) */
     public Deal createOrUpdate(DealRequest request) {
-        try {
-            if (request.id() != null && !request.id().isBlank()) {
-                // Обновление существующей сделки
-                UUID id = UUID.fromString(request.id());
-                Deal existingDeal = findById(id);
-                return save(mapper.toEntity(existingDeal, request));
-            } else {
-                // Создание новой сделки
-                return save(mapper.toEntity(request));
-            }
-        } catch (IllegalArgumentException e) {
-            throw new ValidationException("Invalid request data: " + e.getMessage());
+        if (request.id() != null) {
+            // Обновление существующей сделки
+            Deal existingDeal = findById(UUID.fromString(request.id()));
+            return save(mapper.toEntity(existingDeal, request));
+        } else {
+            // Создание новой сделки
+            return save(mapper.toEntity(request));
         }
     }
 
@@ -81,7 +75,7 @@ public class DealService {
     @Transactional(readOnly = true)
     public Deal findByIdWithContractors(UUID id) {
         return repository.findWithContractorsById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Deal not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Deal not found"));
     }
 
 
@@ -93,10 +87,9 @@ public class DealService {
 
     /** Меняет статус сделки */
     @Transactional
-    public Deal changeStatus(UUID dealId, DealStatus newStatus) {
-        Deal deal = findByIdWithContractors(dealId);
+    public Deal changeStatus(UUID id, DealStatus newStatus) {
+        Deal deal = findByIdWithContractors(id);
         deal.setStatus(newStatus);
         return repository.save(deal);
     }
-
 }
