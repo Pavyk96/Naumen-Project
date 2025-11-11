@@ -68,7 +68,7 @@ class DealMapperTest {
      */
     @Test
     @DisplayName("tolResponse - детальный DTO с контрагентами")
-    void tolResponseWithContractorsTets() {
+    void tolResponseWithContractorsTest() {
         Set<Contractor> contractors = Set.of(
                 testHelperDeal.createContractor("CTR-001", "Контрагент 1"),
                 testHelperDeal.createContractor("CTR-002", "Контрагент 2")
@@ -113,55 +113,5 @@ class DealMapperTest {
         assertEquals(DealStatus.DRAFT.getDisplayName(), result.get(0).status());
         assertEquals("Сделка 2", result.get(1).description());
         assertEquals(DealStatus.ACTIVE.getDisplayName(), result.get(1).status());
-    }
-
-    /**
-     * Проверяет корректное создание новой сущности из DTO запроса
-     */
-    @Test
-    @DisplayName("toEntity - для новой сущности")
-    void toEntityCreateNewTest() {
-        DealRequest request = testHelperDeal.createDealRequest(null, testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
-        Deal result = dealMapper.toEntity(request);
-
-        assertNull(result.getId());
-        assertEquals(testHelperDeal.getDescription(), result.getDescription());
-        assertEquals(testHelperDeal.getAgreementNumber(), result.getAgreementNumber());
-        assertEquals(testHelperDeal.getAgreementDate(), result.getAgreementDate());
-        assertEquals(testHelperDeal.getOpenedAt(), result.getOpenedAt());
-        assertEquals(testHelperDeal.getClosedAt(), result.getClosedAt());
-        assertEquals(testHelperDeal.getDealType(), result.getType());
-        assertEquals(testHelperDeal.getDealStatus(), result.getStatus());
-    }
-
-    /**
-     * Проверяет корректное создание новой сущности с установкой статуса DRAFT по умолчанию
-     */
-    @Test
-    @DisplayName("toEntity - для новой сущности со статусом по умолчанию")
-    void toEntitySetStatusTest() {
-        DealRequest request = testHelperDeal.createDealRequest(null, testHelperDeal.getDescription(), null);
-        Deal result = dealMapper.toEntity(request);
-        assertEquals(DealStatus.DRAFT, result.getStatus());
-    }
-
-    /**
-     * Проверяет корректное обновление существующей сущности из DTO запроса
-     */
-    @Test
-    @DisplayName("toEntity - обновление сущности")
-    void toEntityUpdateExistingTest() {
-        Deal existingDeal = testHelperDeal.createDeal(testHelperDeal.getDealId(), "Старое описание", DealStatus.DRAFT, new HashSet<>());
-        DealRequest request = testHelperDeal.createDealRequest(testHelperDeal.getDealId().toString(), "Новое описание", DealStatus.WON);
-        Deal result = dealMapper.toEntity(existingDeal, request);
-
-        assertEquals(testHelperDeal.getDealId(), result.getId());
-        assertEquals("Новое описание", result.getDescription());
-        assertEquals(testHelperDeal.getAgreementNumber(), result.getAgreementNumber());
-        assertEquals(testHelperDeal.getAgreementDate(), result.getAgreementDate());
-        assertEquals(testHelperDeal.getOpenedAt(), result.getOpenedAt());
-        assertEquals(testHelperDeal.getClosedAt(), result.getClosedAt());
-        assertEquals(testHelperDeal.getDealType(), result.getType());
-        assertEquals(DealStatus.WON, result.getStatus());
     }
 }

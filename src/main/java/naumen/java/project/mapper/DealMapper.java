@@ -2,18 +2,11 @@ package naumen.java.project.mapper;
 
 import naumen.java.project.dto.contractor.ContractorInfoForDeal;
 import naumen.java.project.dto.deal.DealResponse;
-import naumen.java.project.dto.deal.DealRequest;
 import naumen.java.project.dto.deal.DealShortResponse;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
-import naumen.java.project.model.DealStatus;
-import naumen.java.project.model.DealType;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -55,33 +48,7 @@ public class DealMapper {
                 .toList();
     }
 
-    /** Создаёт новую сущность из DTO запроса */
-    public Deal toEntity(DealRequest request) {
-        return new Deal(
-                null,
-                request.description(),
-                request.agreementNumber(),
-                parseLocalDate(request.agreementDate()),
-                parseLocalDateTime(request.openedAt()),
-                parseLocalDateTime(request.closedAt()),
-                parseDealType(request.type()),
-                parseDealStatus(request.status())
-        );
-    }
-
-    /** Обновляет существующую сущность из DTO запроса */
-    public Deal toEntity(Deal existingDeal, DealRequest request) {
-        existingDeal.setDescription(request.description());
-        existingDeal.setAgreementNumber(request.agreementNumber());
-        existingDeal.setAgreementDate(parseLocalDate(request.agreementDate()));
-        existingDeal.setOpenedAt(parseLocalDateTime(request.openedAt()));
-        existingDeal.setClosedAt(parseLocalDateTime(request.closedAt()));
-        existingDeal.setType(parseDealType(request.type()));
-        existingDeal.setStatus(parseDealStatus(request.status()));
-        return existingDeal;
-    }
-
-    /** Преобразует контрагентов из сделки в DTO */
+    /** Преобразует контрагентов из сделки в DTO-ответ*/
     private List<ContractorInfoForDeal> toListResponse(Set<Contractor> contractors) {
         if (contractors == null) {
             return List.of();
@@ -92,42 +59,5 @@ public class DealMapper {
                         contractor.getName()
                 ))
                 .toList();
-    }
-
-    /** Парсит LocalDate */
-    private LocalDate parseLocalDate(String dateString) {
-        if (dateString == null || dateString.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDate.parse(dateString);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Expected: yyyy-MM-dd, got: " + dateString);
-        }
-    }
-
-    /** Парсит LocalDateTime */
-    private LocalDateTime parseLocalDateTime(String dateTimeString) {
-        if (dateTimeString == null || dateTimeString.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(dateTimeString.replace("Z", ""));
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid datetime format. Expected: yyyy-MM-ddTHH:mm:ss, got: " + dateTimeString);
-        }
-    }
-
-    /** Парсит DealType */
-    private DealType parseDealType(String typeString) {
-        return DealType.fromString(typeString);
-    }
-
-    /** Парсит DealStatus */
-    private DealStatus parseDealStatus(String statusString) {
-        if (statusString == null || statusString.isBlank()) {
-            return DealStatus.DRAFT;
-        }
-        return DealStatus.fromString(statusString);
     }
 }

@@ -108,16 +108,13 @@ class DealServiceTest {
         Deal savedDeal = testHelperDeal.createDeal(testHelperDeal.getDealId(),
                 testHelperDeal.getDescription(), testHelperDeal.getDealStatus());
 
-        Mockito.when(mapper.toEntity(request))
-                .thenReturn(newDeal);
-        Mockito.when(repository.save(newDeal))
+        Mockito.when(repository.save(Mockito.any(Deal.class)))
                 .thenReturn(savedDeal);
 
         Deal result = dealService.createOrUpdate(request);
 
         Assertions.assertEquals(savedDeal, result);
-        Mockito.verify(mapper).toEntity(request);
-        Mockito.verify(repository).save(newDeal);
+        Mockito.verify(repository).save(Mockito.any(Deal.class));
         Mockito.verify(repository, Mockito.never()).findById(ArgumentMatchers.any());
     }
 
@@ -138,17 +135,14 @@ class DealServiceTest {
 
         Mockito.when(repository.findById(testHelperDeal.getDealId()))
                 .thenReturn(Optional.of(existingDeal));
-        Mockito.when(mapper.toEntity(existingDeal, request))
-                .thenReturn(updatedDeal);
-        Mockito.when(repository.save(updatedDeal))
+        Mockito.when(repository.save(Mockito.any(Deal.class)))
                 .thenReturn(savedDeal);
 
         Deal result = dealService.createOrUpdate(request);
 
         Assertions.assertEquals(savedDeal, result);
         Mockito.verify(repository).findById(testHelperDeal.getDealId());
-        Mockito.verify(mapper).toEntity(existingDeal, request);
-        Mockito.verify(repository).save(updatedDeal);
+        Mockito.verify(repository).save(Mockito.any(Deal.class));
     }
 
     /**
@@ -341,8 +335,6 @@ class DealServiceTest {
 
         Assertions.assertEquals("Deal not found", exception.getMessage());
         Mockito.verify(repository).findById(testHelperDeal.getDealId());
-        Mockito.verify(mapper, Mockito.never()).toEntity(Mockito.any(Deal.class),
-                Mockito.any(DealRequest.class));
         Mockito.verify(repository, Mockito.never()).save(Mockito.any(Deal.class));
     }
 
