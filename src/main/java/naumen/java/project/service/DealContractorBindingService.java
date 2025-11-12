@@ -1,11 +1,9 @@
 package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import naumen.java.project.dto.DealContractorRequest;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -15,13 +13,13 @@ import java.util.UUID;
  * @author Daria
  */
 @Service
-public class DealContractorService {
+public class DealContractorBindingService {
 
     private final DealService dealService;
     private final ContractorService contractorService;
 
-    public DealContractorService(DealService dealService,
-                                 ContractorService contractorService) {
+    public DealContractorBindingService(DealService dealService,
+                                        ContractorService contractorService) {
         this.dealService = dealService;
         this.contractorService = contractorService;
     }
@@ -29,11 +27,7 @@ public class DealContractorService {
     /**
      * Добавляет контрагента к сделке
      */
-    @Transactional
-    public Deal addContractorToDeal(DealContractorRequest request) {
-        String contractorId = request.contractorId();
-        UUID dealId = UUID.fromString(request.dealId());
-
+    public Deal addContractorToDeal(String contractorId, UUID dealId) {
         Deal deal = dealService.findByIdWithContractors(dealId);
         Contractor contractor = contractorService.findById(contractorId);
 
@@ -47,11 +41,7 @@ public class DealContractorService {
     /**
      * Удаляет контрагента из сделки
      */
-    @Transactional
-    public Deal deleteContractorFromDeal(DealContractorRequest request) {
-        String contractorId = request.contractorId();
-        UUID dealId = UUID.fromString(request.dealId());
-
+    public Deal deleteContractorFromDeal(String contractorId, UUID dealId) {
         Deal deal = dealService.findByIdWithContractors(dealId);
         Contractor contractor = contractorService.findById(contractorId);
 

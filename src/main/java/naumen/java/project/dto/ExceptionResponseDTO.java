@@ -9,15 +9,21 @@ import java.time.LocalDateTime;
  *
  * @author Daria
  */
-public record ExceptionResponse(
+public record ExceptionResponseDTO(
+        /** HTTP статус код */
         int status,
+        /** Описание ошибки */
         String error,
+        /** Сообщение об ошибке */
         String message,
+        /** Путь запроса */
         String path,
+        /** Время возникновения ошибки */
         LocalDateTime timestamp,
+        /** Код ошибки */
         String errorCode
 ) {
-    public ExceptionResponse(HttpStatus status, String message, String path, String errorCode) {
+    public ExceptionResponseDTO(HttpStatus status, String message, String path, String errorCode) {
         this(
                 status.value(),
                 status.getReasonPhrase(),
@@ -28,7 +34,7 @@ public record ExceptionResponse(
         );
     }
 
-    public ExceptionResponse(HttpStatus status, String message, String path) {
+    public ExceptionResponseDTO(HttpStatus status, String message, String path) {
         this(status, message, path, null);
     }
 }
