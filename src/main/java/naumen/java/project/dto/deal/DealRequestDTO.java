@@ -8,13 +8,21 @@ import naumen.java.project.validation.ValidUuid;
  *
  * @author Daria
  */
-public record DealRequest(
+public record DealRequestDTO(
+        /** Уникальный идентификатор сделки */
         @ValidUuid String id,
+        /** Описание сделки */
         @NotBlank String description,
+        /** Номер договора */
         @NotBlank String agreementNumber,
+        /** Дата договора */
         @NotBlank String agreementDate,
+        /** Дата открытия сделки */
         String openedAt,
+        /** Дата закрытия сделки */
         String closedAt,
+        /** Тип сделки */
         @NotBlank String type,
+        /** Статус сделки */
         String status
 ) { }

@@ -5,7 +5,9 @@ package naumen.java.project.dto.contractor;
  *
  * @author Daria
  */
-public record ContractorInfoForDeal(
+public record ContractorInfoForDealDTO(
+        /** Идентификатор контрагента */
         String id,
+        /** Наименование контрагента */
         String name
 ) { }

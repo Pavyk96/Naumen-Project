@@ -2,8 +2,7 @@ package naumen.java.project.exepction;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import naumen.java.project.dto.ExceptionResponse;
-import org.springframework.context.MessageSourceResolvable;
+import naumen.java.project.dto.ExceptionResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -22,15 +22,15 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     /**
-     * Обрабатка исключений ненайденный сущностей entity
+     * Обработка исключений ненайденных сущностей
      */
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handleEntityNotFound(EntityNotFoundException ex,
-                                                                  HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDTO> handleEntityNotFound(EntityNotFoundException ex,
+                                                                     HttpServletRequest request) {
 
-        ExceptionResponse error = new ExceptionResponse(
+        ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.NOT_FOUND,
-                ex.getMessage(),
+                "Запрашиваемый объект не найден",
                 request.getRequestURI(),
                 "ENTITY_NOT_FOUND"
         );
@@ -39,15 +39,15 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Обрабатка бизнес-логических исключений аргументов
+     * Обработка бизнес-логических исключений аргументов
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ExceptionResponse> handleBadRequestArgument(RuntimeException ex,
-                                                                      HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDTO> handleBadRequestArgument(RuntimeException ex,
+                                                                         HttpServletRequest request) {
 
-        ExceptionResponse error = new ExceptionResponse(
+        ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,
-                ex.getMessage(),
+                "Некорректные параметры запроса",
                 request.getRequestURI(),
                 "INVALID_INPUT"
         );
@@ -56,15 +56,15 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Обрабатка бизнес-логических исключений состояний сущности
+     * Обработка бизнес-логических исключений состояний сущности
      */
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ExceptionResponse> handleBadRequestState(RuntimeException ex,
-                                                                   HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDTO> handleBadRequestState(RuntimeException ex,
+                                                                      HttpServletRequest request) {
 
-        ExceptionResponse error = new ExceptionResponse(
+        ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,
-                ex.getMessage(),
+                "Недопустимое состояние объекта",
                 request.getRequestURI(),
                 "ILLEGAL_STATE"
         );
@@ -73,15 +73,15 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Обрабатка всех неперехваченных исключений
+     * Обработка всех неперехваченных исключений
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ExceptionResponse> handleAllUncaught(Exception ex,
-                                                               HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDTO> handleAllUncaught(Exception ex,
+                                                                  HttpServletRequest request) {
 
-        ExceptionResponse error = new ExceptionResponse(
+        ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Internal server error",
+                "Внутренняя ошибка сервера",
                 request.getRequestURI(),
                 "INTERNAL_ERROR"
         );
@@ -90,11 +90,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Обрабатка исключений валидации входных данных в dto
+     * Обработка исключений валидации входных данных в dto
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ExceptionResponse> handleValidationErrors(MethodArgumentNotValidException ex,
-                                                                    HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDTO> handleValidationErrors(MethodArgumentNotValidException ex,
+                                                                       HttpServletRequest request) {
 
         String errorMessage = ex.getBindingResult()
                 .getFieldErrors()
@@ -103,9 +103,9 @@ public class GlobalExceptionHandler {
                         fieldError.getDefaultMessage())
                 .collect(Collectors.joining("; "));
 
-        ExceptionResponse error = new ExceptionResponse(
+        ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,
-                errorMessage,
+                "Ошибка валидации данных: " + errorMessage,
                 request.getRequestURI(),
                 "VALIDATION_FAILED"
         );
@@ -114,22 +114,22 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Обрабатка исключений валидации параметров методов
+     * Обработка исключений валидации параметров методов
      */
     @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<ExceptionResponse> handleHandlerMethodValidation(HandlerMethodValidationException ex,
-                                                                           HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDTO> handleHandlerMethodValidation(HandlerMethodValidationException ex,
+                                                                              HttpServletRequest request) {
 
         String errorMessage = ex.getParameterValidationResults()
                 .stream()
                 .flatMap(result -> result.getResolvableErrors().stream())
-                .map(MessageSourceResolvable::getDefaultMessage)
+                .map(error -> Objects.toString(error.getDefaultMessage(), "Ошибка валидации"))
                 .findFirst()
-                .orElse("Validation error");
+                .orElse("Ошибка валидации параметров");
 
-        ExceptionResponse error = new ExceptionResponse(
+        ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,
-                errorMessage,
+                "Некорректные параметры метода: " + errorMessage,
                 request.getRequestURI(),
                 "VALIDATION_FAILED"
         );

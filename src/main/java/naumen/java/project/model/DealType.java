@@ -6,8 +6,19 @@ package naumen.java.project.model;
  * @author Daria
  */
 public enum DealType {
+    /**
+     * Кредитная сделка - предоставление заемных средств
+     */
     CREDIT("Кредитная сделка"),
+
+    /**
+     * Дебетовая сделка - операции по списанию средств
+     */
     DEBIT("Дебетовая сделка"),
+
+    /**
+     * Лизинговая сделка - финансовая аренда оборудования/имущества
+     */
     LEASING("Лизинговая сделка");
 
     private final String displayName;
@@ -16,15 +27,11 @@ public enum DealType {
         this.displayName = displayName;
     }
 
+    /**
+     * Возвращает типы в удобном виде
+     */
     public String getDisplayName() {
         return displayName;
     }
 
-    public static DealType fromString(String type) {
-        try {
-            return valueOf(type.toUpperCase().trim());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Such type does not exist");
-        }
-    }
 }

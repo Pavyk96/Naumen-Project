@@ -1,18 +1,12 @@
 package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import naumen.java.project.dto.deal.DealRequest;
-import naumen.java.project.mapper.DealMapper;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
-import naumen.java.project.model.DealType;
 import naumen.java.project.repository.DealRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,132 +16,73 @@ import java.util.UUID;
  * @author Daria
  */
 @Service
+@Transactional
 public class DealService {
 
-    private final DealRepository repository;
-    private final DealMapper mapper;
+    private final DealRepository dealRepository;
 
-    public DealService(DealRepository repository, DealMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
+    public DealService(DealRepository dealRepository) {
+        this.dealRepository = dealRepository;
     }
 
     /** Сохраняет сделку  */
-    @Transactional
     public Deal save(Deal deal) {
-        return repository.save(deal);
+        return dealRepository.save(deal);
     }
 
     /** Возвращает сделку по идентификатору */
-    @Transactional(readOnly = true)
     public Deal findById(UUID id) {
-        return repository.findById(id)
+        return dealRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Deal not found"));
     }
 
     /** Возвращает все сделки */
-    @Transactional(readOnly = true)
     public List<Deal> findAll() {
-        return repository.findAll();
+        return dealRepository.findAll();
     }
 
     /** Удаляет сделку по идентификатору */
-    @Transactional
     public void delete(UUID id) {
-        if (!repository.existsById(id)) {
+        if (!dealRepository.existsById(id)) {
             throw new EntityNotFoundException("Deal not found");
         }
         if (!findByIdWithContractors(id).getContractors().isEmpty()) {
             throw new IllegalStateException("Deal use in contractor");
         }
-        repository.deleteById(id);
+        dealRepository.deleteById(id);
     }
 
     /** Сохраняет сделку (создание или обновление) */
-    public Deal createOrUpdate(DealRequest request) {
-        if (request.id() != null) {
-            // Обновление существующей сделки
-            Deal existingDeal = findById(UUID.fromString(request.id()));
-            existingDeal.setDescription(request.description());
-            existingDeal.setAgreementNumber(request.agreementNumber());
-            existingDeal.setAgreementDate(parseLocalDate(request.agreementDate()));
-            existingDeal.setOpenedAt(parseLocalDateTime(request.openedAt()));
-            existingDeal.setClosedAt(parseLocalDateTime(request.closedAt()));
-            existingDeal.setType(parseDealType(request.type()));
-            existingDeal.setStatus(parseDealStatus(request.status()));
-            return save(existingDeal);
-        } else {
-            // Создание новой сделки
-            Deal deal = new Deal(
-                    null,
-                    request.description(),
-                    request.agreementNumber(),
-                    parseLocalDate(request.agreementDate()),
-                    parseLocalDateTime(request.openedAt()),
-                    parseLocalDateTime(request.closedAt()),
-                    parseDealType(request.type()),
-                    parseDealStatus(request.status())
-            );
-            return save(deal);
+    public Deal createOrUpdate(Deal deal) {
+        if (deal.getId() != null && !existsById(deal.getId())) {
+            throw new EntityNotFoundException("Deal not found");
         }
+        return save(deal);
     }
 
     /** Возвращает сделку по идентификатору с контрагентами*/
-    @Transactional(readOnly = true)
     public Deal findByIdWithContractors(UUID id) {
-        return repository.findWithContractorsById(id)
+        return dealRepository.findWithContractorsById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Deal not found"));
     }
 
 
     /** Возвращает все сделки с контрагентами*/
-    @Transactional(readOnly = true)
     public List<Deal> findAllWithContractors() {
-        return repository.findAllWithContractors();
+        return dealRepository.findAllWithContractors();
     }
 
     /** Меняет статус сделки */
-    @Transactional
     public Deal changeStatus(UUID id, DealStatus newStatus) {
         Deal deal = findByIdWithContractors(id);
         deal.setStatus(newStatus);
-        return repository.save(deal);
+        return dealRepository.save(deal);
     }
 
-    /** Парсит LocalDate */
-    private LocalDate parseLocalDate(String dateString) {
-        if (dateString == null || dateString.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDate.parse(dateString);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Expected: yyyy-MM-dd, got: " + dateString);
-        }
-    }
-
-    /** Парсит LocalDateTime */
-    private LocalDateTime parseLocalDateTime(String dateTimeString) {
-        if (dateTimeString == null || dateTimeString.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(dateTimeString.replace("Z", ""));
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid datetime format. Expected: yyyy-MM-ddTHH:mm:ss, got: " + dateTimeString);
-        }
-    }
-
-    /** Парсит DealType */
-    private DealType parseDealType(String typeString) {
-        return DealType.fromString(typeString);
-    }
-
-    /** Парсит DealStatus */
-    private DealStatus parseDealStatus(String statusString) {
-        if (statusString == null || statusString.isBlank()) {
-            return DealStatus.DRAFT;
-        }
-        return DealStatus.fromString(statusString);
+    /**
+     * Проверяет существование сделки по ID
+     */
+    public boolean existsById(UUID id) {
+        return dealRepository.existsById(id);
     }
 }

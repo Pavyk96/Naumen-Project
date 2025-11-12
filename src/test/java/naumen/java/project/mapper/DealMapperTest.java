@@ -1,10 +1,9 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.contractor.ContractorInfoForDeal;
-import naumen.java.project.dto.deal.DealRequest;
-import naumen.java.project.dto.deal.DealResponse;
-import naumen.java.project.dto.deal.DealShortResponse;
-import naumen.java.project.helper.TestHelperDeal;
+import naumen.java.project.dto.contractor.ContractorInfoForDealDTO;
+import naumen.java.project.dto.deal.DealResponseDTO;
+import naumen.java.project.dto.deal.DealShortResponseDTO;
+import naumen.java.project.factory.DealTestFactory;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
@@ -28,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class DealMapperTest {
 
     private final DealMapper dealMapper = new DealMapper();
-    private final TestHelperDeal testHelperDeal = new TestHelperDeal();
+    private final DealTestFactory dealTestFactory = new DealTestFactory();
 
     /**
      * Проверяет корректную конвертацию сущности в короткий DTO
@@ -36,11 +35,11 @@ class DealMapperTest {
     @Test
     @DisplayName("toResponse - короткий DTO")
     void toResponseShortTest() {
-        Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus(), null);
-        DealShortResponse result = dealMapper.toResponse(deal);
+        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), dealTestFactory.getDescription(), dealTestFactory.getDealStatus(), null);
+        DealShortResponseDTO result = dealMapper.toShortResponse(deal);
 
-        assertEquals(testHelperDeal.getDealId(), result.id());
-        assertEquals(testHelperDeal.getDealStatus(), result.status());
+        assertEquals(dealTestFactory.getDealId(), result.id());
+        assertEquals(dealTestFactory.getDealStatus(), result.status());
     }
 
     /**
@@ -49,17 +48,17 @@ class DealMapperTest {
     @Test
     @DisplayName("tolResponse - детальный DTO без контрагентов")
     void tolResponseWithoutContractorsTest() {
-        Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus(), new HashSet<>());
-        DealResponse result = dealMapper.tolResponse(deal);
+        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), dealTestFactory.getDescription(), dealTestFactory.getDealStatus(), new HashSet<>());
+        DealResponseDTO result = dealMapper.toDetailResponse(deal);
 
-        assertEquals(testHelperDeal.getDealId(), result.id());
-        assertEquals(testHelperDeal.getDescription(), result.description());
-        assertEquals(testHelperDeal.getAgreementNumber(), result.agreementNumber());
-        assertEquals(testHelperDeal.getAgreementDate().toString(), result.agreementDate());
-        assertEquals(testHelperDeal.getOpenedAt().toString(), result.openedAt());
-        assertEquals(testHelperDeal.getClosedAt().toString(), result.closedAt());
-        assertEquals(testHelperDeal.getDealType().getDisplayName(), result.type());
-        assertEquals(testHelperDeal.getDealStatus().getDisplayName(), result.status());
+        assertEquals(dealTestFactory.getDealId(), result.id());
+        assertEquals(dealTestFactory.getDescription(), result.description());
+        assertEquals(dealTestFactory.getAgreementNumber(), result.agreementNumber());
+        assertEquals(dealTestFactory.getAgreementDate().toString(), result.agreementDate());
+        assertEquals(dealTestFactory.getOpenedAt().toString(), result.openedAt());
+        assertEquals(dealTestFactory.getClosedAt().toString(), result.closedAt());
+        assertEquals(dealTestFactory.getDealType().getDisplayName(), result.type());
+        assertEquals(dealTestFactory.getDealStatus().getDisplayName(), result.status());
         assertEquals(0, result.contractors().size());
     }
 
@@ -70,25 +69,25 @@ class DealMapperTest {
     @DisplayName("tolResponse - детальный DTO с контрагентами")
     void tolResponseWithContractorsTest() {
         Set<Contractor> contractors = Set.of(
-                testHelperDeal.createContractor("CTR-001", "Контрагент 1"),
-                testHelperDeal.createContractor("CTR-002", "Контрагент 2")
+                dealTestFactory.createContractor("CTR-001", "Контрагент 1"),
+                dealTestFactory.createContractor("CTR-002", "Контрагент 2")
         );
-        Deal deal = testHelperDeal.createDeal(testHelperDeal.getDealId(), testHelperDeal.getDescription(), testHelperDeal.getDealStatus(), contractors);
-        DealResponse result = dealMapper.tolResponse(deal);
+        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), dealTestFactory.getDescription(), dealTestFactory.getDealStatus(), contractors);
+        DealResponseDTO result = dealMapper.toDetailResponse(deal);
 
-        assertEquals(testHelperDeal.getDealId(), result.id());
-        assertEquals(testHelperDeal.getDescription(), result.description());
-        assertEquals(testHelperDeal.getAgreementNumber(), result.agreementNumber());
-        assertEquals(testHelperDeal.getDealType().getDisplayName(), result.type());
-        assertEquals(testHelperDeal.getDealStatus().getDisplayName(), result.status());
+        assertEquals(dealTestFactory.getDealId(), result.id());
+        assertEquals(dealTestFactory.getDescription(), result.description());
+        assertEquals(dealTestFactory.getAgreementNumber(), result.agreementNumber());
+        assertEquals(dealTestFactory.getDealType().getDisplayName(), result.type());
+        assertEquals(dealTestFactory.getDealStatus().getDisplayName(), result.status());
         assertEquals(2, result.contractors().size());
 
         List<String> contractorIds = result.contractors().stream()
-                .map(ContractorInfoForDeal::id)
+                .map(ContractorInfoForDealDTO::id)
                 .sorted()
                 .toList();
         List<String> contractorNames = result.contractors().stream()
-                .map(ContractorInfoForDeal::name)
+                .map(ContractorInfoForDealDTO::name)
                 .sorted()
                 .toList();
 
@@ -103,10 +102,10 @@ class DealMapperTest {
     @DisplayName("toListResponse - список сущностей")
     void toListResponseTest() {
         List<Deal> deals = List.of(
-                testHelperDeal.createDeal(testHelperDeal.getDealId(), "Сделка 1", DealStatus.DRAFT, new HashSet<>()),
-                testHelperDeal.createDeal(UUID.randomUUID(), "Сделка 2", DealStatus.ACTIVE, new HashSet<>())
+                dealTestFactory.createDeal(dealTestFactory.getDealId(), "Сделка 1", DealStatus.DRAFT, new HashSet<>()),
+                dealTestFactory.createDeal(UUID.randomUUID(), "Сделка 2", DealStatus.ACTIVE, new HashSet<>())
         );
-        List<DealResponse> result = dealMapper.toListResponse(deals);
+        List<DealResponseDTO> result = dealMapper.toListResponse(deals);
 
         assertEquals(2, result.size());
         assertEquals("Сделка 1", result.get(0).description());

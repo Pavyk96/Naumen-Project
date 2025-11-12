@@ -8,8 +8,9 @@ import naumen.java.project.validation.ValidUuid;
  *
  * @author Daria
  */
-public record DealContractorRequest(
+public record DealContractorRequestDTO(
+        /** Идентификатор сделки */
         @NotBlank @ValidUuid String dealId,
+        /** Идентификатор контрагента */
         @NotBlank String contractorId
-) {
-}
+) { }

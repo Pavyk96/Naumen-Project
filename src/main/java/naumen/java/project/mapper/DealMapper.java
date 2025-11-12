@@ -1,8 +1,8 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.contractor.ContractorInfoForDeal;
-import naumen.java.project.dto.deal.DealResponse;
-import naumen.java.project.dto.deal.DealShortResponse;
+import naumen.java.project.dto.contractor.ContractorInfoForDealDTO;
+import naumen.java.project.dto.deal.DealResponseDTO;
+import naumen.java.project.dto.deal.DealShortResponseDTO;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
 import org.springframework.stereotype.Component;
@@ -19,16 +19,16 @@ import java.util.Set;
 public class DealMapper {
 
     /** Конвертация сущности в короткий DTO-ответ */
-    public DealShortResponse toResponse(Deal entity) {
-        return new DealShortResponse(
+    public DealShortResponseDTO toShortResponse(Deal entity) {
+        return new DealShortResponseDTO(
                 entity.getId(),
                 entity.getStatus()
         );
     }
 
     /** Конвертация сущности в детальный DTO-ответ */
-    public DealResponse tolResponse(Deal entity) {
-        return new DealResponse(
+    public DealResponseDTO toDetailResponse(Deal entity) {
+        return new DealResponseDTO(
                 entity.getId(),
                 entity.getDescription(),
                 entity.getAgreementNumber(),
@@ -42,19 +42,19 @@ public class DealMapper {
     }
 
     /** Конвертация списка сущностей в список DTO-ответов */
-    public List<DealResponse> toListResponse(List<Deal> entities) {
+    public List<DealResponseDTO> toListResponse(List<Deal> entities) {
         return entities.stream()
-                .map(this::tolResponse)
+                .map(this::toDetailResponse)
                 .toList();
     }
 
     /** Преобразует контрагентов из сделки в DTO-ответ*/
-    private List<ContractorInfoForDeal> toListResponse(Set<Contractor> contractors) {
+    private List<ContractorInfoForDealDTO> toListResponse(Set<Contractor> contractors) {
         if (contractors == null) {
             return List.of();
         }
         return contractors.stream()
-                .map(contractor -> new ContractorInfoForDeal(
+                .map(contractor -> new ContractorInfoForDealDTO(
                         contractor.getId(),
                         contractor.getName()
                 ))

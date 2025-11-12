@@ -1,17 +1,22 @@
 package naumen.java.project.controller;
 
 import jakarta.validation.Valid;
-import naumen.java.project.dto.deal.DealRequest;
-import naumen.java.project.dto.deal.DealResponse;
-import naumen.java.project.dto.deal.DealShortResponse;
+import naumen.java.project.dto.deal.DealRequestDTO;
+import naumen.java.project.dto.deal.DealResponseDTO;
+import naumen.java.project.dto.deal.DealShortResponseDTO;
 import naumen.java.project.mapper.DealMapper;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
+import naumen.java.project.model.DealType;
 import naumen.java.project.service.DealService;
 import naumen.java.project.validation.ValidUuid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,26 +40,41 @@ public class DealController {
     /**
      * Создаёт/обновляет сделки
      */
+    @Transactional
     @PostMapping("/save")
-    public ResponseEntity<DealShortResponse> save(@Valid @RequestBody DealRequest request) {
-        Deal deal = dealService.createOrUpdate(request);
-        DealShortResponse dealShortResponse = dealMapper.toResponse(deal);
-        return ResponseEntity.ok(dealShortResponse);
+    public ResponseEntity<DealShortResponseDTO> save(@Valid @RequestBody DealRequestDTO request) {
+        Deal deal = new Deal();
+        if (request.id() != null) {
+            deal.setId(UUID.fromString(request.id()));
+        }
+        deal.setDescription(request.description());
+        deal.setAgreementNumber(request.agreementNumber());
+        deal.setAgreementDate(parseLocalDate(request.agreementDate()));
+        deal.setOpenedAt(parseLocalDateTime(request.openedAt()));
+        deal.setClosedAt(parseLocalDateTime(request.closedAt()));
+        deal.setType(DealType.valueOf(request.type()));
+        deal.setStatus(parseDealStatus(request.status()));
+
+        Deal dealSave = dealService.createOrUpdate(deal);
+        DealShortResponseDTO dealShortResponseDTO = dealMapper.toShortResponse(dealSave);
+        return ResponseEntity.ok(dealShortResponseDTO);
     }
 
     /**
      * Возвращает информацию о сделке
      */
+    @Transactional(readOnly = true)
     @GetMapping("/{id}")
-    public ResponseEntity<DealResponse> getById(@PathVariable @ValidUuid String id) {
+    public ResponseEntity<DealResponseDTO> getById(@PathVariable @ValidUuid String id) {
         Deal deal = dealService.findByIdWithContractors(UUID.fromString(id));
-        DealResponse dealResponse = dealMapper.tolResponse(deal);
-        return ResponseEntity.ok(dealResponse);
+        DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
+        return ResponseEntity.ok(dealResponseDTO);
     }
 
     /**
      * Удаляет сделку
      */
+    @Transactional
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         dealService.delete(UUID.fromString(id));
@@ -64,22 +84,56 @@ public class DealController {
     /**
      * Возвращает все сделки
      */
+    @Transactional(readOnly = true)
     @GetMapping("/all")
-    public ResponseEntity<List<DealResponse>> findAll() {
+    public ResponseEntity<List<DealResponseDTO>> findAll() {
         List<Deal> dealList = dealService.findAllWithContractors();
-        List<DealResponse> dealResponseList = dealMapper.toListResponse(dealList);
-        return ResponseEntity.ok(dealResponseList);
+        List<DealResponseDTO> dealResponseDTOList = dealMapper.toListResponse(dealList);
+        return ResponseEntity.ok(dealResponseDTOList);
     }
 
     /**
      * Меняет статус сделки
      */
+    @Transactional
     @PatchMapping("/change/status/{id}/{status}")
-    public ResponseEntity<DealResponse> changeStatus(@PathVariable @ValidUuid String id,
-                                                     @PathVariable String status) {
-        Deal deal = dealService.changeStatus(UUID.fromString(id), DealStatus.fromString(status));
-        DealResponse dealResponse = dealMapper.tolResponse(deal);
-        return ResponseEntity.ok(dealResponse);
+    public ResponseEntity<DealResponseDTO> changeStatus(@PathVariable @ValidUuid String id,
+                                                        @PathVariable String status) {
+        Deal deal = dealService.changeStatus(UUID.fromString(id), DealStatus.valueOf(status));
+        DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
+        return ResponseEntity.ok(dealResponseDTO);
+    }
+
+    /** Парсит LocalDate */
+    private LocalDate parseLocalDate(String dateString) {
+        if (dateString == null || dateString.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(dateString);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date format. Expected: yyyy-MM-dd, got: " + dateString);
+        }
+    }
+
+    /** Парсит LocalDateTime */
+    private LocalDateTime parseLocalDateTime(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(dateTimeString.replace("Z", ""));
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid datetime format. Expected: yyyy-MM-ddTHH:mm:ss, got: " + dateTimeString);
+        }
+    }
+
+    /** Парсит DealStatus */
+    private DealStatus parseDealStatus(String statusString) {
+        if (statusString == null || statusString.isBlank()) {
+            return DealStatus.DRAFT;
+        }
+        return DealStatus.valueOf(statusString);
     }
 
 }
