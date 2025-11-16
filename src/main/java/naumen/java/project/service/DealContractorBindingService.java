@@ -1,6 +1,7 @@
 package naumen.java.project.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class DealContractorBindingService {
     /**
      * Добавляет контрагента к сделке
      */
-    public Deal addContractorToDeal(String contractorId, UUID dealId) {
+    public Deal addContractorToDeal(String contractorId, UUID dealId) throws ResourceNotFoundException {
         Deal deal = dealService.findByIdWithContractors(dealId);
         Contractor contractor = contractorService.findById(contractorId);
 
@@ -41,7 +42,7 @@ public class DealContractorBindingService {
     /**
      * Удаляет контрагента из сделки
      */
-    public Deal deleteContractorFromDeal(String contractorId, UUID dealId) {
+    public Deal deleteContractorFromDeal(String contractorId, UUID dealId) throws ResourceNotFoundException {
         Deal deal = dealService.findByIdWithContractors(dealId);
         Contractor contractor = contractorService.findById(contractorId);
 

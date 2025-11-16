@@ -1,11 +1,11 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.OrgFormResponse;
+import naumen.java.project.dto.OrgFormResponseDTO;
 import naumen.java.project.model.OrgForm;
 import org.springframework.stereotype.Component;
 
 /**
- * Маппер для преобразования между сущностью OrgForm и её DTO.
+ * Маппер для конвертации правовой формы из сущности в ДТО
  *
  * @author Daniil Mezev
  */
@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 public class OrgFormMapper {
 
     /** Конвертация сущности в DTO-ответ */
-    public OrgFormResponse toResponse(OrgForm entity) {
-        return new OrgFormResponse(entity.getId(), entity.getName());
+    public OrgFormResponseDTO toResponse(OrgForm entity) {
+        return new OrgFormResponseDTO(entity.getId(), entity.getName());
     }
 
 }

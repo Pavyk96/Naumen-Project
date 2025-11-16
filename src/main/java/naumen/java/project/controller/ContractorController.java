@@ -1,24 +1,28 @@
 package naumen.java.project.controller;
 
 import jakarta.validation.Valid;
-import naumen.java.project.dto.contractor.ContractorRequest;
-import naumen.java.project.dto.contractor.ContractorResponse;
+import naumen.java.project.dto.contractor.ContractorRequestDTO;
+import naumen.java.project.dto.contractor.ContractorResponseDTO;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.ContractorMapper;
 import naumen.java.project.model.Contractor;
+import naumen.java.project.service.ContractorService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
 import naumen.java.project.model.Country;
 import naumen.java.project.model.Industry;
 import naumen.java.project.model.OrgForm;
-import naumen.java.project.service.ContractorService;
 import naumen.java.project.service.CountryService;
-import naumen.java.project.service.OrgFormService;
 import naumen.java.project.service.IndustryService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import naumen.java.project.service.OrgFormService;
+
 
 import java.util.List;
 
 /**
- * REST-контроллер для управления контрагентами (маппинг DTO вынесен в контроллер)
+ * REST-контроллер для управления контрагентами
  *
  * @author Daniil Mezev
  */
@@ -27,68 +31,97 @@ import java.util.List;
 public class ContractorController {
 
     private final ContractorService contractorService;
+    private final ContractorMapper contractorMapper;
+
     private final CountryService countryService;
     private final IndustryService industryService;
     private final OrgFormService orgFormService;
-    private final ContractorMapper mapper;
 
     public ContractorController(ContractorService contractorService,
+                                ContractorMapper contractorMapper,
                                 CountryService countryService,
                                 IndustryService industryService,
-                                OrgFormService orgFormService,
-                                ContractorMapper mapper) {
+                                OrgFormService orgFormService) {
         this.contractorService = contractorService;
+        this.contractorMapper = contractorMapper;
         this.countryService = countryService;
         this.industryService = industryService;
         this.orgFormService = orgFormService;
-        this.mapper = mapper;
     }
 
     /** Возвращает всех контрагентов */
     @GetMapping("/all")
-    public ResponseEntity<List<ContractorResponse>> getAll() {
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<ContractorResponseDTO>> getAll() {
         List<Contractor> entities = contractorService.findAll();
-        List<ContractorResponse> dtos = entities.stream()
-                .map(this::mapToResponse)
+        List<ContractorResponseDTO> dtos = entities.stream()
+                .map(contractorMapper::toResponse)
                 .toList();
         return ResponseEntity.ok(dtos);
     }
 
     /** Возвращает контрагента по идентификатору */
     @GetMapping("/{id}")
-    public ResponseEntity<ContractorResponse> getById(@PathVariable String id) {
+    @Transactional(readOnly = true)
+    public ResponseEntity<ContractorResponseDTO> getById(@PathVariable String id) throws ResourceNotFoundException {
         Contractor entity = contractorService.findById(id);
-        return ResponseEntity.ok(mapToResponse(entity));
+        return ResponseEntity.ok(contractorMapper.toResponse(entity));
     }
 
     /** Создаёт нового контрагента */
     @PostMapping
-    public ResponseEntity<ContractorResponse> create(@Valid @RequestBody ContractorRequest request) {
-        Contractor created = contractorService.create(request);
-        return ResponseEntity.ok(mapToResponse(created));
+    @Transactional
+    public ResponseEntity<ContractorResponseDTO> create(
+            @Valid @RequestBody ContractorRequestDTO req
+    ) throws ResourceNotFoundException {
+
+        Country country = countryService.findById(req.countryId());
+        Industry industry = industryService.findById(req.industryId());
+        OrgForm orgForm = orgFormService.findById(req.orgFormId());
+
+        Contractor toCreate = new Contractor(
+                req.id(),
+                req.name(),
+                country,
+                industry,
+                orgForm
+        );
+
+        Contractor created = contractorService.create(toCreate);
+
+        return ResponseEntity.ok(contractorMapper.toResponse(created));
     }
 
     /** Обновляет существующего контрагента */
     @PutMapping("/{id}")
-    public ResponseEntity<ContractorResponse> update(@PathVariable String id,
-                                                     @Valid @RequestBody ContractorRequest request) {
-        Contractor updated = contractorService.update(id, request);
-        return ResponseEntity.ok(mapToResponse(updated));
+    @Transactional
+    public ResponseEntity<ContractorResponseDTO> update(@PathVariable String id,
+                                                        @Valid @RequestBody ContractorRequestDTO req)
+            throws ResourceNotFoundException {
+        Country country = countryService.findById(req.countryId());
+        Industry industry = industryService.findById(req.industryId());
+        OrgForm orgForm = orgFormService.findById(req.orgFormId());
+
+        Contractor toUpdate = new Contractor(
+                req.id(),
+                req.name(),
+                country,
+                industry,
+                orgForm
+        );
+
+        Contractor updated = contractorService.update(id, toUpdate);
+
+        return ResponseEntity.ok(contractorMapper.toResponse(updated));
     }
+
 
     /** Удаляет контрагента */
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<Void> delete(@PathVariable String id) throws ResourceNotFoundException {
         contractorService.delete(id);
         return ResponseEntity.ok().build();
-    }
-
-    /** Хелпер для сборки ContractorResponse из сущности */
-    private ContractorResponse mapToResponse(Contractor entity) {
-        Country country = countryService.findById(entity.getCountryId());
-        Industry industry = industryService.findById(entity.getIndustryId());
-        OrgForm orgForm = orgFormService.findById(entity.getOrgFormId());
-        return mapper.toResponse(entity, country, industry, orgForm);
     }
 
 }

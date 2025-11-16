@@ -2,9 +2,6 @@ package naumen.java.project.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,30 +22,29 @@ public class Contractor {
     @Column(name = "name", length = 256, nullable = false)
     private String name;
 
-    @NotBlank
-    @Size(min = 2, max = 3)
-    @Column(name = "country_id", length = 3, nullable = false)
-    private String countryId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "country_id", nullable = false)
+    private Country country;
 
-    @NotNull
-    @Column(name = "industry_id", nullable = false)
-    private Long industryId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "industry_id", nullable = false)
+    private Industry industry;
 
-    @NotNull
-    @Column(name = "org_form_id", nullable = false)
-    private String orgFormId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "org_form_id", nullable = false)
+    private OrgForm orgForm;
 
     @ManyToMany(mappedBy = "contractors", fetch = FetchType.LAZY)
     private Set<Deal> deals = new HashSet<>();
 
-    public Contractor() { }
+    protected Contractor() { }
 
-    public Contractor(String id, String name, String countryId, Long industryId, String orgFormId) {
+    public Contractor(String id, String name, Country country, Industry industry, OrgForm orgForm) {
         this.id = id;
         this.name = name;
-        this.countryId = countryId;
-        this.industryId = industryId;
-        this.orgFormId = orgFormId;
+        this.country = country;
+        this.industry = industry;
+        this.orgForm = orgForm;
     }
 
     /** Возвращает идентификатор */
@@ -63,23 +59,23 @@ public class Contractor {
     /** Устанавливает название */
     public void setName(String name) { this.name = name; }
 
-    /** Возвращает идентификатор страны */
-    public String getCountryId() { return countryId; }
+    /** Возвращает страну */
+    public Country getCountry() { return country; }
 
-    /** Устанавливает идентификатор страны */
-    public void setCountryId(String countryId) { this.countryId = countryId; }
+    /** Устанавливает страну */
+    public void setCountry(Country country) { this.country = country; }
 
-    /** Возвращает идентификатор отрасли */
-    public Long getIndustryId() { return industryId; }
+    /** Возвращает индустрию */
+    public Industry getIndustry() { return industry; }
 
-    /** Устанавливает идентификатор отрасли */
-    public void setIndustryId(Long industryId) { this.industryId = industryId; }
+    /** Устанавливает индустрию */
+    public void setIndustry(Industry industry) { this.industry = industry; }
 
-    /** Возвращает идентификатор формы организации */
-    public String getOrgFormId() { return orgFormId; }
+    /** Возвращает ОПФ */
+    public OrgForm getOrgForm() { return orgForm; }
 
-    /** Устанавливает идентификатор формы организации */
-    public void setOrgFormId(String orgFormId) { this.orgFormId = orgFormId; }
+    /** Устанавливает ОПФ */
+    public void setOrgForm(OrgForm orgForm) { this.orgForm = orgForm; }
 
     /** Возвращает сделки */
     public Set<Deal> getDeals() { return deals; }

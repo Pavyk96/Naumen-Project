@@ -7,15 +7,21 @@ import naumen.java.project.model.OrgForm;
  *
  * @author Daniil Mezev
  */
-public record OrgFormResponse(
+public record OrgFormResponseDTO(
+        /**
+         * Id страны
+         */
         String id,
+        /**
+         * Название правовой формы
+         */
         String name
 ) {
 
     /**
      * Создает DTO из сущности OrgForm
      */
-    public OrgFormResponse(OrgForm entity) {
+    public OrgFormResponseDTO(OrgForm entity) {
         this(entity.getId(), entity.getName());
     }
 

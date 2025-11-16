@@ -7,15 +7,21 @@ import naumen.java.project.model.Industry;
  *
  * @author Daniil Mezev
  */
-public record IndustryResponse(
+public record IndustryResponseDTO(
+        /**
+         * Id страны
+         */
         Long id,
+        /**
+         * Название индустрии
+         */
         String name
 ) {
 
     /**
      * Создает DTO из сущности Industry
      */
-    public IndustryResponse(Industry entity) {
+    public IndustryResponseDTO(Industry entity) {
         this(entity.getId(), entity.getName());
     }
 

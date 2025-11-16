@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import naumen.java.project.dto.deal.DealRequestDTO;
 import naumen.java.project.dto.deal.DealResponseDTO;
 import naumen.java.project.dto.deal.DealShortResponseDTO;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.DealMapper;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
@@ -42,7 +43,8 @@ public class DealController {
      */
     @Transactional
     @PostMapping("/save")
-    public ResponseEntity<DealShortResponseDTO> save(@Valid @RequestBody DealRequestDTO request) {
+    public ResponseEntity<DealShortResponseDTO> save(@Valid @RequestBody DealRequestDTO request)
+            throws ResourceNotFoundException {
         Deal deal = new Deal();
         if (request.id() != null) {
             deal.setId(UUID.fromString(request.id()));
@@ -65,7 +67,8 @@ public class DealController {
      */
     @Transactional(readOnly = true)
     @GetMapping("/{id}")
-    public ResponseEntity<DealResponseDTO> getById(@PathVariable @ValidUuid String id) {
+    public ResponseEntity<DealResponseDTO> getById(@PathVariable @ValidUuid String id)
+            throws ResourceNotFoundException {
         Deal deal = dealService.findByIdWithContractors(UUID.fromString(id));
         DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
         return ResponseEntity.ok(dealResponseDTO);
@@ -76,7 +79,7 @@ public class DealController {
      */
     @Transactional
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) throws ResourceNotFoundException {
         dealService.delete(UUID.fromString(id));
         return ResponseEntity.ok().build();
     }
@@ -98,7 +101,7 @@ public class DealController {
     @Transactional
     @PatchMapping("/change/status/{id}/{status}")
     public ResponseEntity<DealResponseDTO> changeStatus(@PathVariable @ValidUuid String id,
-                                                        @PathVariable String status) {
+                                                        @PathVariable String status) throws ResourceNotFoundException {
         Deal deal = dealService.changeStatus(UUID.fromString(id), DealStatus.valueOf(status));
         DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
         return ResponseEntity.ok(dealResponseDTO);

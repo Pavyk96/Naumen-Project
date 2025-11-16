@@ -1,11 +1,11 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.CountryResponse;
+import naumen.java.project.dto.CountryResponseDTO;
 import naumen.java.project.model.Country;
 import org.springframework.stereotype.Component;
 
 /**
- * CountryMapper
+ * Маппер для конвертации страны из сущности в ДТО
  *
  * @author Daniil Mezev
  */
@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 public class CountryMapper {
 
     /** Конвертация сущности в DTO-ответ */
-    public CountryResponse toResponse(Country entity) {
-        return new CountryResponse(entity.getId(), entity.getName());
+    public CountryResponseDTO toResponse(Country entity) {
+        return new CountryResponseDTO(entity.getId(), entity.getName());
     }
 
 }

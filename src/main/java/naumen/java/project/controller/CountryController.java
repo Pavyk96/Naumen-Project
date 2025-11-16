@@ -1,11 +1,13 @@
 package naumen.java.project.controller;
 
 import jakarta.validation.Valid;
-import naumen.java.project.dto.CountryRequest;
-import naumen.java.project.dto.CountryResponse;
+import naumen.java.project.dto.CountryRequestDTO;
+import naumen.java.project.dto.CountryResponseDTO;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.CountryMapper;
 import naumen.java.project.model.Country;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import naumen.java.project.service.CountryService;
 
@@ -30,39 +32,52 @@ public class CountryController {
 
     /** Возвращает список всех стран из справочника. */
     @GetMapping("/all")
-    public ResponseEntity<List<CountryResponse>> getAll() {
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<CountryResponseDTO>> getAll() {
         List<Country> entities = service.findAll();
-        List<CountryResponse> responses = entities.stream()
+        List<CountryResponseDTO> responses = entities.stream()
                 .map(mapper::toResponse)
                 .toList();
         return ResponseEntity.ok(responses);
     }
 
     /** Возвращает страну по её идентификатору. */
+    @Transactional(readOnly = true)
     @GetMapping("/{id}")
-    public ResponseEntity<CountryResponse> getById(@PathVariable String id) {
+    public ResponseEntity<CountryResponseDTO> getById(@PathVariable String id)
+            throws ResourceNotFoundException {
         Country entity = service.findById(id);
         return ResponseEntity.ok(mapper.toResponse(entity));
     }
 
     /** Создаёт новую запись страны в справочнике. */
     @PostMapping
-    public ResponseEntity<CountryResponse> create(@Valid @RequestBody CountryRequest req) {
-        Country created = service.create(req);
+    @Transactional
+    public ResponseEntity<CountryResponseDTO> create(@Valid @RequestBody CountryRequestDTO req) {
+        Country toCreate = new Country(req.id(), req.name());
+
+        Country created = service.create(toCreate);
         return ResponseEntity.ok(mapper.toResponse(created));
     }
 
     /** Обновляет существующую запись страны по идентификатору. */
     @PutMapping("/{id}")
-    public ResponseEntity<CountryResponse> update(@PathVariable String id,
-                                                  @Valid @RequestBody CountryRequest req) {
-        Country updated = service.update(id, req);
+    @Transactional
+    public ResponseEntity<CountryResponseDTO> update(@PathVariable String id,
+                                                     @Valid @RequestBody CountryRequestDTO req)
+            throws ResourceNotFoundException {
+        Country toUpdate = new Country(req.id(), req.name());
+
+        Country updated = service.update(id, toUpdate);
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
+
     /** Удаляет запись страны по идентификатору. */
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    @Transactional
+    public ResponseEntity<Void> delete(@PathVariable String id)
+            throws ResourceNotFoundException {
         service.delete(id);
         return ResponseEntity.ok().build();
     }

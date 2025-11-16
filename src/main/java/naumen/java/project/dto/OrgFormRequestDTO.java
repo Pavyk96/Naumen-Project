@@ -1,14 +1,19 @@
 package naumen.java.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 /**
  * DTO-запрос для создания или обновления организационно-правовой формы
  *
  * @author Daniil Mezev
  */
-public record OrgFormRequest(
+public record OrgFormRequestDTO(
+        /**
+         * Id страны
+         */
         @NotBlank String id,
+        /**
+         * Название правовой формы
+         */
         @NotBlank String name
 ) { }

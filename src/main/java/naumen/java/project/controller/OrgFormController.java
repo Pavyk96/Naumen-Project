@@ -1,14 +1,15 @@
 package naumen.java.project.controller;
 
 import jakarta.validation.Valid;
-import naumen.java.project.dto.OrgFormRequest;
-import naumen.java.project.dto.OrgFormResponse;
+import naumen.java.project.dto.OrgFormRequestDTO;
+import naumen.java.project.dto.OrgFormResponseDTO;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.OrgFormMapper;
 import naumen.java.project.model.OrgForm;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import naumen.java.project.service.OrgFormService;
-
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,9 +32,10 @@ public class OrgFormController {
 
     /** Возвращает список всех организационно-правовых форм из справочника */
     @GetMapping("/all")
-    public ResponseEntity<List<OrgFormResponse>> getAll() {
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<OrgFormResponseDTO>> getAll() {
         List<OrgForm> entities = service.findAll();
-        List<OrgFormResponse> responses = entities.stream()
+        List<OrgFormResponseDTO> responses = entities.stream()
                 .map(mapper::toResponse)
                 .toList();
         return ResponseEntity.ok(responses);
@@ -41,31 +43,41 @@ public class OrgFormController {
 
     /** Возвращает организационно-правовую форму по её идентификатору */
     @GetMapping("/{id}")
-    public ResponseEntity<OrgFormResponse> getById(@PathVariable String id) {
+    @Transactional(readOnly = true)
+    public ResponseEntity<OrgFormResponseDTO> getById(@PathVariable String id)
+            throws ResourceNotFoundException {
         OrgForm entity = service.findById(id);
         return ResponseEntity.ok(mapper.toResponse(entity));
     }
 
     /** Создаёт новую запись организационно-правовой формы в справочнике */
     @PostMapping
-    public ResponseEntity<OrgFormResponse> create(@Valid @RequestBody OrgFormRequest req) {
-        OrgForm created = service.create(req);
+    @Transactional
+    public ResponseEntity<OrgFormResponseDTO> create(@Valid @RequestBody OrgFormRequestDTO req) {
+        OrgForm toCreate = new OrgForm(req.id(), req.name());
+
+        OrgForm created = service.create(toCreate);
         return ResponseEntity.ok(mapper.toResponse(created));
     }
 
     /** Обновляет существующую запись организационно-правовой формы по идентификатору */
     @PutMapping("/{id}")
-    public ResponseEntity<OrgFormResponse> update(@PathVariable String id,
-                                                  @Valid @RequestBody OrgFormRequest req) {
-        OrgForm updated = service.update(id, req);
+    @Transactional
+    public ResponseEntity<OrgFormResponseDTO> update(@PathVariable String id,
+                                                     @Valid @RequestBody OrgFormRequestDTO req)
+            throws ResourceNotFoundException {
+        OrgForm toUpdate = new OrgForm(req.id(), req.name());
+
+        OrgForm updated = service.update(id, toUpdate);
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
     /** Удаляет запись организационно-правовой формы по идентификатору */
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    @Transactional
+    public ResponseEntity<Void> delete(@PathVariable String id)
+            throws ResourceNotFoundException {
         service.delete(id);
         return ResponseEntity.ok().build();
     }
-
 }

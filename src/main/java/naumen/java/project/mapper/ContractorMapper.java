@@ -1,17 +1,14 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.contractor.ContractorResponse;
-import naumen.java.project.dto.CountryResponse;
-import naumen.java.project.dto.IndustryResponse;
-import naumen.java.project.dto.OrgFormResponse;
+import naumen.java.project.dto.contractor.ContractorResponseDTO;
+import naumen.java.project.dto.CountryResponseDTO;
+import naumen.java.project.dto.IndustryResponseDTO;
+import naumen.java.project.dto.OrgFormResponseDTO;
 import naumen.java.project.model.Contractor;
-import naumen.java.project.model.Country;
-import naumen.java.project.model.Industry;
-import naumen.java.project.model.OrgForm;
 import org.springframework.stereotype.Component;
 
 /**
- * ContractorMapper
+ * Маппер для конвертации контрагента из сущности в ДТО
  *
  * @author Daniil Mezev
  */
@@ -19,14 +16,13 @@ import org.springframework.stereotype.Component;
 public class ContractorMapper {
 
     /** Конвертация сущности в DTO-ответ */
-    public ContractorResponse toResponse(Contractor entity, Country country, Industry industry, OrgForm orgForm) {
-        return new ContractorResponse(
-                entity.getId(),
-                entity.getName(),
-                new CountryResponse(country),
-                new IndustryResponse(industry),
-                new OrgFormResponse(orgForm)
+    public ContractorResponseDTO toResponse(Contractor e) {
+        return new ContractorResponseDTO(
+                e.getId(),
+                e.getName(),
+                new CountryResponseDTO(e.getCountry()),
+                new IndustryResponseDTO(e.getIndustry()),
+                new OrgFormResponseDTO(e.getOrgForm())
         );
     }
-
 }
