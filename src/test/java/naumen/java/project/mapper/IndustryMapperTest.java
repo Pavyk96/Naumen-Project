@@ -1,11 +1,15 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.IndustryResponse;
+import naumen.java.project.dto.IndustryResponseDTO;
 import naumen.java.project.model.Industry;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+/**
+ * Тесты IndustryMapper
+ *
+ * @author Daniil Mezev
+ */
 class IndustryMapperTest {
 
     /**
@@ -16,10 +20,10 @@ class IndustryMapperTest {
         IndustryMapper mapper = new IndustryMapper();
         Industry entity = new Industry(10L, "IT");
 
-        IndustryResponse dto = mapper.toResponse(entity);
+        IndustryResponseDTO dto = mapper.toResponse(entity);
 
-        assertEquals(10L, dto.id());
-        assertEquals("IT", dto.name());
+        Assertions.assertEquals(10L, dto.id());
+        Assertions.assertEquals("IT", dto.name());
     }
 
 }

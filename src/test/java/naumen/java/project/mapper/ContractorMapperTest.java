@@ -1,14 +1,18 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.contractor.ContractorResponse;
+import naumen.java.project.dto.contractor.ContractorResponseDTO;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Country;
 import naumen.java.project.model.Industry;
 import naumen.java.project.model.OrgForm;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+/**
+ * Тесты ContractorMapper
+ *
+ * @author Daniil Mezev
+ */
 class ContractorMapperTest {
     /**
      * Конвертация в ДТО респонс
@@ -16,22 +20,22 @@ class ContractorMapperTest {
     @Test
     void toResponse_mapsFields() {
         ContractorMapper mapper = new ContractorMapper();
-
-        Contractor contractor = new Contractor("c-1", "Acme LLC", "RU", 10L, "OOO");
         Country country = new Country("RU", "Russia");
         Industry industry = new Industry(10L, "IT");
         OrgForm orgForm = new OrgForm("OOO", "ООО");
 
-        ContractorResponse dto = mapper.toResponse(contractor, country, industry, orgForm);
+        Contractor contractor = new Contractor("c-1", "Acme LLC", country, industry, orgForm);
 
-        assertEquals("c-1", dto.id());
-        assertEquals("Acme LLC", dto.name());
-        assertEquals("RU", dto.country().id());
-        assertEquals("Russia", dto.country().name());
-        assertEquals(10L, dto.industry().id());
-        assertEquals("IT", dto.industry().name());
-        assertEquals("OOO", dto.orgForm().id());
-        assertEquals("ООО", dto.orgForm().name());
+        ContractorResponseDTO dto = mapper.toResponse(contractor);
+
+        Assertions.assertEquals("c-1", dto.id());
+        Assertions.assertEquals("Acme LLC", dto.name());
+        Assertions.assertEquals("RU", dto.country().id());
+        Assertions.assertEquals("Russia", dto.country().name());
+        Assertions.assertEquals(10L, dto.industry().id());
+        Assertions.assertEquals("IT", dto.industry().name());
+        Assertions.assertEquals("OOO", dto.orgForm().id());
+        Assertions.assertEquals("ООО", dto.orgForm().name());
     }
 
 }

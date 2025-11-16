@@ -1,14 +1,10 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
-import naumen.java.project.dto.OrgFormRequest;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.OrgForm;
 import naumen.java.project.repository.OrgFormRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Assertions;
-import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,153 +12,174 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
- * Тестирование OrgFormService
+ * Тесты OrgFormService
  *
  * @author Daniil Mezev
  */
 @ExtendWith(MockitoExtension.class)
 class OrgFormServiceTest {
 
-    @Mock
-    private OrgFormRepository repository;
-
-    @InjectMocks
-    private OrgFormService service;
-
     private static final String ID_RAW = " ooo ";
     private static final String ID_NORM = "OOO";
     private static final String NAME = "Общество с ограниченной ответственностью";
     private static final String NAME_UPDATED = "ООО (обновлено)";
 
-    private OrgForm entity(String id, String name) { return new OrgForm(id, name); }
-    private OrgFormRequest req(String id, String name) { return new OrgFormRequest(id, name); }
+    private final OrgFormRepository repositoryMock;
+    private final OrgFormService service;
 
-    /** Создать, затем получить все — вернуть 2 записи */
-    @Test
-    void create_then_list_orgForms_returnsTwo() {
-        OrgForm existing = entity("PJSC", "Публичное акционерное общество");
-        OrgForm created  = entity(ID_NORM, NAME);
-
-        Mockito.when(repository.existsById(ID_NORM)).thenReturn(false);
-        Mockito.when(repository.save(ArgumentMatchers.any(OrgForm.class))).thenReturn(created);
-        Mockito.when(repository.findAll()).thenReturn(List.of(existing, created));
-
-        OrgForm saved = service.create(req(ID_RAW, NAME));
-        List<OrgForm> all = service.findAll();
-
-        Assertions.assertEquals(ID_NORM, saved.getId());
-        Assertions.assertEquals(2, all.size());
-        Assertions.assertTrue(all.stream().anyMatch(of -> ID_NORM.equals(of.getId())));
-
-        Mockito.verify(repository).existsById(ID_NORM);
-        Mockito.verify(repository).save(ArgumentMatchers.any(OrgForm.class));
-        Mockito.verify(repository).findAll();
+    public OrgFormServiceTest(@Mock OrgFormRepository repositoryMock) {
+        this.repositoryMock = repositoryMock;
+        this.service = new OrgFormService(repositoryMock);
     }
 
-    /** Создать — id существует */
-    @Test
-    void create_orgForm_whenIdExists_throws() {
-        Mockito.when(repository.existsById(ID_NORM)).thenReturn(true);
+    private OrgForm entity(String id, String name) {
+        return new OrgForm(id, name);
+    }
 
-        IllegalArgumentException ex = Assertions.assertThrows(
+    /** Возвращает список форм */
+    @Test
+    void testFindAllReturnsAllOrgForms() {
+        OrgForm of1 = entity("PJSC", "Публичное акционерное общество");
+        OrgForm of2 = entity(ID_NORM, NAME);
+
+        Mockito.when(repositoryMock.findAll()).thenReturn(List.of(of1, of2));
+
+        List<OrgForm> all = service.findAll();
+
+        assertEquals(2, all.size());
+        assertSame(of1, all.get(0));
+        assertSame(of2, all.get(1));
+    }
+
+    /** Возвращает форму с нормализацией id */
+    @Test
+    void testFindByIdReturnsOrgFormWithNormalization() throws ResourceNotFoundException {
+        OrgForm stored = entity(ID_NORM, NAME);
+        Mockito.when(repositoryMock.findById(ID_NORM)).thenReturn(Optional.of(stored));
+
+        OrgForm result = service.findById(ID_RAW);
+
+        assertSame(stored, result);
+        assertEquals(ID_NORM, result.getId());
+        assertEquals(NAME, result.getName());
+        Mockito.verify(repositoryMock).findById(ID_NORM);
+    }
+
+    /** Кидает ResourceNotFoundException, если формы нет */
+    @Test
+    void testFindByIdThrowsIfNotFound() {
+        Mockito.when(repositoryMock.findById(ID_NORM)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.findById(ID_RAW));
+
+        Mockito.verify(repositoryMock).findById(ID_NORM);
+    }
+
+    /** Нормализует id и сохраняет форму */
+    @Test
+    void testCreateNormalizesIdAndSavesOrgForm() {
+        OrgForm toCreate = entity(ID_RAW, NAME);
+        Mockito.when(repositoryMock.existsById(ID_NORM)).thenReturn(false);
+        Mockito.when(repositoryMock.save(toCreate)).thenReturn(toCreate);
+
+        OrgForm result = service.create(toCreate);
+
+        assertSame(toCreate, result);
+        assertEquals(ID_NORM, toCreate.getId());
+        Mockito.verify(repositoryMock).existsById(ID_NORM);
+        Mockito.verify(repositoryMock).save(toCreate);
+    }
+
+    /** Кидает IllegalArgumentException, если форма уже существует */
+    @Test
+    void testCreateThrowsIfOrgFormAlreadyExists() {
+        OrgForm toCreate = entity(ID_RAW, NAME);
+        Mockito.when(repositoryMock.existsById(ID_NORM)).thenReturn(true);
+
+        IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.create(req(ID_RAW, NAME))
+                () -> service.create(toCreate)
         );
 
-        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
-        Mockito.verify(repository).existsById(ID_NORM);
-        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
-    }
-
-    /** Вернуть все — одну запись */
-    @Test
-    void list_orgForms_returnsAll() {
-        Mockito.when(repository.findAll()).thenReturn(List.of(entity(ID_NORM, NAME)));
-
-        List<OrgForm> all = service.findAll();
-
-        Assertions.assertEquals(1, all.size());
-        Assertions.assertEquals(ID_NORM, all.get(0).getId());
-        Mockito.verify(repository).findAll();
-    }
-
-    /** Найти по id — с нормализацией найдено */
-    @Test
-    void get_orgFormById_found_withNormalization() {
-        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.of(entity(ID_NORM, NAME)));
-
-        OrgForm of = service.findById(ID_RAW);
-
-        Assertions.assertEquals(ID_NORM, of.getId());
-        Mockito.verify(repository).findById(ID_NORM);
-    }
-
-    /** Найти по id — не найдено */
-    @Test
-    void get_orgFormById_notFound() {
-        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.empty());
-
-        EntityNotFoundException ex =
-                Assertions.assertThrows(EntityNotFoundException.class, () -> service.findById(ID_RAW));
-
-        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
-        Mockito.verify(repository).findById(ID_NORM);
-    }
-
-    /** Обновить — не найдено */
-    @Test
-    void update_orgForm_notFound() {
-        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.empty());
-
-        EntityNotFoundException ex = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> service.update(ID_RAW, req(ID_RAW, NAME_UPDATED))
+        assertEquals(
+                "Организационно-правовая форма с id = " + ID_NORM + " уже существует",
+                ex.getMessage()
         );
-
-        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
-        Mockito.verify(repository).findById(ID_NORM);
-        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
+        Mockito.verify(repositoryMock).existsById(ID_NORM);
+        Mockito.verify(repositoryMock, Mockito.never()).save(Mockito.any());
     }
 
-    /** Обновить — изменить name и сохранить ту же сущность */
+    /** Обновляет name и сохраняет ту же сущность */
     @Test
-    void update_orgForm_updatesNameAndSavesSameInstance() {
+    void testUpdateUpdatesNameAndSavesSameInstance() throws ResourceNotFoundException {
         OrgForm existing = entity(ID_NORM, NAME);
-        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.of(existing));
-        Mockito.when(repository.save(ArgumentMatchers.any(OrgForm.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+        OrgForm body = entity(ID_RAW, NAME_UPDATED);
 
-        OrgForm updated = service.update(ID_RAW, req(ID_RAW, NAME_UPDATED));
+        Mockito.when(repositoryMock.findById(ID_NORM)).thenReturn(Optional.of(existing));
+        Mockito.when(repositoryMock.save(existing)).thenReturn(existing);
 
-        Mockito.verify(repository).save(existing);
-        Assertions.assertEquals(ID_NORM, existing.getId());
-        Assertions.assertEquals(NAME_UPDATED, existing.getName());
-        Assertions.assertSame(existing, updated);
+        OrgForm result = service.update(ID_RAW, body);
+
+        assertSame(existing, result);
+        assertEquals(ID_NORM, existing.getId());
+        assertEquals(NAME_UPDATED, existing.getName());
+        Mockito.verify(repositoryMock).findById(ID_NORM);
+        Mockito.verify(repositoryMock).save(existing);
     }
 
-    /** Удалить — не существующую запись */
+    /** Кидает IllegalArgumentException, если id в пути и теле разные */
     @Test
-    void delete_orgForm_notFound() {
-        Mockito.when(repository.existsById(ID_NORM)).thenReturn(false);
+    void testUpdateThrowsIfIdsDoNotMatch() {
+        OrgForm body = entity("pjsc", NAME_UPDATED);
 
-        EntityNotFoundException ex =
-                Assertions.assertThrows(EntityNotFoundException.class, () -> service.delete(ID_RAW));
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.update(ID_RAW, body)
+        );
 
-        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
-        Mockito.verify(repository).existsById(ID_NORM);
-        Mockito.verify(repository, Mockito.never()).deleteById(ArgumentMatchers.anyString());
+        assertEquals(
+                "Идентификатор в пути (" +
+                        ID_NORM + ") не совпадает с идентификатором в теле запроса (PJSC)",
+                ex.getMessage()
+        );
+        Mockito.verify(repositoryMock, Mockito.never()).findById(Mockito.anyString());
+        Mockito.verify(repositoryMock, Mockito.never()).save(Mockito.any());
     }
 
-    /** Удалить — существующую запись */
+    /** Кидает ResourceNotFoundException, если формы нет */
     @Test
-    void delete_orgForm_ok() {
-        Mockito.when(repository.existsById(ID_NORM)).thenReturn(true);
+    void testUpdateThrowsIfOrgFormNotFound() {
+        OrgForm body = entity(ID_RAW, NAME_UPDATED);
+        Mockito.when(repositoryMock.findById(ID_NORM)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.update(ID_RAW, body));
+
+        Mockito.verify(repositoryMock).findById(ID_NORM);
+        Mockito.verify(repositoryMock, Mockito.never()).save(Mockito.any());
+    }
+
+    /** Удаляет форму, если она существует */
+    @Test
+    void testDeleteDeletesOrgFormIfExists() throws ResourceNotFoundException {
+        Mockito.when(repositoryMock.existsById(ID_NORM)).thenReturn(true);
 
         service.delete(ID_RAW);
 
-        Mockito.verify(repository).existsById(ID_NORM);
-        Mockito.verify(repository).deleteById(ID_NORM);
+        Mockito.verify(repositoryMock).existsById(ID_NORM);
+        Mockito.verify(repositoryMock).deleteById(ID_NORM);
     }
 
+    /** Кидает ResourceNotFoundException, если формы нет */
+    @Test
+    void testDeleteThrowsIfOrgFormNotFound() {
+        Mockito.when(repositoryMock.existsById(ID_NORM)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> service.delete(ID_RAW));
+
+        Mockito.verify(repositoryMock).existsById(ID_NORM);
+        Mockito.verify(repositoryMock, Mockito.never()).deleteById(Mockito.anyString());
+    }
 }

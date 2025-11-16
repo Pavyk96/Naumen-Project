@@ -1,14 +1,10 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
-import naumen.java.project.dto.CountryRequest;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Country;
 import naumen.java.project.repository.CountryRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Assertions;
-import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,154 +12,170 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
- * Тестирование CountryService
+ * Юнит-тесты для CountryService
  *
  * @author Daniil Mezev
  */
 @ExtendWith(MockitoExtension.class)
 class CountryServiceTest {
 
-    @Mock
-    private CountryRepository repository;
-
-    @InjectMocks
-    private CountryService service;
-
     private static final String ID_RAW = " ru ";
     private static final String ID_NORM = "RU";
     private static final String NAME = "Russia";
     private static final String NAME_UPDATED = "Russian Federation";
 
+    private final CountryRepository repositoryMock;
+    private final CountryService service;
+
+    public CountryServiceTest(@Mock CountryRepository repositoryMock) {
+        this.repositoryMock = repositoryMock;
+        this.service = new CountryService(repositoryMock);
+    }
+
+    /** Хелпер для создания страны */
     private Country entity(String id, String name) {
         return new Country(id, name);
     }
 
-    private CountryRequest req(String id, String name) {
-        return new CountryRequest(id, name);
+    /** Возвращает список стран */
+    @Test
+    void testFindAllReturnsAllCountries() {
+        Country c1 = entity("US", "United States");
+        Country c2 = entity(ID_NORM, NAME);
+        Mockito.when(repositoryMock.findAll()).thenReturn(List.of(c1, c2));
+
+        List<Country> result = service.findAll();
+
+        assertEquals(2, result.size());
+        assertSame(c1, result.get(0));
+        assertSame(c2, result.get(1));
     }
 
-    /** Создание и возврат записей */
+    /** Нормализует id и возвращает страну */
     @Test
-    void create_then_list_countries_returnsTwo() {
-        Country existing = entity("US", "United States");
-        Country created = entity(ID_NORM, NAME);
+    void testFindByIdReturnsCountryWithNormalization() throws ResourceNotFoundException {
+        Country stored = entity(ID_NORM, NAME);
+        Mockito.when(repositoryMock.findById(ID_NORM)).thenReturn(Optional.of(stored));
 
-        Mockito.when(repository.existsById(ID_NORM)).thenReturn(false);
-        Mockito.when(repository.save(ArgumentMatchers.any(Country.class)))
-                .thenReturn(created);
-        Mockito.when(repository.findAll())
-                .thenReturn(List.of(existing, created));
+        Country result = service.findById(ID_RAW);
 
-        Country saved = service.create(req(ID_RAW, NAME));
-        List<Country> all = service.findAll();
-
-        Assertions.assertEquals(ID_NORM, saved.getId());
-        Assertions.assertEquals(2, all.size());
-        Assertions.assertTrue(all.stream().anyMatch(c -> ID_NORM.equals(c.getId())));
-
-        Mockito.verify(repository).existsById(ID_NORM);
-        Mockito.verify(repository).save(ArgumentMatchers.any(Country.class));
-        Mockito.verify(repository).findAll();
+        assertSame(stored, result);
+        assertEquals(ID_NORM, result.getId());
+        assertEquals(NAME, result.getName());
+        Mockito.verify(repositoryMock).findById(ID_NORM);
     }
 
-    /** Создать запись — id уже существует */
+    /** Кидает ResourceNotFoundException, если страна не найдена */
     @Test
-    void create_country_whenIdExists_throws() {
-        Mockito.when(repository.existsById(ID_NORM)).thenReturn(true);
+    void testFindByIdThrowsIfCountryNotFound() {
+        Mockito.when(repositoryMock.findById(ID_NORM)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = Assertions.assertThrows(
+        assertThrows(ResourceNotFoundException.class, () -> service.findById(ID_RAW));
+
+        Mockito.verify(repositoryMock).findById(ID_NORM);
+    }
+
+    /** Нормализует id и сохраняет страну */
+    @Test
+    void testCreateNormalizesIdAndSavesCountry() {
+        Country toCreate = entity(ID_RAW, NAME);
+        Mockito.when(repositoryMock.existsById(ID_NORM)).thenReturn(false);
+        Mockito.when(repositoryMock.save(toCreate)).thenReturn(toCreate);
+
+        Country result = service.create(toCreate);
+
+        assertEquals(ID_NORM, toCreate.getId());
+        assertSame(toCreate, result);
+        Mockito.verify(repositoryMock).existsById(ID_NORM);
+        Mockito.verify(repositoryMock).save(toCreate);
+    }
+
+    /** Кидает IllegalArgumentException, если id уже существует */
+    @Test
+    void testCreateThrowsIfCountryAlreadyExists() {
+        Country toCreate = entity(ID_RAW, NAME);
+        Mockito.when(repositoryMock.existsById(ID_NORM)).thenReturn(true);
+
+        IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.create(req(ID_RAW, NAME))
+                () -> service.create(toCreate)
         );
 
-        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
-        Mockito.verify(repository).existsById(ID_NORM);
-        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
+        assertEquals("Страна с id = " + ID_NORM + " уже существует", ex.getMessage());
+        Mockito.verify(repositoryMock).existsById(ID_NORM);
+        Mockito.verify(repositoryMock, Mockito.never()).save(Mockito.any());
     }
 
-    /** Найти запись по id — с нормализацией найдено */
+    /** Кидает IllegalArgumentException, если id в пути и теле не совпадают */
     @Test
-    void get_countryById_found_withNormalization() {
-        Mockito.when(repository.findById(ID_NORM))
-                .thenReturn(Optional.of(entity(ID_NORM, NAME)));
+    void testUpdateThrowsIfIdsDoNotMatch() {
+        Country body = entity("us", NAME_UPDATED);
 
-        Country c = service.findById(ID_RAW);
-
-        Assertions.assertEquals(ID_NORM, c.getId());
-        Mockito.verify(repository).findById(ID_NORM);
-    }
-
-    /** Найти запись по id — не найдено */
-    @Test
-    void get_countryById_notFound() {
-        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.empty());
-
-        EntityNotFoundException ex = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> service.findById(ID_RAW)
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.update(ID_RAW, body)
         );
 
-        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
-        Mockito.verify(repository).findById(ID_NORM);
-    }
-
-    /** Обновить запись — не найдено */
-    @Test
-    void update_country_notFound() {
-        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.empty());
-
-        EntityNotFoundException ex = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> service.update(ID_RAW, req(ID_RAW, NAME_UPDATED))
+        assertEquals(
+                "Идентификатор в пути (RU) не совпадает с идентификатором в теле запроса (US)",
+                ex.getMessage()
         );
-
-        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
-        Mockito.verify(repository).findById(ID_NORM);
-        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
+        Mockito.verify(repositoryMock, Mockito.never()).findById(Mockito.anyString());
+        Mockito.verify(repositoryMock, Mockito.never()).save(Mockito.any());
     }
 
-    /** Обновить запись — изменить имя и сохранить ту же сущность */
+    /** Кидает ResourceNotFoundException, если страна не найдена */
     @Test
-    void update_country_updatesNameAndSavesSameInstance() {
+    void testUpdateThrowsIfCountryNotFound() {
+        Country body = entity(ID_RAW, NAME_UPDATED);
+        Mockito.when(repositoryMock.findById(ID_NORM)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.update(ID_RAW, body));
+
+        Mockito.verify(repositoryMock).findById(ID_NORM);
+        Mockito.verify(repositoryMock, Mockito.never()).save(Mockito.any());
+    }
+
+    /** Обновляет имя и сохраняет ту же сущность */
+    @Test
+    void testUpdateUpdatesNameAndSavesSameInstance() throws ResourceNotFoundException {
         Country existing = entity(ID_NORM, NAME);
-        Mockito.when(repository.findById(ID_NORM)).thenReturn(Optional.of(existing));
-        Mockito.when(repository.save(ArgumentMatchers.any(Country.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+        Country body = entity(ID_RAW, NAME_UPDATED);
 
-        Country result = service.update(ID_RAW, req(ID_RAW, NAME_UPDATED));
+        Mockito.when(repositoryMock.findById(ID_NORM)).thenReturn(Optional.of(existing));
+        Mockito.when(repositoryMock.save(existing)).thenReturn(existing);
 
-        // сохраняется та же ссылка (мутация), а не новый объект
-        Mockito.verify(repository).save(existing);
-        Assertions.assertEquals(ID_NORM, existing.getId());
-        Assertions.assertEquals(NAME_UPDATED, existing.getName());
-        Assertions.assertSame(existing, result);
+        Country result = service.update(ID_RAW, body);
+
+        assertSame(existing, result);
+        assertEquals(ID_NORM, existing.getId());
+        assertEquals(NAME_UPDATED, existing.getName());
+        Mockito.verify(repositoryMock).findById(ID_NORM);
+        Mockito.verify(repositoryMock).save(existing);
     }
 
-    /** Удалить запись — не существующую запись */
+    /** Кидает ResourceNotFoundException, если страны нет */
     @Test
-    void delete_country_notFound() {
-        Mockito.when(repository.existsById(ID_NORM)).thenReturn(false);
+    void testDeleteThrowsIfCountryNotFound() {
+        Mockito.when(repositoryMock.existsById(ID_NORM)).thenReturn(false);
 
-        EntityNotFoundException ex = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> service.delete(ID_RAW)
-        );
+        assertThrows(ResourceNotFoundException.class, () -> service.delete(ID_RAW));
 
-        Assertions.assertTrue(ex.getMessage().contains(ID_NORM));
-        Mockito.verify(repository).existsById(ID_NORM);
-        Mockito.verify(repository, Mockito.never()).deleteById(ArgumentMatchers.anyString());
+        Mockito.verify(repositoryMock).existsById(ID_NORM);
+        Mockito.verify(repositoryMock, Mockito.never()).deleteById(Mockito.anyString());
     }
 
-    /** Удалить запись — существующую запись */
+    /** Удаляет страну, если она существует */
     @Test
-    void delete_country_ok() {
-        Mockito.when(repository.existsById(ID_NORM)).thenReturn(true);
+    void testDeleteDeletesCountryIfExists() throws ResourceNotFoundException {
+        Mockito.when(repositoryMock.existsById(ID_NORM)).thenReturn(true);
 
         service.delete(ID_RAW);
 
-        Mockito.verify(repository).existsById(ID_NORM);
-        Mockito.verify(repository).deleteById(ID_NORM);
+        Mockito.verify(repositoryMock).existsById(ID_NORM);
+        Mockito.verify(repositoryMock).deleteById(ID_NORM);
     }
-
 }
