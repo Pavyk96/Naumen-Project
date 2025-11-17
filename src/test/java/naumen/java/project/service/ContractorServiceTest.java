@@ -1,15 +1,15 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
-import naumen.java.project.dto.contractor.ContractorRequest;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Contractor;
+import naumen.java.project.model.Country;
+import naumen.java.project.model.Industry;
+import naumen.java.project.model.OrgForm;
 import naumen.java.project.repository.ContractorRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Assertions;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,177 +17,166 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
- * Тестирование ContractorService
+ * Юнит-тесты для ContractorService
  *
  * @author Daniil Mezev
  */
 @ExtendWith(MockitoExtension.class)
 class ContractorServiceTest {
 
-    @Mock
-    private ContractorRepository repository;
-
-    @InjectMocks
-    private ContractorService service;
-
     private static final String ID = "c-1";
     private static final String NAME = "Acme LLC";
-    private static final String NAME_UPDATED = "Acme Updated";
-    private static final String COUNTRY_ID = "RU";
-    private static final Long   INDUSTRY_ID = 10L;
-    private static final String ORGFORM_ID = "OOO";
+    private static final String UPDATED_NAME = "Acme Updated";
 
-    private static final String COUNTRY_ID_UPDATED = "US";
-    private static final Long   INDUSTRY_ID_UPDATED = 20L;
-    private static final String ORGFORM_ID_UPDATED = "AO";
+    private ContractorRepository contractorRepositoryMock;
+    private ContractorService contractorService;
 
-    private Contractor entity(String id, String name, String countryId, Long industryId, String orgFormId) {
-        return new Contractor(id, name, countryId, industryId, orgFormId);
+    private Country country;
+    private Industry industry;
+    private OrgForm orgForm;
+    private Contractor contractor;
+    private Contractor updatedContractor;
+
+    public ContractorServiceTest(@Mock ContractorRepository contractorRepositoryMock) {
+        this.contractorRepositoryMock = contractorRepositoryMock;
+        this.contractorService = new ContractorService(contractorRepositoryMock);
     }
 
-    private Contractor entity(String name) {
-        return entity(ID, name, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
+    @BeforeEach
+    void setUpData() {
+        country = new Country("RU", "Russia");
+        industry = new Industry(10L, "IT");
+        orgForm = new OrgForm("OOO", "ООО");
+
+        contractor = new Contractor(ID, NAME, country, industry, orgForm);
+        updatedContractor = new Contractor(ID, UPDATED_NAME, country, industry, orgForm);
     }
 
-    /** DTO-запрос */
-    private ContractorRequest req(String id, String name, String countryId, Long industryId, String orgFormId) {
-        return new ContractorRequest(id, name, countryId, industryId, orgFormId);
-    }
-
-    /** Создать, затем получить все — вернуть 2 записи */
+    /** Проверяет, что findAll возвращает список контрагентов из репозитория */
     @Test
-    void create_then_list_contractors_returnsTwo() {
-        Contractor existing = entity("c-0", "First", COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
-        Contractor toCreate = entity(ID, NAME, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
+    void testFindAllReturnsAllContractors() {
+        Mockito.when(contractorRepositoryMock.findAll()).thenReturn(List.of(contractor));
 
-        Mockito.when(repository.existsById(ID)).thenReturn(false);
-        Mockito.when(repository.save(ArgumentMatchers.any(Contractor.class))).thenReturn(toCreate);
-        Mockito.when(repository.findAll()).thenReturn(List.of(existing, toCreate));
+        List<Contractor> result = contractorService.findAll();
 
-        Contractor created = service.create(req(ID, NAME, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID));
-        List<Contractor> all = service.findAll();
-
-        Assertions.assertEquals(NAME, created.getName());
-        Assertions.assertEquals(2, all.size());
-        Assertions.assertTrue(all.stream().anyMatch(c -> ID.equals(c.getId())));
-        Mockito.verify(repository).existsById(ID);
-        Mockito.verify(repository).save(ArgumentMatchers.any(Contractor.class));
-        Mockito.verify(repository).findAll();
+        assertEquals(1, result.size());
+        assertSame(contractor, result.get(0));
     }
 
-    /** Создать — id уже существует */
+    /** Проверяет, что findById возвращает контрагента при его наличии */
     @Test
-    void create_contractor_whenIdExists_throws() {
-        Mockito.when(repository.existsById(ID)).thenReturn(true);
+    void testFindByIdReturnsContractor() throws ResourceNotFoundException {
+        Mockito.when(contractorRepositoryMock.findById(ID)).thenReturn(Optional.of(contractor));
 
-        IllegalArgumentException ex = Assertions.assertThrows(
+        Contractor result = contractorService.findById(ID);
+
+        assertSame(contractor, result);
+    }
+
+    /** Проверяет, что findById выбрасывает ResourceNotFoundException, если контрагент не найден */
+    @Test
+    void testFindByIdThrowsIfContractorNotFound() {
+        Mockito.when(contractorRepositoryMock.findById(ID)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> contractorService.findById(ID));
+    }
+
+    /** Проверяет, что findByIdWithDeals возвращает контрагента при его наличии */
+    @Test
+    void testFindByIdWithDealsReturnsContractor() throws ResourceNotFoundException {
+        Mockito.when(contractorRepositoryMock.findWithDealsById(ID)).thenReturn(Optional.of(contractor));
+
+        Contractor result = contractorService.findByIdWithDeals(ID);
+
+        assertSame(contractor, result);
+    }
+
+    /** Проверяет, что findByIdWithDeals выбрасывает ResourceNotFoundException, если контрагент не найден */
+    @Test
+    void testFindByIdWithDealsThrowsIfContractorNotFound() {
+        Mockito.when(contractorRepositoryMock.findWithDealsById(ID)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> contractorService.findByIdWithDeals(ID));
+    }
+
+    /** Проверяет, что create сохраняет нового контрагента, если id ещё не существует */
+    @Test
+    void testCreateSavesNewContractor() {
+        Mockito.when(contractorRepositoryMock.existsById(ID)).thenReturn(false);
+        Mockito.when(contractorRepositoryMock.save(contractor)).thenReturn(contractor);
+
+        Contractor result = contractorService.create(contractor);
+
+        assertSame(contractor, result);
+    }
+
+    /** Проверяет, что create выбрасывает IllegalArgumentException, если id уже существует */
+    @Test
+    void testCreateThrowsIfContractorAlreadyExists() {
+        Mockito.when(contractorRepositoryMock.existsById(ID)).thenReturn(true);
+
+        IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.create(req(ID, NAME, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID))
+                () -> contractorService.create(contractor)
+        );
+        assertTrue(ex.getMessage().contains(ID));
+    }
+
+    /** Проверяет, что update обновляет существующего контрагента, если id совпадают */
+    @Test
+    void testUpdateUpdatesExistingContractor() throws ResourceNotFoundException {
+        Mockito.when(contractorRepositoryMock.findById(ID)).thenReturn(Optional.of(contractor));
+        Mockito.when(contractorRepositoryMock.save(Mockito.any(Contractor.class)))
+                .thenAnswer(inv -> inv.getArgument(0, Contractor.class));
+        Contractor result = contractorService.update(ID, updatedContractor);
+
+        assertSame(contractor, result);
+        assertEquals(UPDATED_NAME, result.getName());
+        assertSame(country, result.getCountry());
+        assertSame(industry, result.getIndustry());
+        assertSame(orgForm, result.getOrgForm());
+    }
+
+    /** Проверяет, что update выбрасывает IllegalArgumentException, если id в пути и теле не совпадают */
+    @Test
+    void testUpdateThrowsIfIdsDoNotMatch() {
+        Contractor body = new Contractor("another-id", NAME, country, industry, orgForm);
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> contractorService.update(ID, body)
         );
 
-        Assertions.assertTrue(ex.getMessage().contains(ID));
-        Mockito.verify(repository).existsById(ID);
-        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
+        assertTrue(ex.getMessage().contains(ID));
+        assertTrue(ex.getMessage().contains("another-id"));
+        Mockito.verify(contractorRepositoryMock, Mockito.never()).findById(Mockito.anyString());
     }
 
-    /** Найти по id — найдено */
+    /** Проверяет, что update выбрасывает ResourceNotFoundException, если контрагент не найден */
     @Test
-    void get_contractorById_found() {
-        Mockito.when(repository.findById(ID)).thenReturn(Optional.of(entity(NAME)));
-
-        Contractor c = service.findById(ID);
-
-        Assertions.assertEquals(ID, c.getId());
-        Assertions.assertEquals(NAME, c.getName());
-        Mockito.verify(repository).findById(ID);
-    }
-
-    /** Найти по id — не найдено */
-    @Test
-    void get_contractorById_notFound() {
-        Mockito.when(repository.findById(ID)).thenReturn(Optional.empty());
-
-        EntityNotFoundException ex =
-                Assertions.assertThrows(EntityNotFoundException.class, () -> service.findById(ID));
-
-        Assertions.assertTrue(ex.getMessage().contains(ID));
-        Mockito.verify(repository).findById(ID);
-    }
-
-    /** Обновить — не найдено */
-    @Test
-    void update_contractor_notFound() {
-        Mockito.when(repository.findById(ID)).thenReturn(Optional.empty());
-
-        EntityNotFoundException ex = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> service.update(ID, req(ID, NAME_UPDATED, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID))
+    void testUpdateThrowsIfContractorNotFound() {
+        Mockito.when(contractorRepositoryMock.findById(ID)).thenReturn(Optional.empty());
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> contractorService.update(ID, updatedContractor)
         );
-
-        Assertions.assertTrue(ex.getMessage().contains(ID));
-        Mockito.verify(repository).findById(ID);
-        Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
-    /** Обновить — изменить поля и сохранить ту же сущность */
+    /** Проверяет, что delete удаляет контрагента, если он существует */
     @Test
-    void update_contractor_updatesFieldsAndSavesSameInstance() {
-        Contractor existing = entity(ID, NAME, COUNTRY_ID, INDUSTRY_ID, ORGFORM_ID);
-        Mockito.when(repository.findById(ID)).thenReturn(Optional.of(existing));
-        Mockito.when(repository.save(ArgumentMatchers.any(Contractor.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
-
-        ContractorRequest updateReq = req(
-                ID, NAME_UPDATED, COUNTRY_ID_UPDATED, INDUSTRY_ID_UPDATED, ORGFORM_ID_UPDATED
-        );
-
-        Contractor result = service.update(ID, updateReq);
-
-        ArgumentCaptor<Contractor> captor = ArgumentCaptor.forClass(Contractor.class);
-        Mockito.verify(repository).save(captor.capture());
-        Contractor saved = captor.getValue();
-        Assertions.assertSame(existing, saved);
-
-        Assertions.assertEquals(ID, saved.getId());
-
-        Assertions.assertEquals(NAME_UPDATED, saved.getName());
-        Assertions.assertEquals(COUNTRY_ID_UPDATED, saved.getCountryId());
-        Assertions.assertEquals(INDUSTRY_ID_UPDATED, saved.getIndustryId());
-        Assertions.assertEquals(ORGFORM_ID_UPDATED, saved.getOrgFormId());
-
-        Assertions.assertSame(saved, result);
+    void testDeleteDeletesContractorIfExists() throws ResourceNotFoundException {
+        Mockito.when(contractorRepositoryMock.existsById(ID)).thenReturn(true);
+        contractorService.delete(ID);
+        Mockito.verify(contractorRepositoryMock).deleteById(ID);
     }
 
-    /** Удалить — существующую запись */
+    /** Проверяет, что delete выбрасывает ResourceNotFoundException, если контрагент не найден */
     @Test
-    void delete_contractor_ok() {
-        Mockito.when(repository.existsById(ID)).thenReturn(true);
-        // Сервис внутри delete() запрашивает контрагента со сделками
-        Mockito.when(repository.findWithDealsById(ID))
-                .thenReturn(Optional.of(entity(NAME)));
-
-        service.delete(ID);
-
-        Mockito.verify(repository).existsById(ID);
-        Mockito.verify(repository).findWithDealsById(ID);
-        Mockito.verify(repository).deleteById(ID);
+    void testDeleteThrowsIfContractorNotFound() {
+        Mockito.when(contractorRepositoryMock.existsById(ID)).thenReturn(false);
+        assertThrows(ResourceNotFoundException.class, () -> contractorService.delete(ID));
+        Mockito.verify(contractorRepositoryMock, Mockito.never()).deleteById(Mockito.anyString());
     }
-
-    /** Удалить — запись не найдена при findWithDealsById */
-    @Test
-    void delete_contractor_notFoundOnWithDeals() {
-        Mockito.when(repository.existsById(ID)).thenReturn(true);
-        Mockito.when(repository.findWithDealsById(ID))
-                .thenReturn(Optional.empty());
-
-        EntityNotFoundException ex =
-                Assertions.assertThrows(EntityNotFoundException.class, () -> service.delete(ID));
-
-        Assertions.assertTrue(ex.getMessage().contains(ID));
-        Mockito.verify(repository).existsById(ID);
-        Mockito.verify(repository).findWithDealsById(ID);
-        Mockito.verify(repository, Mockito.never()).deleteById(ArgumentMatchers.any());
-    }
-
 }

@@ -1,11 +1,15 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.CountryResponse;
+import naumen.java.project.dto.CountryResponseDTO;
 import naumen.java.project.model.Country;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+/**
+ * Тесты CountryMapper
+ *
+ * @author Daniil Mezev
+ */
 class CountryMapperTest {
 
     /**
@@ -16,10 +20,10 @@ class CountryMapperTest {
         CountryMapper mapper = new CountryMapper();
         Country entity = new Country("RU", "Russia");
 
-        CountryResponse dto = mapper.toResponse(entity);
+        CountryResponseDTO dto = mapper.toResponse(entity);
 
-        assertEquals("RU", dto.id());
-        assertEquals("Russia", dto.name());
+        Assertions.assertEquals("RU", dto.id());
+        Assertions.assertEquals("Russia", dto.name());
     }
 
 }

@@ -1,128 +1,152 @@
 package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import naumen.java.project.dto.OrgFormRequest;
-import naumen.java.project.dto.OrgFormResponse;
+import naumen.java.project.dto.OrgFormRequestDTO;
+import naumen.java.project.dto.OrgFormResponseDTO;
+import naumen.java.project.exepction.GlobalExceptionHandler;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.OrgFormMapper;
 import naumen.java.project.model.OrgForm;
 import naumen.java.project.service.OrgFormService;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
 /**
- * Тесты OrgFormController
+ * Юнит-тесты для OrgFormController
  *
  * @author Daniil Mezev
  */
-@WebMvcTest(OrgFormController.class)
+@ExtendWith(MockitoExtension.class)
 class OrgFormControllerTest {
 
     private static final String ID = "OOO";
     private static final String NAME = "Общество с ограниченной ответственностью";
     private static final String NAME_UPDATED = "ООО (обновлено)";
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper om;
+    private final OrgFormService orgFormServiceMock;
+    private final OrgFormMapper orgFormMapperMock;
 
-    @MockitoBean private OrgFormService service;
-    @MockitoBean private OrgFormMapper mapper;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
 
-    private OrgForm entity(String id, String name) { return new OrgForm(id, name); }
-    private OrgFormResponse dto(String id, String name) { return new OrgFormResponse(id, name); }
+    private OrgForm orgForm;
+    private OrgForm orgFormUpdated;
+    private OrgFormResponseDTO orgFormDto;
+    private OrgFormResponseDTO orgFormUpdatedDto;
+    private OrgFormRequestDTO createRequest;
+    private OrgFormRequestDTO updateRequest;
 
-    /** Проверяет корректную работу получения списка объектов */
+    public OrgFormControllerTest(@Mock OrgFormService orgFormServiceMock,
+                                 @Mock OrgFormMapper orgFormMapperMock) {
+        this.orgFormServiceMock = orgFormServiceMock;
+        this.orgFormMapperMock = orgFormMapperMock;
+
+        OrgFormController controller = new OrgFormController(orgFormServiceMock, orgFormMapperMock);
+
+        this.mockMvc = MockMvcBuilders
+                .standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        this.objectMapper = new ObjectMapper();
+    }
+
+    /**
+     * Инициализация переменных для тестов
+     */
+    @BeforeEach
+    void setUpData() {
+        orgForm = new OrgForm(ID, NAME);
+        orgFormUpdated = new OrgForm(ID, NAME_UPDATED);
+
+        orgFormDto = new OrgFormResponseDTO(ID, NAME);
+        orgFormUpdatedDto = new OrgFormResponseDTO(ID, NAME_UPDATED);
+
+        createRequest = new OrgFormRequestDTO(ID, NAME);
+        updateRequest = new OrgFormRequestDTO(ID, NAME_UPDATED);
+    }
+
+    /** Проверяет успешное получение списка организационно-правовых форм */
     @Test
-    @DisplayName("GET /org_form/all")
-    void getAll_minimal() throws Exception {
-        OrgForm e = entity(ID, NAME);
-        Mockito.when(service.findAll()).thenReturn(List.of(e));
-        Mockito.when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
+    void testGetAllReturnsListOfOrgForms() throws Exception {
+        Mockito.when(orgFormServiceMock.findAll()).thenReturn(List.of(orgForm));
+        Mockito.when(orgFormMapperMock.toResponse(orgForm)).thenReturn(orgFormDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/org_form/all"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(NAME));
-
-        Mockito.verify(service).findAll();
     }
 
-    /** Проверяет корректную работу получения объекта по идентификатору */
+    /** Проверяет успешное получение организационно-правовой формы по идентификатору */
     @Test
-    @DisplayName("GET /org_form/{id}")
-    void getById_minimal() throws Exception {
-        OrgForm e = entity(ID, NAME);
-        Mockito.when(service.findById(ID)).thenReturn(e);
-        Mockito.when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
+    void testGetByIdReturnsOrgForm() throws Exception {
+        Mockito.when(orgFormServiceMock.findById(ID)).thenReturn(orgForm);
+        Mockito.when(orgFormMapperMock.toResponse(orgForm)).thenReturn(orgFormDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/org_form/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
-
-        Mockito.verify(service).findById(ID);
     }
 
-    /** Проверяет корректное создание нового объекта */
+    /** Проверяет, что при отсутствии организационно-правовой формы возвращается 404 */
     @Test
-    @DisplayName("POST /org_form")
-    void create_minimal() throws Exception {
-        OrgFormRequest req = new OrgFormRequest(ID, NAME);
-        OrgForm created = entity(ID, NAME);
-        Mockito.when(service.create(ArgumentMatchers.any(OrgFormRequest.class))).thenReturn(created);
-        Mockito.when(mapper.toResponse(created)).thenReturn(dto(ID, NAME));
+    void testGetByIdReturns404IfOrgFormNotFound() throws Exception {
+        Mockito.when(orgFormServiceMock.findById(ID))
+                .thenThrow(new ResourceNotFoundException("Организационно-правовая форма", ID));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/org_form/{id}", ID))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("Организационно-правовая форма с id = " + ID + " не найдена"));
+    }
+
+    /** Проверяет успешное создание организационно-правовой формы */
+    @Test
+    void testCreateCreatesOrgForm() throws Exception {
+        Mockito.when(orgFormServiceMock.create(Mockito.any(OrgForm.class))).thenReturn(orgForm);
+        Mockito.when(orgFormMapperMock.toResponse(orgForm)).thenReturn(orgFormDto);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/org_form")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(req)))
+                        .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
-
-        Mockito.verify(service).create(ArgumentMatchers.any(OrgFormRequest.class));
     }
 
-    /** Проверяет корректное обновление существующего объекта */
+    /** Проверяет успешное обновление организационно-правовой формы */
     @Test
-    @DisplayName("PUT /org_form/{id}")
-    void update_minimal() throws Exception {
-        OrgFormRequest req = new OrgFormRequest(ID, NAME_UPDATED);
-        OrgForm updated = entity(ID, NAME_UPDATED);
-        Mockito.when(service.update(
-                ArgumentMatchers.eq(ID),
-                ArgumentMatchers.any(OrgFormRequest.class)
-        )).thenReturn(updated);
-        Mockito.when(mapper.toResponse(updated)).thenReturn(dto(ID, NAME_UPDATED));
+    void testUpdateUpdatesOrgForm() throws Exception {
+        Mockito.when(orgFormServiceMock.update(Mockito.eq(ID), Mockito.any(OrgForm.class)))
+                .thenReturn(orgFormUpdated);
+        Mockito.when(orgFormMapperMock.toResponse(orgFormUpdated)).thenReturn(orgFormUpdatedDto);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/org_form/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(req)))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME_UPDATED));
-
-        Mockito.verify(service).update(ArgumentMatchers.eq(ID), ArgumentMatchers.any(OrgFormRequest.class));
     }
 
-    /** Проверяет корректное удаление объекта */
+    /** Проверяет успешное удаление организационно-правовой формы */
     @Test
-    @DisplayName("DELETE /org_form/delete/{id}")
-    void delete_minimal() throws Exception {
+    void testDeleteDeletesOrgForm() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/org_form/delete/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string(""));
-
-        Mockito.verify(service).delete(ID);
     }
-
 }

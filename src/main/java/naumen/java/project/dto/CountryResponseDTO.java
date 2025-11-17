@@ -7,12 +7,21 @@ import naumen.java.project.model.Country;
  *
  * @author Daniil Mezev
  */
-public record CountryResponse(String id, String name) {
+public record CountryResponseDTO(
+        /**
+         * Id страны
+         */
+        String id,
+        /**
+         * Название страны
+         */
+        String name
+) {
 
     /**
      * Создает DTO из сущности Country
      */
-    public CountryResponse(Country entity) {
+    public CountryResponseDTO(Country entity) {
         this(entity.getId(), entity.getName());
     }
 

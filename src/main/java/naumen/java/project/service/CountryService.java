@@ -1,11 +1,10 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
-import naumen.java.project.dto.CountryRequest;
+import naumen.java.project.dto.CountryRequestDTO;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Country;
 import naumen.java.project.repository.CountryRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,59 +23,66 @@ public class CountryService {
     }
 
     /** Возвращает все страны */
-    @Transactional(readOnly = true)
     public List<Country> findAll() {
         return repository.findAll();
     }
 
     /** Возвращает страну по идентификатору */
-    @Transactional(readOnly = true)
-    public Country findById(String id) {
+    public Country findById(String id) throws ResourceNotFoundException {
         String normId = normalize(id);
         return repository.findById(normId)
-                .orElseThrow(() -> new EntityNotFoundException("Country not found: " + normId));
+                .orElseThrow(() -> new ResourceNotFoundException("Страна", normId));
     }
 
     /** Создаёт новую страну */
-    @Transactional
-    public Country create(CountryRequest request) {
-        String normId = normalize(request.id());
+    public Country create(Country country) {
+        String normId = normalize(country.getId());
+        country.setId(normId);
+
         if (repository.existsById(normId)) {
-            throw new IllegalArgumentException("Country already exists: " + normId);
+            throw new IllegalArgumentException(
+                    "Страна с id = " + normId + " уже существует"
+            );
         }
-        Country entity = new Country(normId, request.name());
-        return repository.save(entity);
+
+        return repository.save(country);
     }
 
     /** Обновляет страну по идентификатору */
-    @Transactional
-    public Country update(String id, CountryRequest request) {
+    public Country update(String id, Country country) throws ResourceNotFoundException {
         String normPathId = normalize(id);
-        String normBodyId = normalize(request.id());
+        String normBodyId = normalize(country.getId());
+
         if (!normPathId.equals(normBodyId)) {
-            throw new IllegalArgumentException("Path id and body id must be equal");
+            throw new IllegalArgumentException(
+                    "Идентификатор в пути (" +
+                            normPathId + ") не совпадает с идентификатором в теле запроса ("
+                            + normBodyId + ")"
+            );
         }
 
         Country existing = repository.findById(normPathId)
-                .orElseThrow(() -> new EntityNotFoundException("Country not found: " + normPathId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Страна",
+                        normPathId
+                ));
 
-        existing.setName(request.name());
+        existing.setName(country.getName());
+
         return repository.save(existing);
     }
 
     /** Удаляет страну по идентификатору */
-    @Transactional
-    public void delete(String id) {
+    public void delete(String id) throws ResourceNotFoundException {
         String normId = normalize(id);
         if (!repository.existsById(normId)) {
-            throw new EntityNotFoundException("Country not found: " + normId);
+            throw new ResourceNotFoundException("Страна", normId);
         }
         repository.deleteById(normId);
     }
 
     /** Нормализация айди */
-    private static String normalize(String id) {
+    private String normalize(String id) {
         return id == null ? null : id.trim().toUpperCase();
     }
-
 }

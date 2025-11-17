@@ -1,6 +1,6 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
 import naumen.java.project.repository.DealRepository;
@@ -31,10 +31,14 @@ public class DealService {
     }
 
     /** Возвращает сделку по идентификатору */
-    public Deal findById(UUID id) {
+    public Deal findById(UUID id) throws ResourceNotFoundException {
         return dealRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Deal not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Сделка",
+                        String.valueOf(id)
+                ));
     }
+
 
     /** Возвращает все сделки */
     public List<Deal> findAll() {
@@ -42,29 +46,46 @@ public class DealService {
     }
 
     /** Удаляет сделку по идентификатору */
-    public void delete(UUID id) {
+    public void delete(UUID id) throws ResourceNotFoundException {
         if (!dealRepository.existsById(id)) {
-            throw new EntityNotFoundException("Deal not found");
+            throw new ResourceNotFoundException(
+                    "Сделка",
+                    String.valueOf(id)
+            );
         }
+
         if (!findByIdWithContractors(id).getContractors().isEmpty()) {
-            throw new IllegalStateException("Deal use in contractor");
+            throw new IllegalStateException(
+                    "Нельзя удалить сделку с id = "
+                            + id + ", так как к ней привязаны контрагенты"
+            );
         }
+
         dealRepository.deleteById(id);
     }
 
+
     /** Сохраняет сделку (создание или обновление) */
-    public Deal createOrUpdate(Deal deal) {
+    public Deal createOrUpdate(Deal deal) throws ResourceNotFoundException {
         if (deal.getId() != null && !existsById(deal.getId())) {
-            throw new EntityNotFoundException("Deal not found");
+            throw new ResourceNotFoundException(
+                    "Сделка",
+                    String.valueOf(deal.getId())
+            );
         }
         return save(deal);
     }
 
-    /** Возвращает сделку по идентификатору с контрагентами*/
-    public Deal findByIdWithContractors(UUID id) {
+
+    /** Возвращает сделку по идентификатору с контрагентами */
+    public Deal findByIdWithContractors(UUID id) throws ResourceNotFoundException {
         return dealRepository.findWithContractorsById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Deal not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Сделка",
+                        String.valueOf(id)
+                ));
     }
+
 
 
     /** Возвращает все сделки с контрагентами*/
@@ -73,7 +94,7 @@ public class DealService {
     }
 
     /** Меняет статус сделки */
-    public Deal changeStatus(UUID id, DealStatus newStatus) {
+    public Deal changeStatus(UUID id, DealStatus newStatus) throws ResourceNotFoundException {
         Deal deal = findByIdWithContractors(id);
         deal.setStatus(newStatus);
         return dealRepository.save(deal);
@@ -85,4 +106,5 @@ public class DealService {
     public boolean existsById(UUID id) {
         return dealRepository.existsById(id);
     }
+
 }

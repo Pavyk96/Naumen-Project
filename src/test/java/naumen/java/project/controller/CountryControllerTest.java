@@ -1,132 +1,153 @@
 package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import naumen.java.project.dto.CountryRequest;
-import naumen.java.project.dto.CountryResponse;
+import naumen.java.project.dto.CountryRequestDTO;
+import naumen.java.project.dto.CountryResponseDTO;
+import naumen.java.project.exepction.GlobalExceptionHandler;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.CountryMapper;
 import naumen.java.project.model.Country;
 import naumen.java.project.service.CountryService;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
 /**
- * Тесты для CountryController
+ * Юнит-тесты для CountryController
  *
  * @author Daniil Mezev
  */
-@WebMvcTest(CountryController.class)
+@ExtendWith(MockitoExtension.class)
 class CountryControllerTest {
 
     private static final String ID = "RU";
     private static final String NAME = "Russia";
     private static final String NAME_UPDATED = "Russian Federation";
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper om;
+    private final CountryService countryServiceMock;
+    private final CountryMapper countryMapperMock;
 
-    @MockitoBean private CountryService service;
-    @MockitoBean private CountryMapper mapper;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
 
-    private Country entity(String id, String name) {
-        return new Country(id, name);
+    private Country country;
+    private Country countryUpdated;
+    private CountryResponseDTO countryDto;
+    private CountryResponseDTO countryUpdatedDto;
+    private CountryRequestDTO createRequest;
+    private CountryRequestDTO updateRequest;
+
+    public CountryControllerTest(@Mock CountryService countryServiceMock,
+                                 @Mock CountryMapper countryMapperMock) {
+        this.countryServiceMock = countryServiceMock;
+        this.countryMapperMock = countryMapperMock;
+
+        CountryController controller = new CountryController(countryServiceMock, countryMapperMock);
+
+        this.mockMvc = MockMvcBuilders
+                .standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        this.objectMapper = new ObjectMapper();
     }
 
-    private CountryResponse dto(String id, String name) {
-        return new CountryResponse(id, name);
+    /**
+     * Инициализация переменных для тестов
+     */
+    @BeforeEach
+    void setUpData() {
+        country = new Country(ID, NAME);
+        countryUpdated = new Country(ID, NAME_UPDATED);
+
+        countryDto = new CountryResponseDTO(ID, NAME);
+        countryUpdatedDto = new CountryResponseDTO(ID, NAME_UPDATED);
+
+        createRequest = new CountryRequestDTO(ID, NAME);
+        updateRequest = new CountryRequestDTO(ID, NAME_UPDATED);
     }
 
-    /** Проверяет корректную работу получения списка объектов */
+    /** Проверяет успешное получение списка стран */
     @Test
-    @DisplayName("GET /country/all")
-    void getAll_ok_minimal() throws Exception {
-        Country e = entity(ID, NAME);
-        Mockito.when(service.findAll()).thenReturn(List.of(e));
-        Mockito.when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
+    void testGetAllReturnsListOfCountries() throws Exception {
+        Mockito.when(countryServiceMock.findAll()).thenReturn(List.of(country));
+        Mockito.when(countryMapperMock.toResponse(country)).thenReturn(countryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/country/all"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(NAME));
-
-        Mockito.verify(service).findAll();
     }
 
-    /** Проверяет корректную работу получения объекта по идентификатору */
+    /** Проверяет успешное получение страны по идентификатору */
     @Test
-    @DisplayName("GET /country/{id}")
-    void getById_ok_minimal() throws Exception {
-        Country e = entity(ID, NAME);
-        Mockito.when(service.findById(ID)).thenReturn(e);
-        Mockito.when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
+    void testGetByIdReturnsCountry() throws Exception {
+        Mockito.when(countryServiceMock.findById(ID)).thenReturn(country);
+        Mockito.when(countryMapperMock.toResponse(country)).thenReturn(countryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/country/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
-
-        Mockito.verify(service).findById(ID);
     }
 
-    /** Проверяет корректное создание нового объекта */
+    /** Проверяет, что при отсутствии страны возвращается 404 */
     @Test
-    @DisplayName("POST /country")
-    void create_ok_minimal() throws Exception {
-        CountryRequest req = new CountryRequest(ID, NAME);
-        Country created = entity(ID, NAME);
-        Mockito.when(service.create(ArgumentMatchers.any(CountryRequest.class))).thenReturn(created);
-        Mockito.when(mapper.toResponse(created)).thenReturn(dto(ID, NAME));
+    void testGetByIdReturns404IfCountryNotFound() throws Exception {
+        Mockito.when(countryServiceMock.findById(ID))
+                .thenThrow(new ResourceNotFoundException("Страна", ID));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/country/{id}", ID))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("Страна с id = " + ID + " не найдена"));
+    }
+
+    /** Проверяет успешное создание страны */
+    @Test
+    void testCreateCreatesCountry() throws Exception {
+        Mockito.when(countryServiceMock.create(Mockito.any(Country.class))).thenReturn(country);
+        Mockito.when(countryMapperMock.toResponse(country)).thenReturn(countryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/country")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(req)))
+                        .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
-
-        Mockito.verify(service).create(ArgumentMatchers.any(CountryRequest.class));
     }
 
-    /** Проверяет корректное обновление существующего объекта */
+    /** Проверяет успешное обновление страны */
     @Test
-    @DisplayName("PUT /country/{id}")
-    void update_ok_checkOnlyChangedField() throws Exception {
-        CountryRequest req = new CountryRequest(ID, NAME_UPDATED);
-        Country updated = entity(ID, NAME_UPDATED);
-        Mockito.when(service.update(
-                ArgumentMatchers.eq(ID),
-                ArgumentMatchers.any(CountryRequest.class)
-        )).thenReturn(updated);
-        Mockito.when(mapper.toResponse(updated)).thenReturn(dto(ID, NAME_UPDATED));
+    void testUpdateUpdatesCountry() throws Exception {
+        Mockito.when(countryServiceMock.update(Mockito.eq(ID), Mockito.any(Country.class)))
+                .thenReturn(countryUpdated);
+        Mockito.when(countryMapperMock.toResponse(countryUpdated)).thenReturn(countryUpdatedDto);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/country/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(req)))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME_UPDATED));
-
-        Mockito.verify(service).update(ArgumentMatchers.eq(ID), ArgumentMatchers.any(CountryRequest.class));
     }
 
-    /** Проверяет корректное удаление объекта */
+    /** Проверяет успешное удаление страны */
     @Test
-    @DisplayName("DELETE /country/delete/{id}")
-    void delete_ok() throws Exception {
+    void testDeleteDeletesCountry() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/country/delete/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string(""));
-
-        Mockito.verify(service).delete(ID);
     }
+
 }

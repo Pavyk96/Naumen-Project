@@ -24,10 +24,28 @@ public class GlobalExceptionHandler {
     /**
      * Обработка исключений ненайденных сущностей
      */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ExceptionResponseDTO> handleResourceNotFound(ResourceNotFoundException ex,
+                                                                       HttpServletRequest request) {
+        String message = ex.getResourceName() + " с id = " + ex.getResourceId() + " не найдена";
+
+        ExceptionResponseDTO error = new ExceptionResponseDTO(
+                HttpStatus.NOT_FOUND,
+                message,
+                request.getRequestURI(),
+                "ENTITY_NOT_FOUND"
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+
+    /**
+     * Обработка исключений ненайденных сущностей
+     */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ExceptionResponseDTO> handleEntityNotFound(EntityNotFoundException ex,
                                                                      HttpServletRequest request) {
-
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.NOT_FOUND,
                 "Запрашиваемый объект не найден",
@@ -42,12 +60,15 @@ public class GlobalExceptionHandler {
      * Обработка бизнес-логических исключений аргументов
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ExceptionResponseDTO> handleBadRequestArgument(RuntimeException ex,
+    public ResponseEntity<ExceptionResponseDTO> handleBadRequestArgument(IllegalArgumentException ex,
                                                                          HttpServletRequest request) {
+        String message = (ex.getMessage() != null && !ex.getMessage().isBlank())
+                ? ex.getMessage()
+                : "Некорректные параметры запроса";
 
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,
-                "Некорректные параметры запроса",
+                message,
                 request.getRequestURI(),
                 "INVALID_INPUT"
         );
@@ -61,7 +82,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ExceptionResponseDTO> handleBadRequestState(RuntimeException ex,
                                                                       HttpServletRequest request) {
-
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,
                 "Недопустимое состояние объекта",
@@ -78,7 +98,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponseDTO> handleAllUncaught(Exception ex,
                                                                   HttpServletRequest request) {
-
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Внутренняя ошибка сервера",
@@ -95,7 +114,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponseDTO> handleValidationErrors(MethodArgumentNotValidException ex,
                                                                        HttpServletRequest request) {
-
         String errorMessage = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -119,7 +137,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ExceptionResponseDTO> handleHandlerMethodValidation(HandlerMethodValidationException ex,
                                                                               HttpServletRequest request) {
-
         String errorMessage = ex.getParameterValidationResults()
                 .stream()
                 .flatMap(result -> result.getResolvableErrors().stream())

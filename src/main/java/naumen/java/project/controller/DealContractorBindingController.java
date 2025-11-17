@@ -3,6 +3,7 @@ package naumen.java.project.controller;
 import jakarta.validation.Valid;
 import naumen.java.project.dto.DealContractorRequestDTO;
 import naumen.java.project.dto.deal.DealResponseDTO;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.DealMapper;
 import naumen.java.project.model.Deal;
 import naumen.java.project.service.DealContractorBindingService;
@@ -31,7 +32,7 @@ public class DealContractorBindingController {
     /** Создает связь сделка-контрагент */
     @Transactional
     @PostMapping("/save")
-    public ResponseEntity<DealResponseDTO> save(@Valid @RequestBody DealContractorRequestDTO request) {
+    public ResponseEntity<DealResponseDTO> save(@Valid @RequestBody DealContractorRequestDTO request) throws ResourceNotFoundException {
         Deal deal = dealContractorBindingService.addContractorToDeal(
                 request.contractorId(), UUID.fromString(request.dealId()));
         DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
@@ -41,7 +42,7 @@ public class DealContractorBindingController {
     /** Удаляет контрагента из сделки */
     @Transactional
     @PostMapping("/delete")
-    public ResponseEntity<DealResponseDTO> delete(@Valid @RequestBody DealContractorRequestDTO request) {
+    public ResponseEntity<DealResponseDTO> delete(@Valid @RequestBody DealContractorRequestDTO request) throws ResourceNotFoundException {
         Deal deal = dealContractorBindingService.deleteContractorFromDeal(
                 request.contractorId(), UUID.fromString(request.dealId()));
         DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);

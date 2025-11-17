@@ -1,11 +1,11 @@
 package naumen.java.project.mapper;
 
-import naumen.java.project.dto.IndustryResponse;
+import naumen.java.project.dto.IndustryResponseDTO;
 import naumen.java.project.model.Industry;
 import org.springframework.stereotype.Component;
 
 /**
- * IndustryMapper
+ * Маппер для конвертации индустрии из сущности в ДТО
  *
  * @author Daniil Mezev
  */
@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 public class IndustryMapper {
 
     /** Конвертация сущности в DTO-ответ */
-    public IndustryResponse toResponse(Industry entity) {
-        return new IndustryResponse(entity.getId(), entity.getName());
+    public IndustryResponseDTO toResponse(Industry entity) {
+        return new IndustryResponseDTO(entity.getId(), entity.getName());
     }
 
 }

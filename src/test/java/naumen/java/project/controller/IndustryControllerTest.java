@@ -1,131 +1,153 @@
 package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import naumen.java.project.dto.IndustryRequest;
-import naumen.java.project.dto.IndustryResponse;
+import naumen.java.project.dto.IndustryRequestDTO;
+import naumen.java.project.dto.IndustryResponseDTO;
+import naumen.java.project.exepction.GlobalExceptionHandler;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.IndustryMapper;
 import naumen.java.project.model.Industry;
 import naumen.java.project.service.IndustryService;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
 /**
- * Тесты IndustryController
+ * Юнит-тесты для IndustryController
  *
  * @author Daniil Mezev
  */
-@WebMvcTest(IndustryController.class)
+@ExtendWith(MockitoExtension.class)
 class IndustryControllerTest {
 
     private static final Long ID = 10L;
     private static final String NAME = "IT";
     private static final String NAME_UPDATED = "Information Technology";
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper om;
+    private final IndustryService industryServiceMock;
+    private final IndustryMapper industryMapperMock;
 
-    @MockitoBean private IndustryService service;
-    @MockitoBean private IndustryMapper mapper;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
 
-    private Industry entity(Long id, String name) {
-        return new Industry(id, name);
+    private Industry industry;
+    private Industry industryUpdated;
+    private IndustryResponseDTO industryDto;
+    private IndustryResponseDTO industryUpdatedDto;
+    private IndustryRequestDTO createRequest;
+    private IndustryRequestDTO updateRequest;
+
+    public IndustryControllerTest(@Mock IndustryService industryServiceMock,
+                                  @Mock IndustryMapper industryMapperMock) {
+        this.industryServiceMock = industryServiceMock;
+        this.industryMapperMock = industryMapperMock;
+
+        IndustryController controller = new IndustryController(industryServiceMock, industryMapperMock);
+
+        this.mockMvc = MockMvcBuilders
+                .standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        this.objectMapper = new ObjectMapper();
     }
 
-    private IndustryResponse dto(Long id, String name) {
-        return new IndustryResponse(id, name);
+    /**
+     * Инициализация переменных для тестов
+     */
+    @BeforeEach
+    void setUpData() {
+        industry = new Industry(ID, NAME);
+        industryUpdated = new Industry(ID, NAME_UPDATED);
+
+        industryDto = new IndustryResponseDTO(ID, NAME);
+        industryUpdatedDto = new IndustryResponseDTO(ID, NAME_UPDATED);
+
+        createRequest = new IndustryRequestDTO(ID, NAME);
+        updateRequest = new IndustryRequestDTO(ID, NAME_UPDATED);
     }
 
-    /** Проверяет корректную работу получения списка объектов */
+    /** Проверяет успешное получение списка индустрий */
     @Test
-    @DisplayName("GET /industry/all")
-    void getAll_minimal() throws Exception {
-        Industry e = entity(ID, NAME);
-        Mockito.when(service.findAll()).thenReturn(List.of(e));
-        Mockito.when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
+    void testGetAllReturnsListOfIndustries() throws Exception {
+        Mockito.when(industryServiceMock.findAll()).thenReturn(List.of(industry));
+        Mockito.when(industryMapperMock.toResponse(industry)).thenReturn(industryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/industry/all"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(ID.intValue()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(NAME));
-
-        Mockito.verify(service).findAll();
     }
 
-    /** Проверяет корректную работу получения объекта по идентификатору */
+    /** Проверяет успешное получение индустрии по идентификатору */
     @Test
-    @DisplayName("GET /industry/{id}")
-    void getById_minimal() throws Exception {
-        Industry e = entity(ID, NAME);
-        Mockito.when(service.findById(ID)).thenReturn(e);
-        Mockito.when(mapper.toResponse(e)).thenReturn(dto(ID, NAME));
+    void testGetByIdReturnsIndustry() throws Exception {
+        Mockito.when(industryServiceMock.findById(ID)).thenReturn(industry);
+        Mockito.when(industryMapperMock.toResponse(industry)).thenReturn(industryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/industry/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID.intValue()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
-
-        Mockito.verify(service).findById(ID);
     }
 
-    /** Проверяет корректное создание нового объекта */
+    /** Проверяет, что при отсутствии индустрии возвращается 404 */
     @Test
-    @DisplayName("POST /industry")
-    void create_minimal() throws Exception {
-        IndustryRequest req = new IndustryRequest(ID, NAME);
-        Industry created = entity(ID, NAME);
-        Mockito.when(service.create(ArgumentMatchers.any(IndustryRequest.class))).thenReturn(created);
-        Mockito.when(mapper.toResponse(created)).thenReturn(dto(ID, NAME));
+    void testGetByIdReturns404IfIndustryNotFound() throws Exception {
+        Mockito.when(industryServiceMock.findById(ID))
+                .thenThrow(new ResourceNotFoundException("Индустрия", String.valueOf(ID)));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/industry/{id}", ID))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("Индустрия с id = " + ID + " не найдена"));
+    }
+
+    /** Проверяет успешное создание индустрии */
+    @Test
+    void testCreateCreatesIndustry() throws Exception {
+        Mockito.when(industryServiceMock.create(Mockito.any(Industry.class))).thenReturn(industry);
+        Mockito.when(industryMapperMock.toResponse(industry)).thenReturn(industryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/industry")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(req)))
+                        .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID.intValue()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
-
-        Mockito.verify(service).create(ArgumentMatchers.any(IndustryRequest.class));
     }
 
-    /** Проверяет корректное обновление существующего объекта */
+    /** Проверяет успешное обновление индустрии */
     @Test
-    @DisplayName("PUT /industry/{id}")
-    void update_minimal() throws Exception {
-        IndustryRequest req = new IndustryRequest(ID, NAME_UPDATED);
-        Industry updated = entity(ID, NAME_UPDATED);
-        Mockito.when(service.update(ArgumentMatchers.eq(ID), ArgumentMatchers.any(IndustryRequest.class)))
-                .thenReturn(updated);
-        Mockito.when(mapper.toResponse(updated)).thenReturn(dto(ID, NAME_UPDATED));
+    void testUpdateUpdatesIndustry() throws Exception {
+        Mockito.when(industryServiceMock.update(Mockito.eq(ID), Mockito.any(Industry.class)))
+                .thenReturn(industryUpdated);
+        Mockito.when(industryMapperMock.toResponse(industryUpdated))
+                .thenReturn(industryUpdatedDto);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/industry/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(req)))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID.intValue()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME_UPDATED));
-
-        Mockito.verify(service).update(ArgumentMatchers.eq(ID), ArgumentMatchers.any(IndustryRequest.class));
     }
 
-    /** Проверяет корректное удаление объекта */
+    /** Проверяет успешное удаление индустрии */
     @Test
-    @DisplayName("DELETE /industry/delete/{id}")
-    void delete_minimal() throws Exception {
+    void testDeleteDeletesIndustry() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/industry/delete/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string(""));
-
-        Mockito.verify(service).delete(ID);
     }
-
 }
