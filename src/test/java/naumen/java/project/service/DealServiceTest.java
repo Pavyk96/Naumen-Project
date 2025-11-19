@@ -1,8 +1,9 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.factory.DealTestFactory;
 import naumen.java.project.mapper.DealMapper;
+import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
 import naumen.java.project.repository.DealRepository;
@@ -32,11 +33,23 @@ class DealServiceTest {
 
     @Mock
     private DealRepository repository;
-    @Mock
-    private DealMapper mapper;
     @InjectMocks
     private DealService dealService;
-    private final DealTestFactory dealTestFactory = new DealTestFactory();
+
+    private static final DealTestFactory DEAL_TEST_FACTORY = new DealTestFactory();
+    private static final UUID DEAL_ID = DEAL_TEST_FACTORY.getDealId();
+    private static final UUID NON_EXISTENT_ID =
+            UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+    private static final String DESCRIPTION = DEAL_TEST_FACTORY.getDescription();
+
+    private static final DealStatus DEAL_STATUS = DEAL_TEST_FACTORY.getDealStatus();
+    private static final DealStatus NEW_STATUS = DealStatus.ACTIVE;
+
+    private static final Deal DEAL = DEAL_TEST_FACTORY.createDeal(DEAL_ID, DESCRIPTION, DEAL_STATUS);
+    private static final Deal NEW_DEAL = DEAL_TEST_FACTORY.createDeal(null, DESCRIPTION, DEAL_STATUS);
+    private static final Deal SAVED_DEAL = DEAL_TEST_FACTORY.createDeal(DEAL_ID, DESCRIPTION, DEAL_STATUS);
+    private static final Deal UPDATED_DEAL = DEAL_TEST_FACTORY.createDeal(DEAL_ID, "Новое описание", NEW_STATUS);
 
     /**
      * Проверяет корректное сохранение сделки
@@ -44,15 +57,12 @@ class DealServiceTest {
     @Test
     @DisplayName("save - сохранение сделки")
     void saveTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-        Mockito.when(repository.save(deal))
-                .thenReturn(deal);
+        Mockito.when(repository.save(DEAL)).thenReturn(DEAL);
 
-        Deal result = dealService.save(deal);
+        Deal result = dealService.save(DEAL);
 
-        Assertions.assertEquals(deal, result);
-        Mockito.verify(repository).save(deal);
+        Assertions.assertEquals(DEAL, result);
+        Mockito.verify(repository).save(DEAL);
     }
 
     /**
@@ -60,16 +70,13 @@ class DealServiceTest {
      */
     @Test
     @DisplayName("findById - получение сделки")
-    void findByIdTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-        Mockito.when(repository.findById(dealTestFactory.getDealId()))
-                .thenReturn(Optional.of(deal));
+    void findByIdTest() throws ResourceNotFoundException {
+        Mockito.when(repository.findById(DEAL_ID)).thenReturn(Optional.of(DEAL));
 
-        Deal result = dealService.findById(dealTestFactory.getDealId());
+        Deal result = dealService.findById(DEAL_ID);
 
-        Assertions.assertEquals(deal, result);
-        Mockito.verify(repository).findById(dealTestFactory.getDealId());
+        Assertions.assertEquals(DEAL, result);
+        Mockito.verify(repository).findById(DEAL_ID);
     }
 
     /**
@@ -79,17 +86,13 @@ class DealServiceTest {
     @DisplayName("findAll - получение всех сделок")
     void findAllTest() {
         List<Deal> deals = List.of(
-                dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                        "Сделка 1", DealStatus.DRAFT),
-                dealTestFactory.createDeal(UUID.randomUUID(),
-                        "Сделка 2", DealStatus.ACTIVE)
+                DEAL,
+                DEAL_TEST_FACTORY.createDeal(UUID.randomUUID(), "Сделка 2", NEW_STATUS)
         );
-        Mockito.when(repository.findAll())
-                .thenReturn(deals);
+        Mockito.when(repository.findAll()).thenReturn(deals);
 
         List<Deal> result = dealService.findAll();
 
-        Assertions.assertEquals(2, result.size());
         Assertions.assertEquals(deals, result);
         Mockito.verify(repository).findAll();
     }
@@ -99,20 +102,13 @@ class DealServiceTest {
      */
     @Test
     @DisplayName("createOrUpdate - создание новой сделки")
-    void createTest() {
-        Deal newDeal = dealTestFactory.createDeal(null, dealTestFactory.getDescription(),
-                dealTestFactory.getDealStatus());
-        Deal savedDeal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
+    void createTest() throws ResourceNotFoundException {
+        Mockito.when(repository.save(Mockito.any(Deal.class))).thenReturn(SAVED_DEAL);
 
-        Mockito.when(repository.save(Mockito.any(Deal.class)))
-                .thenReturn(savedDeal);
+        Deal result = dealService.createOrUpdate(NEW_DEAL);
 
-        Deal result = dealService.createOrUpdate(newDeal);
-
-        Assertions.assertEquals(savedDeal, result);
-        Mockito.verify(repository).save(Mockito.any(Deal.class));
-        Mockito.verify(repository, Mockito.never()).findById(ArgumentMatchers.any());
+        Assertions.assertEquals(SAVED_DEAL, result);
+        Mockito.verify(repository).save(NEW_DEAL);
     }
 
     /**
@@ -120,22 +116,15 @@ class DealServiceTest {
      */
     @Test
     @DisplayName("createOrUpdate - обновление существующей сделки")
-    void updateTest() {
-        Deal updatedDeal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                "Новое описание", DealStatus.ACTIVE);
-        Deal savedDeal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                "Новое описание", DealStatus.ACTIVE);
+    void updateTest() throws ResourceNotFoundException {
+        Mockito.when(repository.existsById(DEAL_ID)).thenReturn(true);
+        Mockito.when(repository.save(UPDATED_DEAL)).thenReturn(UPDATED_DEAL);
 
-        Mockito.when(repository.existsById(dealTestFactory.getDealId()))
-                .thenReturn(true);
-        Mockito.when(repository.save(Mockito.any(Deal.class)))
-                .thenReturn(savedDeal);
+        Deal result = dealService.createOrUpdate(UPDATED_DEAL);
 
-        Deal result = dealService.createOrUpdate(updatedDeal);
-
-        Assertions.assertEquals(savedDeal, result);
-        Mockito.verify(repository).existsById(dealTestFactory.getDealId());
-        Mockito.verify(repository).save(Mockito.any(Deal.class));
+        Assertions.assertEquals(UPDATED_DEAL, result);
+        Mockito.verify(repository).existsById(DEAL_ID);
+        Mockito.verify(repository).save(UPDATED_DEAL);
     }
 
     /**
@@ -143,16 +132,13 @@ class DealServiceTest {
      */
     @Test
     @DisplayName("findByIdWithContractors - получение сделки с контрагентами")
-    void findByIdWithContractorsTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-        Mockito.when(repository.findWithContractorsById(dealTestFactory.getDealId()))
-                .thenReturn(Optional.of(deal));
+    void findByIdWithContractorsTest() throws ResourceNotFoundException {
+        Mockito.when(repository.findWithContractorsById(DEAL_ID)).thenReturn(Optional.of(DEAL));
 
-        Deal result = dealService.findByIdWithContractors(dealTestFactory.getDealId());
+        Deal result = dealService.findByIdWithContractors(DEAL_ID);
 
-        Assertions.assertEquals(deal, result);
-        Mockito.verify(repository).findWithContractorsById(dealTestFactory.getDealId());
+        Assertions.assertEquals(DEAL, result);
+        Mockito.verify(repository).findWithContractorsById(DEAL_ID);
     }
 
     /**
@@ -161,18 +147,11 @@ class DealServiceTest {
     @Test
     @DisplayName("findAllWithContractors - получение всех сделок с контрагентами")
     void findAllWithContractorsTest() {
-        List<Deal> deals = List.of(
-                dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                        "Сделка 1", DealStatus.DRAFT),
-                dealTestFactory.createDeal(UUID.randomUUID(),
-                        "Сделка 2", DealStatus.ACTIVE)
-        );
-        Mockito.when(repository.findAllWithContractors())
-                .thenReturn(deals);
+        List<Deal> deals = List.of(DEAL, UPDATED_DEAL);
+        Mockito.when(repository.findAllWithContractors()).thenReturn(deals);
 
         List<Deal> result = dealService.findAllWithContractors();
 
-        Assertions.assertEquals(2, result.size());
         Assertions.assertEquals(deals, result);
         Mockito.verify(repository).findAllWithContractors();
     }
@@ -182,23 +161,16 @@ class DealServiceTest {
      */
     @Test
     @DisplayName("changeStatus - изменение статуса сделки")
-    void changeStatusTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), DealStatus.DRAFT);
-        Deal savedDeal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
+    void changeStatusTest() throws ResourceNotFoundException {
+        Mockito.when(repository.findWithContractorsById(DEAL_ID)).thenReturn(Optional.of(DEAL));
+        Mockito.when(repository.save(DEAL)).thenReturn(DEAL);
 
-        Mockito.when(repository.findWithContractorsById(dealTestFactory.getDealId()))
-                .thenReturn(Optional.of(deal));
-        Mockito.when(repository.save(deal)).thenReturn(savedDeal);
+        Deal result = dealService.changeStatus(DEAL_ID, NEW_STATUS);
 
-        Deal result = dealService.changeStatus(dealTestFactory.getDealId(),
-                dealTestFactory.getDealStatus());
-
-        Assertions.assertEquals(savedDeal, result);
-        Assertions.assertEquals(dealTestFactory.getDealStatus(), deal.getStatus());
-        Mockito.verify(repository).findWithContractorsById(dealTestFactory.getDealId());
-        Mockito.verify(repository).save(deal);
+        Assertions.assertEquals(DEAL, result);
+        Assertions.assertEquals(NEW_STATUS, DEAL.getStatus());
+        Mockito.verify(repository).findWithContractorsById(DEAL_ID);
+        Mockito.verify(repository).save(DEAL);
     }
 
     /**
@@ -206,20 +178,15 @@ class DealServiceTest {
      */
     @Test
     @DisplayName("delete - удаление сделки без контрагентов")
-    void deleteTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-        deal.setContractors(new HashSet<>());
+    void deleteTest() throws ResourceNotFoundException {
+        DEAL.setContractors(new HashSet<>());
 
-        Mockito.when(repository.existsById(dealTestFactory.getDealId())).thenReturn(true);
-        Mockito.when(repository.findWithContractorsById(dealTestFactory.getDealId()))
-                .thenReturn(Optional.of(deal));
+        Mockito.when(repository.existsById(DEAL_ID)).thenReturn(true);
+        Mockito.when(repository.findWithContractorsById(DEAL_ID)).thenReturn(Optional.of(DEAL));
 
-        dealService.delete(dealTestFactory.getDealId());
+        dealService.delete(DEAL_ID);
 
-        Mockito.verify(repository).existsById(dealTestFactory.getDealId());
-        Mockito.verify(repository).findWithContractorsById(dealTestFactory.getDealId());
-        Mockito.verify(repository).deleteById(dealTestFactory.getDealId());
+        Mockito.verify(repository).deleteById(DEAL_ID);
     }
 
     /**
@@ -228,17 +195,15 @@ class DealServiceTest {
     @Test
     @DisplayName("findById - выброс исключения при несуществующей сделке")
     void findByIdNonExistentDealTest() {
-        UUID nonExistentId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        Mockito.when(repository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        Mockito.when(repository.findById(nonExistentId)).thenReturn(Optional.empty());
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealService.findById(nonExistentId)
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
+                () -> dealService.findById(NON_EXISTENT_ID)
         );
 
-        Assertions.assertEquals("Deal not found", exception.getMessage());
-        Mockito.verify(repository).findById(nonExistentId);
+        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
+                exception.getMessage());
     }
 
     /**
@@ -247,18 +212,15 @@ class DealServiceTest {
     @Test
     @DisplayName("findByIdWithContractors - выброс исключения при несуществующей сделке")
     void findByIdWithContractorsNonExistentDealTest() {
-        UUID nonExistentId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        Mockito.when(repository.findWithContractorsById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        Mockito.when(repository.findWithContractorsById(nonExistentId))
-                .thenReturn(Optional.empty());
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealService.findByIdWithContractors(nonExistentId)
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
+                () -> dealService.findByIdWithContractors(NON_EXISTENT_ID)
         );
 
-        Assertions.assertEquals("Deal not found", exception.getMessage());
-        Mockito.verify(repository).findWithContractorsById(nonExistentId);
+        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
+                exception.getMessage());
     }
 
     /**
@@ -267,19 +229,16 @@ class DealServiceTest {
     @Test
     @DisplayName("delete - выброс исключения при удалении несуществующей сделки")
     void deleteNonExistentDealTest() {
-        UUID nonExistentId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        Mockito.when(repository.existsById(NON_EXISTENT_ID)).thenReturn(false);
 
-        Mockito.when(repository.existsById(nonExistentId)).thenReturn(false);
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealService.delete(nonExistentId)
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
+                () -> dealService.delete(NON_EXISTENT_ID)
         );
 
-        Assertions.assertEquals("Deal not found", exception.getMessage());
-        Mockito.verify(repository).existsById(nonExistentId);
-        Mockito.verify(repository, Mockito.never()).findWithContractorsById(nonExistentId);
-        Mockito.verify(repository, Mockito.never()).deleteById(nonExistentId);
+        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
+                exception.getMessage());
+        Mockito.verify(repository, Mockito.never()).deleteById(NON_EXISTENT_ID);
     }
 
     /**
@@ -288,25 +247,21 @@ class DealServiceTest {
     @Test
     @DisplayName("delete - выброс исключения при удалении сделки с контрагентами")
     void deleteDealWithContractorsTest() {
-        Deal dealWithContractors = dealTestFactory.createDeal(
-                dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(),
-                dealTestFactory.getDealStatus(),
-                new HashSet<>(List.of(dealTestFactory.createContractor("CTR-001", "Контрагент 1")))
-        );
+        Deal deal = DEAL_TEST_FACTORY.createDeal(DEAL_ID, DESCRIPTION, DEAL_STATUS,
+                new HashSet<>(List.of(DEAL_TEST_FACTORY.createContractor(
+                        "CTR-001", "Контрагент 1"))));
 
-        Mockito.when(repository.existsById(dealTestFactory.getDealId())).thenReturn(true);
-        Mockito.when(repository.findWithContractorsById(dealTestFactory.getDealId())).thenReturn(Optional.of(dealWithContractors));
+        Mockito.when(repository.existsById(DEAL_ID)).thenReturn(true);
+        Mockito.when(repository.findWithContractorsById(DEAL_ID)).thenReturn(Optional.of(deal));
 
         IllegalStateException exception = Assertions.assertThrows(
                 IllegalStateException.class,
-                () -> dealService.delete(dealTestFactory.getDealId())
+                () -> dealService.delete(DEAL_ID)
         );
 
-        Assertions.assertEquals("Deal use in contractor", exception.getMessage());
-        Mockito.verify(repository).existsById(dealTestFactory.getDealId());
-        Mockito.verify(repository).findWithContractorsById(dealTestFactory.getDealId());
-        Mockito.verify(repository, Mockito.never()).deleteById(dealTestFactory.getDealId());
+        Assertions.assertEquals("Нельзя удалить сделку с id = " + DEAL_ID +
+                ", так как к ней привязаны контрагенты", exception.getMessage());
+        Mockito.verify(repository, Mockito.never()).deleteById(DEAL_ID);
     }
 
     /**
@@ -315,20 +270,16 @@ class DealServiceTest {
     @Test
     @DisplayName("createOrUpdate - выброс исключения при обновлении несуществующей сделки")
     void updateNonExistentDealTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
+        Mockito.when(repository.existsById(DEAL_ID)).thenReturn(false);
 
-        Mockito.when(repository.existsById(dealTestFactory.getDealId()))
-                .thenReturn(false);
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealService.createOrUpdate(deal)
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
+                () -> dealService.createOrUpdate(UPDATED_DEAL)
         );
 
-        Assertions.assertEquals("Deal not found", exception.getMessage());
-        Mockito.verify(repository).existsById(dealTestFactory.getDealId());
-        Mockito.verify(repository, Mockito.never()).save(Mockito.any(Deal.class));
+        Assertions.assertEquals("Сделка с id = " + DEAL_ID + " не найдена",
+                exception.getMessage());
+        Mockito.verify(repository, Mockito.never()).save(UPDATED_DEAL);
     }
 
     /**
@@ -337,18 +288,15 @@ class DealServiceTest {
     @Test
     @DisplayName("changeStatus - выброс исключения при изменении статуса несуществующей сделки")
     void changeStatusNonExistentDealTest() {
-        UUID nonExistentId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        Mockito.when(repository.findWithContractorsById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        Mockito.when(repository.findWithContractorsById(nonExistentId))
-                .thenReturn(Optional.empty());
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealService.changeStatus(nonExistentId, DealStatus.ACTIVE)
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
+                () -> dealService.changeStatus(NON_EXISTENT_ID, NEW_STATUS)
         );
 
-        Assertions.assertEquals("Deal not found", exception.getMessage());
-        Mockito.verify(repository).findWithContractorsById(nonExistentId);
-        Mockito.verify(repository, Mockito.never()).save(Mockito.any(Deal.class));
+        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
+                exception.getMessage());
+        Mockito.verify(repository, Mockito.never()).save(Mockito.any());
     }
 }

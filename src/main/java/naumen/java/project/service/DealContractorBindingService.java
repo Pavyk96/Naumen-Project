@@ -1,6 +1,5 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
@@ -36,7 +35,10 @@ public class DealContractorBindingService {
             deal.addContractor(contractor);
             return dealService.save(deal);
         }
-        throw new IllegalStateException("Contractor is already exists in deal");
+        throw new IllegalStateException(
+                "Нельзя добавить контрагента с id = "
+                        + contractorId + ", так как уже существует связь"
+        );
     }
 
     /**
@@ -50,7 +52,7 @@ public class DealContractorBindingService {
             deal.removeContractor(contractor);
             return dealService.save(deal);
         }
-        throw new EntityNotFoundException("Contractor not found in deal");
+        throw new ResourceNotFoundException("Контрагент", contractorId);
     }
 
     /**

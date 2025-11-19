@@ -5,13 +5,13 @@ package naumen.java.project.exepction;
  *
  * @author Daniil Mezev
  */
-public class ResourceNotFoundException extends Exception {
+public class ResourceNotFoundException extends RuntimeException {
 
     private final String resourceName;
     private final String resourceId;
 
     public ResourceNotFoundException(String resourceName, String resourceId) {
-        super();
+        super(resourceName + " с id = " + resourceId + " не найдена");
         this.resourceName = resourceName;
         this.resourceId = resourceId;
     }

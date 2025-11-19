@@ -1,6 +1,9 @@
 package naumen.java.project.dto.deal;
 
 import jakarta.validation.constraints.NotBlank;
+import naumen.java.project.model.DealStatus;
+import naumen.java.project.model.DealType;
+import naumen.java.project.validation.ValidEnum;
 import naumen.java.project.validation.ValidUuid;
 
 /**
@@ -22,7 +25,10 @@ public record DealRequestDTO(
         /** Дата закрытия сделки */
         String closedAt,
         /** Тип сделки */
-        @NotBlank String type,
+        @NotBlank
+        @ValidEnum(enumClass = DealType.class)
+        String type,
         /** Статус сделки */
+        @ValidEnum(enumClass = DealStatus.class)
         String status
 ) { }
