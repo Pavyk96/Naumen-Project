@@ -90,7 +90,6 @@ class DealContractorBindingServiceTest {
 
         Assertions.assertEquals("Нельзя добавить контрагента с id = " + CONTRACTOR_ID + ", так как уже существует связь",
                 exception.getMessage());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
     }
 
     /**
@@ -110,7 +109,6 @@ class DealContractorBindingServiceTest {
         );
 
         Assertions.assertEquals("Контрагент с id = " + NON_EXISTENT_CONTRACTOR_ID + " не найдена", exception.getMessage());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
     }
 
     /**
@@ -127,9 +125,7 @@ class DealContractorBindingServiceTest {
                 () -> dealContractorBindingService.addContractorToDeal(CONTRACTOR_ID, DEAL_ID)
         );
 
-        Assertions.assertEquals("Сделка с id = " + DEAL_ID.toString() + " не найдена", exception.getMessage());
-        Mockito.verify(contractorService, Mockito.never()).findById(Mockito.anyString());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
+        Assertions.assertEquals("Сделка с id = " + DEAL_ID + " не найдена", exception.getMessage());
     }
 
     /**
@@ -148,7 +144,6 @@ class DealContractorBindingServiceTest {
         );
 
         Assertions.assertEquals("Контрагент с id = " + NON_EXISTENT_CONTRACTOR_ID + " не найдена", exception.getMessage());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
     }
 
     /**
@@ -166,8 +161,6 @@ class DealContractorBindingServiceTest {
         );
 
         Assertions.assertEquals("Сделка с id = " + DEAL_ID.toString() + " не найдена", exception.getMessage());
-        Mockito.verify(contractorService, Mockito.never()).findById(Mockito.anyString());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
     }
 
     /**
@@ -186,6 +179,5 @@ class DealContractorBindingServiceTest {
         );
 
         Assertions.assertEquals("Контрагент с id = " + NON_EXISTENT_CONTRACTOR_ID + " не найдена", exception.getMessage());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
     }
 }

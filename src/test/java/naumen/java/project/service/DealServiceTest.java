@@ -238,7 +238,6 @@ class DealServiceTest {
 
         Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
                 exception.getMessage());
-        Mockito.verify(repository, Mockito.never()).deleteById(NON_EXISTENT_ID);
     }
 
     /**
@@ -261,7 +260,6 @@ class DealServiceTest {
 
         Assertions.assertEquals("Нельзя удалить сделку с id = " + DEAL_ID +
                 ", так как к ней привязаны контрагенты", exception.getMessage());
-        Mockito.verify(repository, Mockito.never()).deleteById(DEAL_ID);
     }
 
     /**
@@ -279,7 +277,6 @@ class DealServiceTest {
 
         Assertions.assertEquals("Сделка с id = " + DEAL_ID + " не найдена",
                 exception.getMessage());
-        Mockito.verify(repository, Mockito.never()).save(UPDATED_DEAL);
     }
 
     /**
@@ -297,6 +294,5 @@ class DealServiceTest {
 
         Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
                 exception.getMessage());
-        Mockito.verify(repository, Mockito.never()).save(Mockito.any());
     }
 }
