@@ -5,6 +5,7 @@ import naumen.java.project.model.Contractor;
 import naumen.java.project.repository.ContractorRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -54,6 +55,8 @@ public class ContractorService {
             );
         }
 
+        contractor.setCreateDate(LocalDateTime.now());
+
         return repository.save(contractor);
     }
 
@@ -80,6 +83,8 @@ public class ContractorService {
         existing.setIndustry(contractor.getIndustry());
         existing.setOrgForm(contractor.getOrgForm());
 
+        existing.setUpdateDate(LocalDateTime.now());
+
         return repository.save(existing);
     }
 
@@ -93,4 +98,5 @@ public class ContractorService {
         }
         repository.deleteById(id);
     }
+
 }

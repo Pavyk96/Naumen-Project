@@ -18,7 +18,6 @@ import naumen.java.project.service.CountryService;
 import naumen.java.project.service.IndustryService;
 import naumen.java.project.service.OrgFormService;
 
-
 import java.util.List;
 
 /**

@@ -2,6 +2,8 @@ package naumen.java.project.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,6 +38,11 @@ public class Contractor {
 
     @ManyToMany(mappedBy = "contractors", fetch = FetchType.LAZY)
     private Set<Deal> deals = new HashSet<>();
+
+    private LocalDateTime createDate;
+
+    private LocalDateTime updateDate;
+
 
     protected Contractor() { }
 
@@ -79,4 +86,32 @@ public class Contractor {
 
     /** Возвращает сделки */
     public Set<Deal> getDeals() { return deals; }
+
+    /**
+     * Вернуть дату создания
+     */
+    public LocalDateTime getCreateDate() {
+        return createDate;
+    }
+
+    /**
+     * Вернуть дату обновления
+     */
+    public LocalDateTime getUpdateDate() {
+        return updateDate;
+    }
+
+    /**
+     * Установит дату создания
+     */
+    public void setCreateDate(LocalDateTime createDate) {
+        this.createDate = createDate;
+    }
+
+    /**
+     * Установить дату обновления
+     */
+    public void setUpdateDate(LocalDateTime updateDate) {
+        this.updateDate = updateDate;
+    }
 }
