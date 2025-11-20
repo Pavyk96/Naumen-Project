@@ -4,10 +4,7 @@ import naumen.java.project.dto.DealContractorRequestDTO;
 import naumen.java.project.dto.deal.DealRequestDTO;
 import naumen.java.project.dto.deal.DealResponseDTO;
 import naumen.java.project.dto.deal.DealShortResponseDTO;
-import naumen.java.project.model.Contractor;
-import naumen.java.project.model.Deal;
-import naumen.java.project.model.DealStatus;
-import naumen.java.project.model.DealType;
+import naumen.java.project.model.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,6 +29,10 @@ public class DealTestFactory {
     private final static LocalDateTime CLOSED_AT = LocalDateTime.of(2023, 12, 31, 18, 0);
     private final static DealType DEAL_TYPE = DealType.CREDIT;
     private final static DealStatus DEAL_STATUS = DealStatus.DRAFT;
+
+    private final static Country COUNTRY = new Country("RU", "Россия");
+    private final static Industry INDUSTRY = new Industry(1L, "IT");
+    private final static OrgForm ORG_FORM = new OrgForm("LLC", "ООО");
 
     /** Создает сущность Deal */
     public Deal createDeal(UUID id, String description, DealStatus status, Set<Contractor> contractors) {
@@ -61,7 +62,7 @@ public class DealTestFactory {
 
     /** Создает сущность Contractor */
     public Contractor createContractor(String id, String name) {
-        return new Contractor(id, name, "RU", 1L, "LLC");
+        return new Contractor(id, name, COUNTRY, INDUSTRY, ORG_FORM);
     }
 
     /**

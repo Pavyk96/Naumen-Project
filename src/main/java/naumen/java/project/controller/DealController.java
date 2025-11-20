@@ -10,6 +10,7 @@ import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
 import naumen.java.project.model.DealType;
 import naumen.java.project.service.DealService;
+import naumen.java.project.validation.ValidEnum;
 import naumen.java.project.validation.ValidUuid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,7 +102,8 @@ public class DealController {
     @Transactional
     @PatchMapping("/change/status/{id}/{status}")
     public ResponseEntity<DealResponseDTO> changeStatus(@PathVariable @ValidUuid String id,
-                                                        @PathVariable String status) throws ResourceNotFoundException {
+                                                        @PathVariable @ValidEnum(enumClass = DealStatus.class) String status
+    ) throws ResourceNotFoundException {
         Deal deal = dealService.changeStatus(UUID.fromString(id), DealStatus.valueOf(status));
         DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
         return ResponseEntity.ok(dealResponseDTO);
