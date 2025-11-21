@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ExceptionResponseDTO> handleResourceNotFound(ResourceNotFoundException ex,
                                                                        HttpServletRequest request) {
-        String message = ex.getResourceName() + " с id = " + ex.getResourceId() + " не найдена";
+        String message = ex.getMessage();
 
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.NOT_FOUND,

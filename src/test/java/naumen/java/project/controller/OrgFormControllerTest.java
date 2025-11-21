@@ -110,7 +110,7 @@ class OrgFormControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/org_form/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message")
-                        .value("Организационно-правовая форма с id = " + ID + " не найдена"));
+                        .value("Организационно-правовая форма с id = " + ID + " не найден(а)"));
     }
 
     /** Проверяет успешное создание организационно-правовой формы */

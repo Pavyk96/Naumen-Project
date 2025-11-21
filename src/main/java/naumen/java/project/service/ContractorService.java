@@ -35,15 +35,6 @@ public class ContractorService {
                 ));
     }
 
-    /** Возвращает контрагента по идентификатору со сделками (если нужно) */
-    public Contractor findByIdWithDeals(String id) throws ResourceNotFoundException {
-        return repository.findWithDealsById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Контрагент",
-                        id
-                ));
-    }
-
     /** Создаёт нового контрагента */
     public Contractor create(Contractor contractor) {
         String id = contractor.getId();

@@ -110,7 +110,7 @@ class IndustryControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/industry/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message")
-                        .value("Индустрия с id = " + ID + " не найдена"));
+                        .value("Индустрия с id = " + ID + " не найден(а)"));
     }
 
     /** Проверяет успешное создание индустрии */

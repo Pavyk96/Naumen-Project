@@ -11,7 +11,7 @@ public class ResourceNotFoundException extends Exception {
     private final String resourceId;
 
     public ResourceNotFoundException(String resourceName, String resourceId) {
-        super();
+        super(resourceName + " с id = " + resourceId + " не найден(а)");
         this.resourceName = resourceName;
         this.resourceId = resourceId;
     }
