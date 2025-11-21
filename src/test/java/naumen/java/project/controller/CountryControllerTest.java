@@ -110,7 +110,7 @@ class CountryControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/country/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message")
-                        .value("Страна с id = " + ID + " не найдена"));
+                        .value("Страна с id = " + ID + " не найден(а)"));
     }
 
     /** Проверяет успешное создание страны */

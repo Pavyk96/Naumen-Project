@@ -52,7 +52,10 @@ public class DealContractorBindingService {
             deal.removeContractor(contractor);
             return dealService.save(deal);
         }
-        throw new ResourceNotFoundException("Контрагент", contractorId);
+        throw new IllegalStateException(
+                "Нельзя удалить контрагента с id = "
+                        + contractorId + ", так как связь не существует"
+        );
     }
 
     /**

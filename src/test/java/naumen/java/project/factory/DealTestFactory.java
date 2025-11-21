@@ -27,12 +27,8 @@ public class DealTestFactory {
     private final static LocalDate AGREEMENT_DATE = LocalDate.of(2023, 1, 1);
     private final static LocalDateTime OPENED_AT = LocalDateTime.of(2023, 1, 2, 10, 0);
     private final static LocalDateTime CLOSED_AT = LocalDateTime.of(2023, 12, 31, 18, 0);
-    private final static DealType DEAL_TYPE = DealType.CREDIT;
-    private final static DealStatus DEAL_STATUS = DealStatus.DRAFT;
-
-    private final static Country COUNTRY = new Country("RU", "Россия");
-    private final static Industry INDUSTRY = new Industry(1L, "IT");
-    private final static OrgForm ORG_FORM = new OrgForm("LLC", "ООО");
+    private final DealType dealType = DealType.CREDIT;
+    private final DealStatus dealStatus = DealStatus.DRAFT;
 
     /** Создает сущность Deal */
     public Deal createDeal(UUID id, String description, DealStatus status, Set<Contractor> contractors) {
@@ -43,7 +39,7 @@ public class DealTestFactory {
                 AGREEMENT_DATE,
                 OPENED_AT,
                 CLOSED_AT,
-                DEAL_TYPE,
+                dealType,
                 status
         );
         deal.setContractors(contractors);
@@ -57,12 +53,13 @@ public class DealTestFactory {
 
     /** Создает сущность Deal (упрощенная версия) */
     public Deal createDeal(UUID id, Set<Contractor> contractors) {
-        return createDeal(id, DESCRIPTION, DEAL_STATUS, contractors);
+        return createDeal(id, DESCRIPTION, dealStatus, contractors);
     }
 
     /** Создает сущность Contractor */
     public Contractor createContractor(String id, String name) {
-        return new Contractor(id, name, COUNTRY, INDUSTRY, ORG_FORM);
+        return new Contractor(id, name, new Country("RU", "Россия"),
+                new Industry(1L, "IT"), new OrgForm("LLC", "ООО"));
     }
 
     /**
@@ -76,7 +73,7 @@ public class DealTestFactory {
                 AGREEMENT_DATE.toString(),
                 OPENED_AT.toString(),
                 CLOSED_AT.toString(),
-                DEAL_TYPE.name(),
+                dealType.name(),
                 status != null ? status.name() : null
         );
     }
@@ -88,7 +85,7 @@ public class DealTestFactory {
         return createDealRequest(
                 id != null ? id.toString() : null,
                 description,
-                DEAL_STATUS
+                dealStatus
         );
     }
 
@@ -103,7 +100,7 @@ public class DealTestFactory {
                 AGREEMENT_DATE.toString(),
                 OPENED_AT.toString(),
                 null,
-                DEAL_TYPE.getDisplayName(),
+                dealType.getDisplayName(),
                 status.getDisplayName(),
                 List.of()
         );
@@ -175,11 +172,13 @@ public class DealTestFactory {
      * Возвращает тип сделки
      */
     public DealType getDealType() {
-        return DEAL_TYPE;
+        return dealType;
     }
 
     /**
      * Возвращает статус сделки
      */
-    public DealStatus getDealStatus() { return DEAL_STATUS; }
+    public DealStatus getDealStatus() {
+        return dealStatus;
+    }
 }

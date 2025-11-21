@@ -137,7 +137,7 @@ class ContractorControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/contractor/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message")
-                        .value("Контрагент с id = " + ID + " не найдена"));
+                        .value("Контрагент с id = " + ID + " не найден(а)"));
     }
 
     /** Проверяет успешное создание контрагента */
@@ -179,7 +179,7 @@ class ContractorControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message")
-                        .value("Страна с id = " + COUNTRY_ID + " не найдена"));
+                        .value("Страна с id = " + COUNTRY_ID + " не найден(а)"));
     }
 
     /** Проверяет успешное обновление контрагента */

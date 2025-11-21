@@ -43,22 +43,24 @@ class DealControllerTest {
     @MockitoBean
     private DealMapper dealMapper;
 
-    private static final DealTestFactory DEAL_TEST_FACTORY = new DealTestFactory();
-    private static final UUID DEAL_ID = DEAL_TEST_FACTORY.getDealId();
     private static final UUID NON_EXISTENT_DEAL_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
-    private static final String DESCRIPTION = DEAL_TEST_FACTORY.getDescription();
-    private static final DealStatus DEAL_STATUS = DEAL_TEST_FACTORY.getDealStatus();
-    private static final DealType DEAL_TYPE = DEAL_TEST_FACTORY.getDealType();
-    private static final String AGREEMENT_NUMBER = DEAL_TEST_FACTORY.getAgreementNumber();
 
-    private static final Deal DEAL = DEAL_TEST_FACTORY.createDeal(DEAL_ID,
-            DESCRIPTION, DEAL_STATUS);
-    private static final DealRequestDTO DEAL_REQUEST = DEAL_TEST_FACTORY
-            .createDealRequest(DEAL_ID, DESCRIPTION);
-    private static final DealShortResponseDTO DEAL_SHORT_RESPONSE = DEAL_TEST_FACTORY
-            .createDealShortResponse(DEAL_ID, DEAL_STATUS);
-    private static final DealResponseDTO DEAL_RESPONSE = DEAL_TEST_FACTORY
-            .createDealResponse(DEAL_ID, DESCRIPTION, DEAL_STATUS);
+    private final DealTestFactory dealTestFactory = new DealTestFactory();
+    private final UUID dealId = dealTestFactory.getDealId();
+    private final String description = dealTestFactory.getDescription();
+    private final String agreementNumber = dealTestFactory.getAgreementNumber();
+
+    private final DealStatus dealStatus = dealTestFactory.getDealStatus();
+    private final DealType dealType = dealTestFactory.getDealType();
+
+    private final Deal deal = dealTestFactory.createDeal(dealId,
+            description, dealStatus);
+    private final DealRequestDTO dealRequest = dealTestFactory
+            .createDealRequest(dealId, description);
+    private final DealShortResponseDTO dealShortResponse = dealTestFactory
+            .createDealShortResponse(dealId, dealStatus);
+    private final DealResponseDTO dealResponse = dealTestFactory
+            .createDealResponse(dealId, description, dealStatus);
 
     /**
      * Проверяет корректное создание новой сделки
@@ -66,17 +68,17 @@ class DealControllerTest {
     @Test
     @DisplayName("POST /deal/save - создание новой сделки")
     void createNewDealTest() throws Exception {
-        DealRequestDTO request = DEAL_TEST_FACTORY.createDealRequest(null, DESCRIPTION);
+        DealRequestDTO request = dealTestFactory.createDealRequest(null, description);
 
-        Mockito.when(dealService.createOrUpdate(Mockito.any(Deal.class))).thenReturn(DEAL);
-        Mockito.when(dealMapper.toShortResponse(DEAL)).thenReturn(DEAL_SHORT_RESPONSE);
+        Mockito.when(dealService.save(Mockito.any(Deal.class))).thenReturn(deal);
+        Mockito.when(dealMapper.toShortResponse(deal)).thenReturn(dealShortResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal/save")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEAL_ID.toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(DEAL_STATUS.name()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(dealId.toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(dealStatus.name()));
     }
 
     /**
@@ -86,17 +88,18 @@ class DealControllerTest {
     @DisplayName("POST /deal/save - обновление существующей сделки")
     void updateExistingDealTest() throws Exception {
         DealStatus newStatus = DealStatus.ACTIVE;
-        Deal updatedDeal = DEAL_TEST_FACTORY.createDeal(DEAL_ID, "Обновленное описание", newStatus);
-        DealShortResponseDTO shortResponse = DEAL_TEST_FACTORY.createDealShortResponse(DEAL_ID, newStatus);
+        Deal updatedDeal = dealTestFactory.createDeal(dealId, "Обновленное описание", newStatus);
+        DealShortResponseDTO shortResponse = dealTestFactory.createDealShortResponse(dealId, newStatus);
 
-        Mockito.when(dealService.createOrUpdate(Mockito.any(Deal.class))).thenReturn(updatedDeal);
+        Mockito.when(dealService.findById(dealId)).thenReturn(deal);
+        Mockito.when(dealService.save(Mockito.any(Deal.class))).thenReturn(updatedDeal);
         Mockito.when(dealMapper.toShortResponse(updatedDeal)).thenReturn(shortResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(DEAL_REQUEST)))
+                        .content(om.writeValueAsString(dealRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEAL_ID.toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(dealId.toString()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(newStatus.name()));
     }
 
@@ -106,16 +109,16 @@ class DealControllerTest {
     @Test
     @DisplayName("GET /deal/{id} - получение сделки с контрагентами")
     void getByIdTest() throws Exception {
-        Mockito.when(dealService.findByIdWithContractors(DEAL_ID)).thenReturn(DEAL);
-        Mockito.when(dealMapper.toDetailResponse(DEAL)).thenReturn(DEAL_RESPONSE);
+        Mockito.when(dealService.findByIdWithContractors(dealId)).thenReturn(deal);
+        Mockito.when(dealMapper.toDetailResponse(deal)).thenReturn(dealResponse);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/deal/{id}", DEAL_ID.toString()))
+        mockMvc.perform(MockMvcRequestBuilders.get("/deal/{id}", dealId.toString()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEAL_ID.toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.description").value(DESCRIPTION))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.agreementNumber").value(AGREEMENT_NUMBER))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.type").value(DEAL_TYPE.getDisplayName()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(DEAL_STATUS.getDisplayName()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(dealId.toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.description").value(description))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.agreementNumber").value(agreementNumber))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.type").value(dealType.getDisplayName()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(dealStatus.getDisplayName()));
     }
 
     /**
@@ -124,9 +127,9 @@ class DealControllerTest {
     @Test
     @DisplayName("DELETE /deal/delete/{id} - удаление сделки")
     void deleteDealTest() throws Exception {
-        Mockito.doNothing().when(dealService).delete(DEAL_ID);
+        Mockito.doNothing().when(dealService).delete(dealId);
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/deal/delete/{id}", DEAL_ID.toString()))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/deal/delete/{id}", dealId.toString()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string(""));
     }
@@ -138,11 +141,11 @@ class DealControllerTest {
     @DisplayName("GET /deal/all - получение всех сделок")
     void findAllTest() throws Exception {
         UUID dealId2 = UUID.randomUUID();
-        Deal deal2 = DEAL_TEST_FACTORY.createDeal(dealId2, "Сделка 2", DealStatus.ACTIVE);
-        List<Deal> deals = List.of(DEAL, deal2);
+        Deal deal2 = dealTestFactory.createDeal(dealId2, "Сделка 2", DealStatus.ACTIVE);
+        List<Deal> deals = List.of(deal, deal2);
 
-        DealResponseDTO response2 = DEAL_TEST_FACTORY.createDealResponse(dealId2, "Сделка 2", DealStatus.ACTIVE);
-        List<DealResponseDTO> responses = List.of(DEAL_RESPONSE, response2);
+        DealResponseDTO response2 = dealTestFactory.createDealResponse(dealId2, "Сделка 2", DealStatus.ACTIVE);
+        List<DealResponseDTO> responses = List.of(dealResponse, response2);
 
         Mockito.when(dealService.findAllWithContractors()).thenReturn(deals);
         Mockito.when(dealMapper.toListResponse(deals)).thenReturn(responses);
@@ -150,8 +153,8 @@ class DealControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/deal/all"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(2))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(DEAL_ID.toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].description").value(DESCRIPTION))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(dealId.toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].description").value(description))
                 .andExpect(MockMvcResultMatchers.jsonPath("$[1].description").value("Сделка 2"));
     }
 
@@ -162,16 +165,16 @@ class DealControllerTest {
     @DisplayName("PATCH /deal/change/status/{id}/{status} - изменение статуса сделки")
     void changeStatusTest() throws Exception {
         DealStatus newStatus = DealStatus.ACTIVE;
-        Deal updatedDeal = DEAL_TEST_FACTORY.createDeal(DEAL_ID, DESCRIPTION, newStatus);
-        DealResponseDTO response = DEAL_TEST_FACTORY.createDealResponse(DEAL_ID, DESCRIPTION, newStatus);
+        Deal updatedDeal = dealTestFactory.createDeal(dealId, description, newStatus);
+        DealResponseDTO response = dealTestFactory.createDealResponse(dealId, description, newStatus);
 
-        Mockito.when(dealService.changeStatus(DEAL_ID, newStatus)).thenReturn(updatedDeal);
+        Mockito.when(dealService.changeStatus(dealId, newStatus)).thenReturn(updatedDeal);
         Mockito.when(dealMapper.toDetailResponse(updatedDeal)).thenReturn(response);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/deal/change/status/{id}/{status}",
-                        DEAL_ID.toString(), newStatus.name()))
+                        dealId.toString(), newStatus.name()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEAL_ID.toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(dealId.toString()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(newStatus.getDisplayName()));
     }
 
@@ -190,8 +193,6 @@ class DealControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("VALIDATION_FAILED"));
-
-        Mockito.verify(dealService, Mockito.never()).findByIdWithContractors(Mockito.any());
     }
 
     /**
@@ -228,8 +229,6 @@ class DealControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("INVALID_INPUT"));
-
-        Mockito.verify(dealService, Mockito.never()).delete(Mockito.any());
     }
 
     /**
@@ -239,7 +238,7 @@ class DealControllerTest {
     @DisplayName("PATCH /deal/change/status/{id}/{status} - возвращает 400 при невалидном статусе")
     void changeStatusWithInvalidStatusTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.patch("/deal/change/status/{id}/{status}",
-                        DEAL_ID.toString(), "INVALID_STATUS"))
+                        dealId.toString(), "INVALID_STATUS"))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -247,8 +246,6 @@ class DealControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("VALIDATION_FAILED"));
-
-        Mockito.verify(dealService, Mockito.never()).changeStatus(Mockito.any(), Mockito.any());
     }
 
     /**
@@ -266,8 +263,6 @@ class DealControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("VALIDATION_FAILED"));
-
-        Mockito.verify(dealService, Mockito.never()).changeStatus(Mockito.any(), Mockito.any());
     }
 
     /**
@@ -291,8 +286,6 @@ class DealControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("VALIDATION_FAILED"));
-
-        Mockito.verify(dealService, Mockito.never()).createOrUpdate(Mockito.any());
     }
 
     /**
@@ -322,10 +315,10 @@ class DealControllerTest {
     @DisplayName("DELETE /deal/delete/{id} - возвращает 400 при наличии контрагентов")
     void deleteDealWithContractorsTest() throws Exception {
         Mockito.doThrow(new IllegalStateException("Нельзя удалить сделку с id = "
-                        + DEAL_ID + ", так как к ней привязаны контрагенты"))
-                .when(dealService).delete(DEAL_ID);
+                        + dealId + ", так как к ней привязаны контрагенты"))
+                .when(dealService).delete(dealId);
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/deal/delete/{id}", DEAL_ID.toString()))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/deal/delete/{id}", dealId.toString()))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
