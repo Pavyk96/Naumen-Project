@@ -46,9 +46,11 @@ public class DealController {
     @PostMapping("/save")
     public ResponseEntity<DealShortResponseDTO> save(@Valid @RequestBody DealRequestDTO request)
             throws ResourceNotFoundException {
-        Deal deal = new Deal();
+        Deal deal;
         if (request.id() != null) {
-            deal.setId(UUID.fromString(request.id()));
+            deal = dealService.findById(UUID.fromString(request.id()));
+        } else {
+            deal = new Deal();
         }
         deal.setDescription(request.description());
         deal.setAgreementNumber(request.agreementNumber());
@@ -58,7 +60,7 @@ public class DealController {
         deal.setType(DealType.valueOf(request.type()));
         deal.setStatus(parseDealStatus(request.status()));
 
-        Deal dealSave = dealService.createOrUpdate(deal);
+        Deal dealSave = dealService.save(deal);
         DealShortResponseDTO dealShortResponseDTO = dealMapper.toShortResponse(dealSave);
         return ResponseEntity.ok(dealShortResponseDTO);
     }

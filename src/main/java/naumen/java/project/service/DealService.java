@@ -64,19 +64,6 @@ public class DealService {
         dealRepository.deleteById(id);
     }
 
-
-    /** Сохраняет сделку (создание или обновление) */
-    public Deal createOrUpdate(Deal deal) throws ResourceNotFoundException {
-        if (deal.getId() != null && !existsById(deal.getId())) {
-            throw new ResourceNotFoundException(
-                    "Сделка",
-                    String.valueOf(deal.getId())
-            );
-        }
-        return save(deal);
-    }
-
-
     /** Возвращает сделку по идентификатору с контрагентами */
     public Deal findByIdWithContractors(UUID id) throws ResourceNotFoundException {
         return dealRepository.findWithContractorsById(id)
