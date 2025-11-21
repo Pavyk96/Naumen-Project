@@ -106,7 +106,7 @@ class DealServiceTest {
                 () -> dealService.findById(NON_EXISTENT_ID)
         );
 
-        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
+        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найден(а)",
                 exception.getMessage());
     }
 
@@ -123,7 +123,7 @@ class DealServiceTest {
                 () -> dealService.findByIdWithContractors(NON_EXISTENT_ID)
         );
 
-        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
+        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найден(а)",
                 exception.getMessage());
     }
 
@@ -140,7 +140,7 @@ class DealServiceTest {
                 () -> dealService.delete(NON_EXISTENT_ID)
         );
 
-        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
+        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найден(а)",
                 exception.getMessage());
     }
 
@@ -179,7 +179,7 @@ class DealServiceTest {
                 () -> dealService.changeStatus(NON_EXISTENT_ID, newStatus)
         );
 
-        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найдена",
+        Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найден(а)",
                 exception.getMessage());
     }
 }
