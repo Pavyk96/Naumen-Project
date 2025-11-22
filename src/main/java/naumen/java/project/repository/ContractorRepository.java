@@ -12,8 +12,4 @@ import java.util.Optional;
  * @author Daniil Mezev
  */
 public interface ContractorRepository extends JpaRepository<Contractor, String> {
-
-    /** Загружает контрагента со сделками через EntityGraph */
-    @EntityGraph(attributePaths = "deals")
-    Optional<Contractor> findWithDealsById(String id);
 }
