@@ -7,6 +7,7 @@ import naumen.java.project.factory.DealTestFactory;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,9 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Тесты для DealMapper
@@ -38,8 +36,8 @@ class DealMapperTest {
         Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), dealTestFactory.getDescription(), dealTestFactory.getDealStatus(), null);
         DealShortResponseDTO result = dealMapper.toShortResponse(deal);
 
-        assertEquals(dealTestFactory.getDealId(), result.id());
-        assertEquals(dealTestFactory.getDealStatus(), result.status());
+        Assertions.assertEquals(dealTestFactory.getDealId(), result.id());
+        Assertions.assertEquals(dealTestFactory.getDealStatus(), result.status());
     }
 
     /**
@@ -51,15 +49,15 @@ class DealMapperTest {
         Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), dealTestFactory.getDescription(), dealTestFactory.getDealStatus(), new HashSet<>());
         DealResponseDTO result = dealMapper.toDetailResponse(deal);
 
-        assertEquals(dealTestFactory.getDealId(), result.id());
-        assertEquals(dealTestFactory.getDescription(), result.description());
-        assertEquals(dealTestFactory.getAgreementNumber(), result.agreementNumber());
-        assertEquals(dealTestFactory.getAgreementDate().toString(), result.agreementDate());
-        assertEquals(dealTestFactory.getOpenedAt().toString(), result.openedAt());
-        assertEquals(dealTestFactory.getClosedAt().toString(), result.closedAt());
-        assertEquals(dealTestFactory.getDealType().getDisplayName(), result.type());
-        assertEquals(dealTestFactory.getDealStatus().getDisplayName(), result.status());
-        assertEquals(0, result.contractors().size());
+        Assertions.assertEquals(dealTestFactory.getDealId(), result.id());
+        Assertions.assertEquals(dealTestFactory.getDescription(), result.description());
+        Assertions.assertEquals(dealTestFactory.getAgreementNumber(), result.agreementNumber());
+        Assertions.assertEquals(dealTestFactory.getAgreementDate().toString(), result.agreementDate());
+        Assertions.assertEquals(dealTestFactory.getOpenedAt().toString(), result.openedAt());
+        Assertions.assertEquals(dealTestFactory.getClosedAt().toString(), result.closedAt());
+        Assertions.assertEquals(dealTestFactory.getDealType().getDisplayName(), result.type());
+        Assertions.assertEquals(dealTestFactory.getDealStatus().getDisplayName(), result.status());
+        Assertions.assertEquals(0, result.contractors().size());
     }
 
     /**
@@ -75,12 +73,12 @@ class DealMapperTest {
         Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), dealTestFactory.getDescription(), dealTestFactory.getDealStatus(), contractors);
         DealResponseDTO result = dealMapper.toDetailResponse(deal);
 
-        assertEquals(dealTestFactory.getDealId(), result.id());
-        assertEquals(dealTestFactory.getDescription(), result.description());
-        assertEquals(dealTestFactory.getAgreementNumber(), result.agreementNumber());
-        assertEquals(dealTestFactory.getDealType().getDisplayName(), result.type());
-        assertEquals(dealTestFactory.getDealStatus().getDisplayName(), result.status());
-        assertEquals(2, result.contractors().size());
+        Assertions.assertEquals(dealTestFactory.getDealId(), result.id());
+        Assertions.assertEquals(dealTestFactory.getDescription(), result.description());
+        Assertions.assertEquals(dealTestFactory.getAgreementNumber(), result.agreementNumber());
+        Assertions.assertEquals(dealTestFactory.getDealType().getDisplayName(), result.type());
+        Assertions.assertEquals(dealTestFactory.getDealStatus().getDisplayName(), result.status());
+        Assertions.assertEquals(2, result.contractors().size());
 
         List<String> contractorIds = result.contractors().stream()
                 .map(ContractorInfoForDealDTO::id)
@@ -91,8 +89,8 @@ class DealMapperTest {
                 .sorted()
                 .toList();
 
-        assertEquals(List.of("CTR-001", "CTR-002"), contractorIds);
-        assertEquals(List.of("Контрагент 1", "Контрагент 2"), contractorNames);
+        Assertions.assertEquals(List.of("CTR-001", "CTR-002"), contractorIds);
+        Assertions.assertEquals(List.of("Контрагент 1", "Контрагент 2"), contractorNames);
     }
 
     /**
@@ -107,10 +105,10 @@ class DealMapperTest {
         );
         List<DealResponseDTO> result = dealMapper.toListResponse(deals);
 
-        assertEquals(2, result.size());
-        assertEquals("Сделка 1", result.get(0).description());
-        assertEquals(DealStatus.DRAFT.getDisplayName(), result.get(0).status());
-        assertEquals("Сделка 2", result.get(1).description());
-        assertEquals(DealStatus.ACTIVE.getDisplayName(), result.get(1).status());
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertEquals("Сделка 1", result.get(0).description());
+        Assertions.assertEquals(DealStatus.DRAFT.getDisplayName(), result.get(0).status());
+        Assertions.assertEquals("Сделка 2", result.get(1).description());
+        Assertions.assertEquals(DealStatus.ACTIVE.getDisplayName(), result.get(1).status());
     }
 }

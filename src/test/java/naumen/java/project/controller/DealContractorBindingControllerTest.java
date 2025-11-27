@@ -2,7 +2,6 @@ package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import naumen.java.project.dto.DealContractorRequestDTO;
-import naumen.java.project.dto.deal.DealResponseDTO;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.factory.DealTestFactory;
 import naumen.java.project.mapper.DealMapper;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,6 +26,7 @@ import java.util.UUID;
  *
  * @author Daria
  */
+@Import(DealMapper.class)
 @WebMvcTest(DealContractorBindingController.class)
 @DisplayName("Тесты DealContractorBindingController")
 class DealContractorBindingControllerTest {
@@ -33,11 +34,11 @@ class DealContractorBindingControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private ObjectMapper om;
+    private ObjectMapper objectMapper;
+    @Autowired
+    private DealMapper dealMapper;
     @MockitoBean
     private DealContractorBindingService dealContractorBindingService;
-    @MockitoBean
-    private DealMapper dealMapper;
 
     private final DealTestFactory dealTestFactory = new DealTestFactory();
     private final UUID dealId = dealTestFactory.getDealId();
@@ -48,8 +49,6 @@ class DealContractorBindingControllerTest {
             new DealContractorRequestDTO("invalid-uuid", contractorId);
     private final Deal deal = dealTestFactory.createDeal(dealId,
             dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-    private final DealResponseDTO dealResponse = dealTestFactory.createDealResponse(dealId,
-            dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
 
     /**
      * Проверяет корректное создание связи между сделкой и контрагентом
@@ -59,11 +58,10 @@ class DealContractorBindingControllerTest {
     void addContractorToDealTest() throws Exception {
         Mockito.when(dealContractorBindingService.addContractorToDeal(contractorId, dealId))
                 .thenReturn(deal);
-        Mockito.when(dealMapper.toDetailResponse(deal)).thenReturn(dealResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(validRequest)))
+                        .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(dealId.toString()));
     }
@@ -76,11 +74,10 @@ class DealContractorBindingControllerTest {
     void removeContractorFromDealTest() throws Exception {
         Mockito.when(dealContractorBindingService.deleteContractorFromDeal(contractorId, dealId))
                 .thenReturn(deal);
-        Mockito.when(dealMapper.toDetailResponse(deal)).thenReturn(dealResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/delete")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(validRequest)))
+                        .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(dealId.toString()));
     }
@@ -93,7 +90,7 @@ class DealContractorBindingControllerTest {
     void addContractorWithInvalidDealUuidTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(invalidUuidRequest)))
+                        .content(objectMapper.writeValueAsString(invalidUuidRequest)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -117,7 +114,7 @@ class DealContractorBindingControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -138,7 +135,7 @@ class DealContractorBindingControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(validRequest)))
+                        .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(404))
@@ -160,7 +157,7 @@ class DealContractorBindingControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(validRequest)))
+                        .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -178,7 +175,7 @@ class DealContractorBindingControllerTest {
     void removeContractorWithInvalidDealUuidTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/delete")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(invalidUuidRequest)))
+                        .content(objectMapper.writeValueAsString(invalidUuidRequest)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -205,7 +202,7 @@ class DealContractorBindingControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/delete")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(404))
