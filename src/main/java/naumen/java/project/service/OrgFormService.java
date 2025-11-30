@@ -26,70 +26,36 @@ public class OrgFormService {
         return repository.findAll();
     }
 
-    /** Ищет организационно-правовую форму по идентификатору */
+    /**
+     * Ищет организационно-правовую форму по идентификатору
+     * @throws ResourceNotFoundException если форма с указанным id не найдена в БД
+     */
     public OrgForm findById(String id) throws ResourceNotFoundException {
-        String normId = normalize(id);
-        return repository.findById(normId)
+        return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Организационно-правовая форма",
-                        normId
+                        id
                 ));
-    }
-
-    /** Создаёт новую организационно-правовую форму */
-    public OrgForm create(OrgForm orgForm) {
-        String normId = normalize(orgForm.getId());
-        orgForm.setId(normId);
-
-        if (repository.existsById(normId)) {
-            throw new IllegalArgumentException(
-                    "Организационно-правовая форма с id = " + normId + " уже существует"
-            );
-        }
-
-        return repository.save(orgForm);
-    }
-
-    /** Обновляет существующую организационно-правовую форму */
-    public OrgForm update(String id, OrgForm orgForm) throws ResourceNotFoundException {
-        String normPathId = normalize(id);
-        String normBodyId = normalize(orgForm.getId());
-
-        if (!normPathId.equals(normBodyId)) {
-            throw new IllegalArgumentException(
-                    "Идентификатор в пути (" +
-                            normPathId + ") не совпадает с идентификатором в теле запроса (" +
-                            normBodyId + ")"
-            );
-        }
-
-        OrgForm existing = repository.findById(normPathId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Организационно-правовая форма",
-                        normPathId
-                ));
-
-        existing.setName(orgForm.getName());
-
-        return repository.save(existing);
-    }
-
-    /** Удаляет организационно-правовую форму */
-    public void delete(String id) throws ResourceNotFoundException {
-        String normId = normalize(id);
-        if (!repository.existsById(normId)) {
-            throw new ResourceNotFoundException(
-                    "Организационно-правовая форма",
-                    normId
-            );
-        }
-        repository.deleteById(normId);
     }
 
     /**
-     * Нормализация текста
+     * Сохраняет организационно-правовую форму
      */
-    private String normalize(String id) {
-        return id == null ? null : id.trim().toUpperCase();
+    public OrgForm save(OrgForm orgForm) {
+        return repository.save(orgForm);
+    }
+
+    /**
+     * Удаляет организационно-правовую форму
+     * @throws ResourceNotFoundException если форма с указанным id отсутствует в БД
+     */
+    public void delete(String id) throws ResourceNotFoundException {
+        if (!repository.existsById(id)) {
+            throw new ResourceNotFoundException(
+                    "Организационно-правовая форма",
+                    id
+            );
+        }
+        repository.deleteById(id);
     }
 }

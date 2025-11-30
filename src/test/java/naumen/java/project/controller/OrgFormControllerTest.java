@@ -35,7 +35,7 @@ class OrgFormControllerTest {
     private static final String NAME_UPDATED = "ООО (обновлено)";
 
     private final OrgFormService orgFormServiceMock;
-    private final OrgFormMapper orgFormMapperMock;
+    private final OrgFormMapper orgFormMapper;
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
@@ -47,12 +47,11 @@ class OrgFormControllerTest {
     private OrgFormRequestDTO createRequest;
     private OrgFormRequestDTO updateRequest;
 
-    public OrgFormControllerTest(@Mock OrgFormService orgFormServiceMock,
-                                 @Mock OrgFormMapper orgFormMapperMock) {
+    public OrgFormControllerTest(@Mock OrgFormService orgFormServiceMock) {
         this.orgFormServiceMock = orgFormServiceMock;
-        this.orgFormMapperMock = orgFormMapperMock;
+        this.orgFormMapper = new OrgFormMapper();
 
-        OrgFormController controller = new OrgFormController(orgFormServiceMock, orgFormMapperMock);
+        OrgFormController controller = new OrgFormController(orgFormServiceMock, orgFormMapper);
 
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(controller)
@@ -81,7 +80,6 @@ class OrgFormControllerTest {
     @Test
     void testGetAllReturnsListOfOrgForms() throws Exception {
         Mockito.when(orgFormServiceMock.findAll()).thenReturn(List.of(orgForm));
-        Mockito.when(orgFormMapperMock.toResponse(orgForm)).thenReturn(orgFormDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/org_form/all"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -93,7 +91,6 @@ class OrgFormControllerTest {
     @Test
     void testGetByIdReturnsOrgForm() throws Exception {
         Mockito.when(orgFormServiceMock.findById(ID)).thenReturn(orgForm);
-        Mockito.when(orgFormMapperMock.toResponse(orgForm)).thenReturn(orgFormDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/org_form/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -116,8 +113,7 @@ class OrgFormControllerTest {
     /** Проверяет успешное создание организационно-правовой формы */
     @Test
     void testCreateCreatesOrgForm() throws Exception {
-        Mockito.when(orgFormServiceMock.create(Mockito.any(OrgForm.class))).thenReturn(orgForm);
-        Mockito.when(orgFormMapperMock.toResponse(orgForm)).thenReturn(orgFormDto);
+        Mockito.when(orgFormServiceMock.save(Mockito.any(OrgForm.class))).thenReturn(orgForm);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/org_form")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,9 +126,9 @@ class OrgFormControllerTest {
     /** Проверяет успешное обновление организационно-правовой формы */
     @Test
     void testUpdateUpdatesOrgForm() throws Exception {
-        Mockito.when(orgFormServiceMock.update(Mockito.eq(ID), Mockito.any(OrgForm.class)))
+        Mockito.when(orgFormServiceMock.findById(ID)).thenReturn(orgForm);
+        Mockito.when(orgFormServiceMock.save(Mockito.any(OrgForm.class)))
                 .thenReturn(orgFormUpdated);
-        Mockito.when(orgFormMapperMock.toResponse(orgFormUpdated)).thenReturn(orgFormUpdatedDto);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/org_form/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)

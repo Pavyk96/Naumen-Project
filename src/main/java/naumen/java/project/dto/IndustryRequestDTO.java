@@ -4,17 +4,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * IndustryRequestDTO
+ * DTO-запрос для индустрии
+ *
+ * @param id   Id индустрии
+ * @param name Название индустрии
  *
  * @author Daniil Mezev
  */
 public record IndustryRequestDTO(
-        /**
-         * Id индустрии
-         */
         @NotNull Long id,
-        /**
-         * Название индустрии
-         */
         @NotBlank String name
 ) { }
+
