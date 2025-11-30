@@ -35,7 +35,7 @@ class CountryControllerTest {
     private static final String NAME_UPDATED = "Russian Federation";
 
     private final CountryService countryServiceMock;
-    private final CountryMapper countryMapperMock;
+    private final CountryMapper countryMapper;
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
@@ -47,12 +47,11 @@ class CountryControllerTest {
     private CountryRequestDTO createRequest;
     private CountryRequestDTO updateRequest;
 
-    public CountryControllerTest(@Mock CountryService countryServiceMock,
-                                 @Mock CountryMapper countryMapperMock) {
+    public CountryControllerTest(@Mock CountryService countryServiceMock) {
         this.countryServiceMock = countryServiceMock;
-        this.countryMapperMock = countryMapperMock;
+        this.countryMapper = new CountryMapper();
 
-        CountryController controller = new CountryController(countryServiceMock, countryMapperMock);
+        CountryController controller = new CountryController(countryServiceMock, countryMapper);
 
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(controller)
@@ -81,7 +80,6 @@ class CountryControllerTest {
     @Test
     void testGetAllReturnsListOfCountries() throws Exception {
         Mockito.when(countryServiceMock.findAll()).thenReturn(List.of(country));
-        Mockito.when(countryMapperMock.toResponse(country)).thenReturn(countryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/country/all"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -93,7 +91,6 @@ class CountryControllerTest {
     @Test
     void testGetByIdReturnsCountry() throws Exception {
         Mockito.when(countryServiceMock.findById(ID)).thenReturn(country);
-        Mockito.when(countryMapperMock.toResponse(country)).thenReturn(countryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/country/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -116,8 +113,7 @@ class CountryControllerTest {
     /** Проверяет успешное создание страны */
     @Test
     void testCreateCreatesCountry() throws Exception {
-        Mockito.when(countryServiceMock.create(Mockito.any(Country.class))).thenReturn(country);
-        Mockito.when(countryMapperMock.toResponse(country)).thenReturn(countryDto);
+        Mockito.when(countryServiceMock.save(Mockito.any(Country.class))).thenReturn(country);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/country")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,9 +126,9 @@ class CountryControllerTest {
     /** Проверяет успешное обновление страны */
     @Test
     void testUpdateUpdatesCountry() throws Exception {
-        Mockito.when(countryServiceMock.update(Mockito.eq(ID), Mockito.any(Country.class)))
+        Mockito.when(countryServiceMock.findById(ID)).thenReturn(country);
+        Mockito.when(countryServiceMock.save(Mockito.any(Country.class)))
                 .thenReturn(countryUpdated);
-        Mockito.when(countryMapperMock.toResponse(countryUpdated)).thenReturn(countryUpdatedDto);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/country/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -149,5 +145,4 @@ class CountryControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string(""));
     }
-
 }

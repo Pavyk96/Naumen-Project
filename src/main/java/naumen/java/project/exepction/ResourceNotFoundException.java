@@ -1,7 +1,7 @@
 package naumen.java.project.exepction;
 
 /**
- * Доменное checked-исключение "ресурс не найден" для любых сущностей
+ * Доменное исключение "ресурс не найден" для любых сущностей
  *
  * @author Daniil Mezev
  */

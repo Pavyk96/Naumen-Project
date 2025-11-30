@@ -2,8 +2,11 @@ package naumen.java.project.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import org.hibernate.annotations.UuidGenerator;
+
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Контрагент для работы со сделками
@@ -15,8 +18,9 @@ import java.util.Set;
 public class Contractor {
 
     @Id
-    @Column(name = "id", length = 36, nullable = false, unique = true)
-    private String id;
+    @GeneratedValue
+    @UuidGenerator
+    private UUID id;
 
     @NotBlank
     @Column(name = "name", length = 256, nullable = false)
@@ -39,8 +43,7 @@ public class Contractor {
 
     protected Contractor() { }
 
-    public Contractor(String id, String name, Country country, Industry industry, OrgForm orgForm) {
-        this.id = id;
+    public Contractor(String name, Country country, Industry industry, OrgForm orgForm) {
         this.name = name;
         this.country = country;
         this.industry = industry;
@@ -48,10 +51,10 @@ public class Contractor {
     }
 
     /** Возвращает идентификатор */
-    public String getId() { return id; }
+    public UUID getId() { return id; }
 
     /** Устанавливает идентификатор */
-    public void setId(String id) { this.id = id; }
+    public void setId(UUID id) { this.id = id; }
 
     /** Возвращает название */
     public String getName() { return name; }

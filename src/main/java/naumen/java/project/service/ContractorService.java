@@ -6,6 +6,7 @@ import naumen.java.project.repository.ContractorRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Реализация сервиса для управления контрагентами
@@ -26,60 +27,32 @@ public class ContractorService {
         return repository.findAll();
     }
 
-    /** Возвращает контрагента по идентификатору */
-    public Contractor findById(String id) throws ResourceNotFoundException {
+    /**
+     * Возвращает контрагента по идентификатору
+     * @throws ResourceNotFoundException если контрагент с указанным id не найден в БД
+     */
+    public Contractor findById(UUID id) throws ResourceNotFoundException {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Контрагент",
-                        id
+                        String.valueOf(id)
                 ));
     }
 
-    /** Создаёт нового контрагента */
-    public Contractor create(Contractor contractor) {
-        String id = contractor.getId();
-
-        if (repository.existsById(id)) {
-            throw new IllegalArgumentException(
-                    "Контрагент с id = " + id + " уже существует"
-            );
-        }
-
+    /** Сохраняет контрагента */
+    public Contractor save(Contractor contractor) {
         return repository.save(contractor);
     }
 
-    /** Обновляет существующего контрагента */
-    public Contractor update(String id, Contractor contractor) throws ResourceNotFoundException {
-        String bodyId = contractor.getId();
-
-        if (!id.equals(bodyId)) {
-            throw new IllegalArgumentException(
-                    "Идентификатор в пути ("
-                            + id + ") не совпадает с идентификатором в теле запроса ("
-                            + bodyId + ")"
-            );
-        }
-
-        Contractor existing = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Контрагент",
-                        id
-                ));
-
-        existing.setName(contractor.getName());
-        existing.setCountry(contractor.getCountry());
-        existing.setIndustry(contractor.getIndustry());
-        existing.setOrgForm(contractor.getOrgForm());
-
-        return repository.save(existing);
-    }
-
-    /** Удаляет контрагента */
-    public void delete(String id) throws ResourceNotFoundException {
+    /**
+     * Удаляет контрагента
+     * @throws ResourceNotFoundException если контрагент с указанным id не найден в БД
+     */
+    public void delete(UUID id) throws ResourceNotFoundException {
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException(
                     "Контрагент",
-                    id
+                    String.valueOf(id)
             );
         }
         repository.deleteById(id);

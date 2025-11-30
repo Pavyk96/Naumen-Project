@@ -34,7 +34,7 @@ public class DealContractorBindingController {
     @PostMapping("/save")
     public ResponseEntity<DealResponseDTO> save(@Valid @RequestBody DealContractorRequestDTO request) throws ResourceNotFoundException {
         Deal deal = dealContractorBindingService.addContractorToDeal(
-                request.contractorId(), UUID.fromString(request.dealId()));
+                UUID.fromString(request.contractorId()), UUID.fromString(request.dealId()));
         DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
         return ResponseEntity.ok(dealResponseDTO);
     }
@@ -44,7 +44,7 @@ public class DealContractorBindingController {
     @PostMapping("/delete")
     public ResponseEntity<DealResponseDTO> delete(@Valid @RequestBody DealContractorRequestDTO request) throws ResourceNotFoundException {
         Deal deal = dealContractorBindingService.deleteContractorFromDeal(
-                request.contractorId(), UUID.fromString(request.dealId()));
+                UUID.fromString(request.contractorId()), UUID.fromString(request.dealId()));
         DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
         return ResponseEntity.ok(dealResponseDTO);
     }

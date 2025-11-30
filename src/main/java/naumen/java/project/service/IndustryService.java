@@ -27,7 +27,10 @@ public class IndustryService {
         return repository.findAll();
     }
 
-    /** Возвращает индустрию по идентификатору */
+    /**
+     * Возвращает индустрию по идентификатору
+     * @throws ResourceNotFoundException если индустрия с указанным id не найдена в БД
+     */
     public Industry findById(Long id) throws ResourceNotFoundException {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -36,43 +39,17 @@ public class IndustryService {
                 ));
     }
 
-    /** Создаёт новую индустрию */
-    public Industry create(Industry industry) {
-        Long id = industry.getId();
-
-        if (repository.existsById(id)) {
-            throw new IllegalArgumentException(
-                    "Индустрия с id = " + id + " уже существует"
-            );
-        }
-
+    /**
+     * Сохраняет индустрию
+     */
+    public Industry save(Industry industry) {
         return repository.save(industry);
     }
 
-    /** Обновляет индустрию по идентификатору */
-    public Industry update(Long id, Industry industry) throws ResourceNotFoundException {
-        Long bodyId = industry.getId();
-
-        if (!id.equals(bodyId)) {
-            throw new IllegalArgumentException(
-                    "Идентификатор в пути (" +
-                            id + ") не совпадает с идентификатором в теле запроса (" + bodyId + ")"
-            );
-        }
-
-        Industry existing = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Индустрия",
-                        String.valueOf(id)
-                ));
-
-        existing.setName(industry.getName());
-
-        return repository.save(existing);
-    }
-
-
-    /** Удаляет индустрию по идентификатору */
+    /**
+     * Удаляет индустрию по идентификатору
+     * @throws ResourceNotFoundException если индустрия с указанным id отсутствует в БД
+     */
     public void delete(Long id) throws ResourceNotFoundException {
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException(
@@ -82,5 +59,4 @@ public class IndustryService {
         }
         repository.deleteById(id);
     }
-
 }

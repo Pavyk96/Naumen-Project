@@ -56,7 +56,7 @@ public class OrgFormController {
     public ResponseEntity<OrgFormResponseDTO> create(@Valid @RequestBody OrgFormRequestDTO req) {
         OrgForm toCreate = new OrgForm(req.id(), req.name());
 
-        OrgForm created = service.create(toCreate);
+        OrgForm created = service.save(toCreate);
         return ResponseEntity.ok(mapper.toResponse(created));
     }
 
@@ -66,9 +66,13 @@ public class OrgFormController {
     public ResponseEntity<OrgFormResponseDTO> update(@PathVariable String id,
                                                      @Valid @RequestBody OrgFormRequestDTO req)
             throws ResourceNotFoundException {
-        OrgForm toUpdate = new OrgForm(req.id(), req.name());
 
-        OrgForm updated = service.update(id, toUpdate);
+        OrgForm toUpdate = service.findById(id);
+
+        toUpdate.setName(req.name());
+
+        OrgForm updated = service.save(toUpdate);
+
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
