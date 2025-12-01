@@ -13,5 +13,5 @@ import naumen.java.project.validation.ValidUuid;
  */
 public record DealContractorRequestDTO(
         @NotBlank @ValidUuid String dealId,
-        @NotBlank String contractorId
+        @NotBlank @ValidUuid String contractorId
 ) { }

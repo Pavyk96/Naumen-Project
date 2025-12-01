@@ -119,7 +119,7 @@ public class DealController {
         try {
             return LocalDate.parse(dateString);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Expected: yyyy-MM-dd, got: " + dateString);
+            throw new IllegalArgumentException("Невалидный формат даты. Ожидаемый формат: yyyy-MM-dd, полученные данные: " + dateString);
         }
     }
 
@@ -131,7 +131,7 @@ public class DealController {
         try {
             return LocalDateTime.parse(dateTimeString.replace("Z", ""));
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid datetime format. Expected: yyyy-MM-ddTHH:mm:ss, got: " + dateTimeString);
+            throw new IllegalArgumentException("Невалидный формат даты. Ожидаемый формат: yyyy-MM-ddTHH:mm:ss, полученные данные: " + dateTimeString);
         }
     }
 

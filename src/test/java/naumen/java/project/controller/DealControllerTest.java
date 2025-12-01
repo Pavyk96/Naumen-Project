@@ -2,6 +2,7 @@ package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import naumen.java.project.dto.deal.DealRequestDTO;
+import naumen.java.project.exepction.GlobalExceptionHandler;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.factory.DealTestFactory;
 import naumen.java.project.mapper.DealMapper;
@@ -10,15 +11,15 @@ import naumen.java.project.model.DealStatus;
 import naumen.java.project.service.DealService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,19 +29,29 @@ import java.util.UUID;
  *
  * @author Daria
  */
-@WebMvcTest(DealController.class)
-@Import(DealMapper.class)
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Тесты DealController")
 class DealControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private DealMapper dealMapper;
-    @MockitoBean
-    private DealService dealService;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
+    private final DealMapper dealMapper;
+    private final DealService dealService;
+
+    public DealControllerTest(@Mock DealService dealService) {
+        this.dealService = dealService;
+        this.dealMapper = new DealMapper();
+
+        DealController dealController
+                = new DealController(dealService, dealMapper);
+
+        this.mockMvc = MockMvcBuilders
+                .standaloneSetup(dealController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        this.objectMapper = new ObjectMapper();
+    }
 
     private static final UUID NON_EXISTENT_DEAL_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 

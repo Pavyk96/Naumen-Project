@@ -150,8 +150,7 @@ class DealServiceTest {
     @DisplayName("delete - выброс исключения при удалении сделки с контрагентами")
     void deleteDealWithContractorsTest() {
         Deal deal = dealTestFactory.createDeal(dealId, description, dealStatus,
-                new HashSet<>(List.of(dealTestFactory.createContractor(
-                        "CTR-001", "Контрагент 1"))));
+                new HashSet<>(List.of(dealTestFactory.createContractor("Контрагент 1"))));
 
         Mockito.when(dealRepositoryMock.existsById(dealId)).thenReturn(true);
         Mockito.when(dealRepositoryMock.findWithContractorsById(dealId)).thenReturn(Optional.of(deal));
