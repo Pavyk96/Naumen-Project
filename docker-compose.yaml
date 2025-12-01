@@ -13,5 +13,18 @@ services:
     volumes:
       - project_pg_data:/var/lib/postgresql/data
 
+  app:
+    image: payk96/project-pavlov:latest
+    container_name: project-app
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/project
+      - SPRING_DATASOURCE_USERNAME=project
+      - SPRING_DATASOURCE_PASSWORD=project
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
 volumes:
   project_pg_data:
