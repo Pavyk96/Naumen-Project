@@ -1,6 +1,5 @@
 package naumen.java.project.service;
 
-import naumen.java.project.dto.IndustryRequestDTO;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Industry;
 import naumen.java.project.repository.IndustryRepository;

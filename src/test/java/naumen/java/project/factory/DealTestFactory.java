@@ -5,6 +5,7 @@ import naumen.java.project.dto.deal.DealRequestDTO;
 import naumen.java.project.dto.deal.DealResponseDTO;
 import naumen.java.project.dto.deal.DealShortResponseDTO;
 import naumen.java.project.model.*;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,14 +22,12 @@ import java.util.UUID;
 public class DealTestFactory {
 
     private final static UUID DEAL_ID = UUID.fromString("8e13d5a0-4298-49f3-a262-ea77ec628ac3");
-    private final static String CONTRACTOR_ID = "CTR-2024-001";
+    private final static UUID CONTRACTOR_ID = UUID.fromString("4a4104e1-5267-4ce1-a746-d0db8447607d");;
     private final static String DESCRIPTION = "Сделка №1";
     private final static String AGREEMENT_NUMBER = "001-01";
     private final static LocalDate AGREEMENT_DATE = LocalDate.of(2023, 1, 1);
     private final static LocalDateTime OPENED_AT = LocalDateTime.of(2023, 1, 2, 10, 0);
     private final static LocalDateTime CLOSED_AT = LocalDateTime.of(2023, 12, 31, 18, 0);
-    private final DealType dealType = DealType.CREDIT;
-    private final DealStatus dealStatus = DealStatus.DRAFT;
 
     /** Создает сущность Deal */
     public Deal createDeal(UUID id, String description, DealStatus status, Set<Contractor> contractors) {
@@ -39,7 +38,7 @@ public class DealTestFactory {
                 AGREEMENT_DATE,
                 OPENED_AT,
                 CLOSED_AT,
-                dealType,
+                DealType.CREDIT,
                 status
         );
         deal.setContractors(contractors);
@@ -53,13 +52,18 @@ public class DealTestFactory {
 
     /** Создает сущность Deal (упрощенная версия) */
     public Deal createDeal(UUID id, Set<Contractor> contractors) {
-        return createDeal(id, DESCRIPTION, dealStatus, contractors);
+        return createDeal(id, DESCRIPTION, DealStatus.DRAFT, contractors);
     }
 
-    /** Создает сущность Contractor */
-    public Contractor createContractor(String id, String name) {
-        return new Contractor(id, name, new Country("RU", "Россия"),
+    /**
+     * Создает сущность Contractor
+     * С помощью ReflectionTestUtils устанавливаем id
+     */
+    public Contractor createContractor(String name) {
+        Contractor contractor =  new Contractor(name, new Country("RU", "Россия"),
                 new Industry(1L, "IT"), new OrgForm("LLC", "ООО"));
+        ReflectionTestUtils.setField(contractor, "id", CONTRACTOR_ID);
+        return contractor;
     }
 
     /**
@@ -73,7 +77,7 @@ public class DealTestFactory {
                 AGREEMENT_DATE.toString(),
                 OPENED_AT.toString(),
                 CLOSED_AT.toString(),
-                dealType.name(),
+                DealType.CREDIT.name(),
                 status != null ? status.name() : null
         );
     }
@@ -85,7 +89,7 @@ public class DealTestFactory {
         return createDealRequest(
                 id != null ? id.toString() : null,
                 description,
-                dealStatus
+                DealStatus.DRAFT
         );
     }
 
@@ -100,7 +104,7 @@ public class DealTestFactory {
                 AGREEMENT_DATE.toString(),
                 OPENED_AT.toString(),
                 null,
-                dealType.getDisplayName(),
+                DealType.CREDIT.getDisplayName(),
                 status.getDisplayName(),
                 List.of()
         );
@@ -116,10 +120,10 @@ public class DealTestFactory {
     /**
      * Создает DealContractorRequestDTO
      */
-    public DealContractorRequestDTO createDealContractorRequest(UUID dealId, String contractorId) {
+    public DealContractorRequestDTO createDealContractorRequest(UUID dealId, UUID contractorId) {
         return new DealContractorRequestDTO(
                 dealId.toString(),
-                contractorId
+                contractorId.toString()
         );
     }
 
@@ -132,7 +136,7 @@ public class DealTestFactory {
     /**
      * Возвращает идентификатор контрагента
      */
-    public String getContractorId() {
+    public UUID getContractorId() {
         return CONTRACTOR_ID;
     }
 
@@ -172,13 +176,13 @@ public class DealTestFactory {
      * Возвращает тип сделки
      */
     public DealType getDealType() {
-        return dealType;
+        return DealType.CREDIT;
     }
 
     /**
      * Возвращает статус сделки
      */
     public DealStatus getDealStatus() {
-        return dealStatus;
+        return DealStatus.DRAFT;
     }
 }

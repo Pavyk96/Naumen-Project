@@ -7,20 +7,21 @@ import java.time.LocalDateTime;
 /**
  * DTO-ответ для отображения информации об ошибках
  *
+ * @param status HTTP статус код
+ * @param error Описание ошибки
+ * @param message Сообщение об ошибке
+ * @param path Путь запроса
+ * @param timestamp Время возникновения ошибки
+ * @param errorCode Код ошибки
+ *
  * @author Daria
  */
 public record ExceptionResponseDTO(
-        /** HTTP статус код */
         int status,
-        /** Описание ошибки */
         String error,
-        /** Сообщение об ошибке */
         String message,
-        /** Путь запроса */
         String path,
-        /** Время возникновения ошибки */
         LocalDateTime timestamp,
-        /** Код ошибки */
         String errorCode
 ) {
     public ExceptionResponseDTO(HttpStatus status, String message, String path, String errorCode) {

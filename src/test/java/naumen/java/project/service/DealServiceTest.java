@@ -42,7 +42,6 @@ class DealServiceTest {
     private final String description = dealTestFactory.getDescription();
 
     private final DealStatus dealStatus = dealTestFactory.getDealStatus();
-    private final DealStatus newStatus = DealStatus.ACTIVE;
 
     private final Deal deal = dealTestFactory.createDeal(dealId, description, dealStatus);
 
@@ -69,10 +68,10 @@ class DealServiceTest {
         Mockito.when(dealRepositoryMock.findWithContractorsById(dealId)).thenReturn(Optional.of(deal));
         Mockito.when(dealRepositoryMock.save(deal)).thenReturn(deal);
 
-        Deal result = dealService.changeStatus(dealId, newStatus);
+        Deal result = dealService.changeStatus(dealId, DealStatus.ACTIVE);
 
         Assertions.assertEquals(deal, result);
-        Assertions.assertEquals(newStatus, deal.getStatus());
+        Assertions.assertEquals(DealStatus.ACTIVE, deal.getStatus());
         Mockito.verify(dealRepositoryMock).findWithContractorsById(dealId);
         Mockito.verify(dealRepositoryMock).save(deal);
     }
@@ -151,8 +150,7 @@ class DealServiceTest {
     @DisplayName("delete - выброс исключения при удалении сделки с контрагентами")
     void deleteDealWithContractorsTest() {
         Deal deal = dealTestFactory.createDeal(dealId, description, dealStatus,
-                new HashSet<>(List.of(dealTestFactory.createContractor(
-                        "CTR-001", "Контрагент 1"))));
+                new HashSet<>(List.of(dealTestFactory.createContractor("Контрагент 1"))));
 
         Mockito.when(dealRepositoryMock.existsById(dealId)).thenReturn(true);
         Mockito.when(dealRepositoryMock.findWithContractorsById(dealId)).thenReturn(Optional.of(deal));
@@ -176,7 +174,7 @@ class DealServiceTest {
 
         ResourceNotFoundException exception = Assertions.assertThrows(
                 ResourceNotFoundException.class,
-                () -> dealService.changeStatus(NON_EXISTENT_ID, newStatus)
+                () -> dealService.changeStatus(NON_EXISTENT_ID, DealStatus.ACTIVE)
         );
 
         Assertions.assertEquals("Сделка с id = " + NON_EXISTENT_ID + " не найден(а)",

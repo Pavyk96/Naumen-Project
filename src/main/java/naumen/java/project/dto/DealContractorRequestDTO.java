@@ -6,11 +6,12 @@ import naumen.java.project.validation.ValidUuid;
 /**
  * DTO-запрос для создания связи сделка-контрагент
  *
+ * @param dealId Идентификатор сделки
+ * @param contractorId Идентификатор контрагента
+ *
  * @author Daria
  */
 public record DealContractorRequestDTO(
-        /** Идентификатор сделки */
         @NotBlank @ValidUuid String dealId,
-        /** Идентификатор контрагента */
-        @NotBlank String contractorId
+        @NotBlank @ValidUuid String contractorId
 ) { }

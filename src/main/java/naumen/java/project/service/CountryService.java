@@ -1,6 +1,5 @@
 package naumen.java.project.service;
 
-import naumen.java.project.dto.CountryRequestDTO;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Country;
 import naumen.java.project.repository.CountryRepository;

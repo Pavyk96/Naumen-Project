@@ -33,13 +33,11 @@ class DealContractorBindingServiceTest {
     @InjectMocks
     private DealContractorBindingService dealContractorBindingService;
 
-    private static final String NON_EXISTENT_CONTRACTOR_ID = "NON_EXISTENT_CONTRACTOR";
-
     private final DealTestFactory dealTestFactory = new DealTestFactory();
     private final UUID dealId = dealTestFactory.getDealId();
-    private final String contractorId = dealTestFactory.getContractorId();
+    private final UUID contractorId = dealTestFactory.getContractorId();
 
-    private final Contractor contractor = dealTestFactory.createContractor(contractorId, "Контрагент 1");
+    private final Contractor contractor = dealTestFactory.createContractor("Контрагент 1");
 
     private final Deal emptyDeal = dealTestFactory.createDeal(dealId, new HashSet<>());
     private final Deal dealWithContractor = dealTestFactory.createDeal(dealId, new HashSet<>(Set.of(contractor)));
@@ -101,17 +99,15 @@ class DealContractorBindingServiceTest {
     @Test
     @DisplayName("deleteContractorFromDeal - выброс исключения при удалении несуществующего контрагента")
     void deleteContractorFromDealNonExistentTest() throws ResourceNotFoundException {
-        Contractor non_existent_contractor = dealTestFactory.createContractor(NON_EXISTENT_CONTRACTOR_ID, "Контрагент 2");
-
         Mockito.when(dealService.findByIdWithContractors(dealId)).thenReturn(emptyDeal);
-        Mockito.when(contractorService.findById(NON_EXISTENT_CONTRACTOR_ID)).thenReturn(non_existent_contractor);
+        Mockito.when(contractorService.findById(contractorId)).thenReturn(contractor);
 
         IllegalStateException exception = Assertions.assertThrows(
                 IllegalStateException.class,
-                () -> dealContractorBindingService.deleteContractorFromDeal(NON_EXISTENT_CONTRACTOR_ID, dealId)
+                () -> dealContractorBindingService.deleteContractorFromDeal(contractorId, dealId)
         );
 
-        Assertions.assertEquals("Нельзя удалить контрагента с id = " + NON_EXISTENT_CONTRACTOR_ID + ", так как связь не существует",
+        Assertions.assertEquals("Нельзя удалить контрагента с id = " + contractorId + ", так как связь не существует",
                 exception.getMessage());
     }
 }

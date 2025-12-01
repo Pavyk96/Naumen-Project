@@ -26,6 +26,9 @@ public class DealContractorBindingService {
 
     /**
      * Добавляет контрагента к сделке
+     *
+     * @throws ResourceNotFoundException если сделка или контрагент не найдены
+     * @throws IllegalStateException если связь между сделкой и контрагентом уже существует
      */
     public Deal addContractorToDeal(UUID contractorId, UUID dealId) throws ResourceNotFoundException {
         Deal deal = dealService.findByIdWithContractors(dealId);
@@ -43,6 +46,9 @@ public class DealContractorBindingService {
 
     /**
      * Удаляет контрагента из сделки
+     *
+     * @throws ResourceNotFoundException если сделка или контрагент не найдены
+     * @throws IllegalStateException если связь между сделкой и контрагентом не существует
      */
     public Deal deleteContractorFromDeal(UUID contractorId, UUID dealId) throws ResourceNotFoundException {
         Deal deal = dealService.findByIdWithContractors(dealId);
