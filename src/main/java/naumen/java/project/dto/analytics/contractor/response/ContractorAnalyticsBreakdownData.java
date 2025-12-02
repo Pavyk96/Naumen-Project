@@ -5,6 +5,9 @@ import java.util.Map;
 /**
  * Данные разреза
  *
+ * @param group информация о группе
+ * @param metrics метрики группы
+ *
  * @author Daniil Mezev
  */
 public record ContractorAnalyticsBreakdownData(
