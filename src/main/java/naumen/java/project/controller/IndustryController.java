@@ -56,7 +56,7 @@ public class IndustryController {
     public ResponseEntity<IndustryResponseDTO> create(@Valid @RequestBody IndustryRequestDTO req) {
         Industry toCreate = new Industry(req.id(), req.name());
 
-        Industry created = service.create(toCreate);
+        Industry created = service.save(toCreate);
         return ResponseEntity.ok(mapper.toResponse(created));
     }
 
@@ -66,12 +66,14 @@ public class IndustryController {
     public ResponseEntity<IndustryResponseDTO> update(@PathVariable Long id,
                                                       @Valid @RequestBody IndustryRequestDTO req)
             throws ResourceNotFoundException {
-        Industry toUpdate = new Industry();
-        toUpdate.setId(req.id());
-        toUpdate.setName(req.name());
 
-        Industry updated = service.update(id, toUpdate);
-        return ResponseEntity.ok(mapper.toResponse(updated));
+        Industry oldIndustry = service.findById(id);
+
+        oldIndustry.setName(req.name());
+
+        Industry updateIndustry = service.save(oldIndustry);
+
+        return ResponseEntity.ok(mapper.toResponse(updateIndustry));
     }
 
 

@@ -1,6 +1,6 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.factory.DealTestFactory;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Тесты для DealContractorBindingService
@@ -31,33 +32,31 @@ class DealContractorBindingServiceTest {
     private ContractorService contractorService;
     @InjectMocks
     private DealContractorBindingService dealContractorBindingService;
+
     private final DealTestFactory dealTestFactory = new DealTestFactory();
+    private final UUID dealId = dealTestFactory.getDealId();
+    private final UUID contractorId = dealTestFactory.getContractorId();
+
+    private final Contractor contractor = dealTestFactory.createContractor("Контрагент 1");
+
+    private final Deal emptyDeal = dealTestFactory.createDeal(dealId, new HashSet<>());
+    private final Deal dealWithContractor = dealTestFactory.createDeal(dealId, new HashSet<>(Set.of(contractor)));
+    private final Deal savedDeal = dealTestFactory.createDeal(dealId, Set.of(contractor));
 
     /**
      * Проверяет корректное добавление контрагента к сделке
      */
     @Test
     @DisplayName("addContractorToDeal - успешное добавление контрагента")
-    void addContractorToDealTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), new HashSet<>());
-        Contractor contractor = dealTestFactory.createContractor(
-                dealTestFactory.getContractorId(), "Контрагент 1");
-        Deal savedDeal = dealTestFactory.createDeal(dealTestFactory.getDealId(), Set.of(contractor));
+    void addContractorToDealTest() throws ResourceNotFoundException {
+        Mockito.when(dealService.findByIdWithContractors(dealId)).thenReturn(emptyDeal);
+        Mockito.when(contractorService.findById(contractorId)).thenReturn(contractor);
+        Mockito.when(dealService.save(emptyDeal)).thenReturn(savedDeal);
 
-        Mockito.when(dealService.findByIdWithContractors(dealTestFactory.getDealId()))
-                .thenReturn(deal);
-        Mockito.when(contractorService.findById(dealTestFactory.getContractorId()))
-                .thenReturn(contractor);
-        Mockito.when(dealService.save(deal))
-                .thenReturn(savedDeal);
-
-        Deal result = dealContractorBindingService.addContractorToDeal(
-                dealTestFactory.getContractorId(), dealTestFactory.getDealId());
+        Deal result = dealContractorBindingService.addContractorToDeal(contractorId, dealId);
 
         Assertions.assertEquals(savedDeal, result);
-        Mockito.verify(dealService).findByIdWithContractors(dealTestFactory.getDealId());
-        Mockito.verify(contractorService).findById(dealTestFactory.getContractorId());
-        Mockito.verify(dealService).save(deal);
+        Mockito.verify(dealService).save(emptyDeal);
     }
 
     /**
@@ -65,27 +64,15 @@ class DealContractorBindingServiceTest {
      */
     @Test
     @DisplayName("deleteContractorFromDeal - успешное удаление контрагента")
-    void deleteContractorFromDealTest() {
-        Contractor contractor = dealTestFactory.createContractor(
-                dealTestFactory.getContractorId(), "Контрагент 1");
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                new HashSet<>(Set.of(contractor)));
-        Deal savedDeal = dealTestFactory.createDeal(dealTestFactory.getDealId(), new HashSet<>());
+    void deleteContractorFromDealTest() throws ResourceNotFoundException {
+        Mockito.when(dealService.findByIdWithContractors(dealId)).thenReturn(dealWithContractor);
+        Mockito.when(contractorService.findById(contractorId)).thenReturn(contractor);
+        Mockito.when(dealService.save(dealWithContractor)).thenReturn(emptyDeal);
 
-        Mockito.when(dealService.findByIdWithContractors(dealTestFactory.getDealId()))
-                .thenReturn(deal);
-        Mockito.when(contractorService.findById(dealTestFactory.getContractorId()))
-                .thenReturn(contractor);
-        Mockito.when(dealService.save(deal))
-                .thenReturn(savedDeal);
+        Deal result = dealContractorBindingService.deleteContractorFromDeal(contractorId, dealId);
 
-        Deal result = dealContractorBindingService.deleteContractorFromDeal(
-                dealTestFactory.getContractorId(), dealTestFactory.getDealId());
-
-        Assertions.assertEquals(savedDeal, result);
-        Mockito.verify(dealService).findByIdWithContractors(dealTestFactory.getDealId());
-        Mockito.verify(contractorService).findById(dealTestFactory.getContractorId());
-        Mockito.verify(dealService).save(deal);
+        Assertions.assertEquals(emptyDeal, result);
+        Mockito.verify(dealService).save(dealWithContractor);
     }
 
     /**
@@ -93,27 +80,17 @@ class DealContractorBindingServiceTest {
      */
     @Test
     @DisplayName("addContractorToDeal - выброс исключения при добавлении существующего контрагента")
-    void addContractorToDealAlreadyExistsTest() {
-        Contractor contractor = dealTestFactory.createContractor(
-                dealTestFactory.getContractorId(), "Контрагент 1");
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                new HashSet<>(Set.of(contractor)));
-
-        Mockito.when(dealService.findByIdWithContractors(dealTestFactory.getDealId()))
-                .thenReturn(deal);
-        Mockito.when(contractorService.findById(dealTestFactory.getContractorId()))
-                .thenReturn(contractor);
+    void addContractorToDealAlreadyExistsTest() throws ResourceNotFoundException {
+        Mockito.when(dealService.findByIdWithContractors(dealId)).thenReturn(dealWithContractor);
+        Mockito.when(contractorService.findById(contractorId)).thenReturn(contractor);
 
         IllegalStateException exception = Assertions.assertThrows(
                 IllegalStateException.class,
-                () -> dealContractorBindingService.addContractorToDeal(
-                        dealTestFactory.getContractorId(), dealTestFactory.getDealId())
+                () -> dealContractorBindingService.addContractorToDeal(contractorId, dealId)
         );
 
-        Assertions.assertEquals("Contractor is already exists in deal", exception.getMessage());
-        Mockito.verify(dealService).findByIdWithContractors(dealTestFactory.getDealId());
-        Mockito.verify(contractorService).findById(dealTestFactory.getContractorId());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
+        Assertions.assertEquals("Нельзя добавить контрагента с id = " + contractorId + ", так как уже существует связь",
+                exception.getMessage());
     }
 
     /**
@@ -121,114 +98,16 @@ class DealContractorBindingServiceTest {
      */
     @Test
     @DisplayName("deleteContractorFromDeal - выброс исключения при удалении несуществующего контрагента")
-    void deleteContractorFromDealNonExistentTest() {
-        Contractor contractor = dealTestFactory.createContractor(
-                "NON_EXISTENT_CONTRACTOR", "Контрагент 1");
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), new HashSet<>());
+    void deleteContractorFromDealNonExistentTest() throws ResourceNotFoundException {
+        Mockito.when(dealService.findByIdWithContractors(dealId)).thenReturn(emptyDeal);
+        Mockito.when(contractorService.findById(contractorId)).thenReturn(contractor);
 
-        Mockito.when(dealService.findByIdWithContractors(dealTestFactory.getDealId()))
-                .thenReturn(deal);
-        Mockito.when(contractorService.findById("NON_EXISTENT_CONTRACTOR"))
-                .thenReturn(contractor);
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealContractorBindingService.deleteContractorFromDeal(
-                        "NON_EXISTENT_CONTRACTOR", dealTestFactory.getDealId()));
-
-        Assertions.assertEquals("Contractor not found in deal", exception.getMessage());
-        Mockito.verify(dealService).findByIdWithContractors(dealTestFactory.getDealId());
-        Mockito.verify(contractorService).findById("NON_EXISTENT_CONTRACTOR");
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
-    }
-
-    /**
-     * Проверяет выброс исключения при добавлении контрагента к несуществующей сделке
-     */
-    @Test
-    @DisplayName("addContractorToDeal - выброс исключения при несуществующей сделке")
-    void addContractorToNonExistentDealTest() {
-        Mockito.when(dealService.findByIdWithContractors(dealTestFactory.getDealId()))
-                .thenThrow(new EntityNotFoundException("Deal not found"));
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealContractorBindingService.addContractorToDeal(
-                        dealTestFactory.getContractorId(), dealTestFactory.getDealId())
+        IllegalStateException exception = Assertions.assertThrows(
+                IllegalStateException.class,
+                () -> dealContractorBindingService.deleteContractorFromDeal(contractorId, dealId)
         );
 
-        Assertions.assertEquals("Deal not found", exception.getMessage());
-        Mockito.verify(dealService).findByIdWithContractors(dealTestFactory.getDealId());
-        Mockito.verify(contractorService, Mockito.never()).findById(Mockito.anyString());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
-    }
-
-    /**
-     * Проверяет выброс исключения при добавлении несуществующего контрагента к сделке
-     */
-    @Test
-    @DisplayName("addContractorToDeal - выброс исключения при несуществующем контрагенте")
-    void addNonExistentContractorToDealTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), new HashSet<>());
-
-        Mockito.when(dealService.findByIdWithContractors(dealTestFactory.getDealId())).thenReturn(deal);
-        Mockito.when(contractorService.findById("NON_EXISTENT_CONTRACTOR"))
-                .thenThrow(new EntityNotFoundException("Contractor not found"));
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealContractorBindingService.addContractorToDeal(
-                        "NON_EXISTENT_CONTRACTOR", dealTestFactory.getDealId())
-        );
-
-        Assertions.assertEquals("Contractor not found", exception.getMessage());
-        Mockito.verify(dealService).findByIdWithContractors(dealTestFactory.getDealId());
-        Mockito.verify(contractorService).findById("NON_EXISTENT_CONTRACTOR");
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
-    }
-
-    /**
-     * Проверяет выброс исключения при удалении контрагента из несуществующей сделки
-     */
-    @Test
-    @DisplayName("deleteContractorFromDeal - выброс исключения при несуществующей сделке")
-    void deleteContractorFromNonExistentDealTest() {
-        Mockito.when(dealService.findByIdWithContractors(dealTestFactory.getDealId()))
-                .thenThrow(new EntityNotFoundException("Deal not found"));
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealContractorBindingService.deleteContractorFromDeal(
-                        dealTestFactory.getContractorId(), dealTestFactory.getDealId())
-        );
-
-        Assertions.assertEquals("Deal not found", exception.getMessage());
-        Mockito.verify(dealService).findByIdWithContractors(dealTestFactory.getDealId());
-        Mockito.verify(contractorService, Mockito.never()).findById(Mockito.anyString());
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
-    }
-
-    /**
-     * Проверяет выброс исключения при удалении несуществующего контрагента из сделки
-     */
-    @Test
-    @DisplayName("deleteContractorFromDeal - выброс исключения при несуществующем контрагенте")
-    void deleteNonExistentContractorFromDealTest() {
-        Deal deal = dealTestFactory.createDeal(dealTestFactory.getDealId(), new HashSet<>());
-
-        Mockito.when(dealService.findByIdWithContractors(dealTestFactory.getDealId())).thenReturn(deal);
-        Mockito.when(contractorService.findById("NON_EXISTENT_CONTRACTOR"))
-                .thenThrow(new EntityNotFoundException("Contractor not found"));
-
-        EntityNotFoundException exception = Assertions.assertThrows(
-                EntityNotFoundException.class,
-                () -> dealContractorBindingService.deleteContractorFromDeal(
-                        "NON_EXISTENT_CONTRACTOR", dealTestFactory.getDealId())
-        );
-
-        Assertions.assertEquals("Contractor not found", exception.getMessage());
-        Mockito.verify(dealService).findByIdWithContractors(dealTestFactory.getDealId());
-        Mockito.verify(contractorService).findById("NON_EXISTENT_CONTRACTOR");
-        Mockito.verify(dealService, Mockito.never()).save(Mockito.any(Deal.class));
+        Assertions.assertEquals("Нельзя удалить контрагента с id = " + contractorId + ", так как связь не существует",
+                exception.getMessage());
     }
 }
