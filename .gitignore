@@ -9,6 +9,8 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 .mvn/
 
+terraform/authorized_key.json
+
 ### STS ###
 .apt_generated
 .classpath
