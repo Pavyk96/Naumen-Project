@@ -20,9 +20,7 @@ public class AnalyticsController {
 
     private final ContractorAnalyticsService contractorAnalyticsService;
 
-    public AnalyticsController(
-            ContractorAnalyticsService contractorAnalyticsService
-    ) {
+    public AnalyticsController(ContractorAnalyticsService contractorAnalyticsService) {
         this.contractorAnalyticsService = contractorAnalyticsService;
     }
 

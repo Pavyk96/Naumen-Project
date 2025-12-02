@@ -61,8 +61,22 @@ public class ContractorAnalyticsService {
         return contractors.stream()
                 .filter(contractor -> filterByCountries(contractor, filters.countries()))
                 .filter(contractor -> filterByIndustries(contractor, filters.industries()))
+                .filter(contractor -> filterByOrgForms(contractor, filters.orgForms()))
                 .filter(contractor -> filterByCreateDate(contractor, filters.dateRange()))
                 .toList();
+    }
+
+    /**
+     * Проверяет фильтр по ОПФ
+     */
+    private boolean filterByOrgForms(Contractor contractor, List<String> orgFormIds) {
+        if (orgFormIds == null || orgFormIds.isEmpty()) {
+            return true;
+        }
+        if (contractor.getOrgForm() == null) {
+            return false;
+        }
+        return orgFormIds.contains(contractor.getOrgForm().getId());
     }
 
     /**
@@ -191,7 +205,6 @@ public class ContractorAnalyticsService {
         return new ContractorAnalyticsBreakdown("country", breakdownData);
     }
 
-    //TODO: обработка если айди не корректный
     /**
      * Строит разрез по индустриям
      */

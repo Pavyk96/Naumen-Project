@@ -12,6 +12,7 @@ import java.util.List;
 public record ContractorAnalyticsFilters(
         List<String> countries,
         List<Long> industries,
+        List<String> orgForms,
         AnalyticsDateRange dateRange
 ) { }
 
