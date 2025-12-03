@@ -123,12 +123,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ExceptionResponseDTO> handleHandlerMethodValidation(HandlerMethodValidationException ex,
                                                                               HttpServletRequest request) {
-        String errorMessage = ex.getParameterValidationResults()
-                .stream()
-                .flatMap(result -> result.getResolvableErrors().stream())
-                .map(error -> Objects.toString(error.getDefaultMessage(), "Ошибка валидации"))
-                .findFirst()
-                .orElse("Ошибка валидации параметров");
+        String errorMessage;
+        if (ex != null && !ex.getParameterValidationResults().isEmpty()) {
+            errorMessage = ex.getParameterValidationResults()
+                    .stream()
+                    .flatMap(result -> result.getResolvableErrors().stream())
+                    .map(error -> Objects.toString(error.getDefaultMessage(), "Ошибка валидации"))
+                    .findFirst()
+                    .orElse("Ошибка валидации параметров");
+        } else {
+            errorMessage = "Ошибка валидации параметров";
+        }
 
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,
