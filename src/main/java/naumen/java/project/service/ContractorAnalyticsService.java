@@ -77,7 +77,7 @@ public class ContractorAnalyticsService {
             return null;
         }
         LocalDateRange createDate = dateRange.createDate();
-        return createDate.from();
+        return LocalDate.parse(createDate.from());
     }
 
     private LocalDate extractToCreateDate(AnalyticsDateRange dateRange) {
@@ -85,7 +85,7 @@ public class ContractorAnalyticsService {
             return null;
         }
         LocalDateRange createDate = dateRange.createDate();
-        return createDate.to();
+        return LocalDate.parse(createDate.to());
     }
 
     /**

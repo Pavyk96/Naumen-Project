@@ -1,5 +1,7 @@
 package naumen.java.project.dto.analytics;
 
+import jakarta.validation.Valid;
+
 /**
  * Запрос диаппазона дат для аналитики
  *
@@ -10,7 +12,10 @@ package naumen.java.project.dto.analytics;
  * @author Daniil Mezev
  */
 public record AnalyticsDateRange(
+        @Valid
         LocalDateRange createDate,
+        @Valid
         LocalDateRange openedAt,
+        @Valid
         LocalDateRange agreementDate
 ) { }
