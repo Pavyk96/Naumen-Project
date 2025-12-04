@@ -30,7 +30,7 @@ public class UuidValidator implements ConstraintValidator<ValidUuid, String> {
         String trimmedValue = value.trim();
 
         if (trimmedValue.isEmpty()) {
-            customizeMessage(context, "UUID cannot be empty");
+            customizeMessage(context, "UUID не может быть пустым");
             return false;
         }
 
