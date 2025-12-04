@@ -100,9 +100,9 @@ public class ContractorAnalyticsService {
         LocalDate contractorCreateDate = contractor.getCreateDate().toLocalDate();
 
         boolean fromMatches = createDateRange.from() == null
-                || !contractorCreateDate.isBefore(createDateRange.from());
+                || !contractorCreateDate.isBefore(LocalDate.parse(createDateRange.from()));
         boolean toMatches = createDateRange.to() == null
-                || !contractorCreateDate.isAfter(createDateRange.to());
+                || !contractorCreateDate.isAfter(LocalDate.parse(createDateRange.to()));
 
         return fromMatches && toMatches;
     }
