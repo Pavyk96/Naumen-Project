@@ -77,15 +77,15 @@ public class ContractorAnalyticsService {
             return null;
         }
         LocalDateRange createDate = dateRange.createDate();
-        return createDate.from();
+        return LocalDate.parse(createDate.from());
     }
 
     private LocalDate extractToCreateDate(AnalyticsDateRange dateRange) {
         if (dateRange == null || dateRange.createDate() == null) {
             return null;
         }
-        LocalDateRange createDate = LocalDate.dateRange.createDate();
-        return createDate.to();
+        LocalDateRange createDate = dateRange.createDate();
+        return LocalDate.parse(createDate.to());
     }
 
     /**
