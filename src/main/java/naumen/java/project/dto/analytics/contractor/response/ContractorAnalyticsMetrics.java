@@ -1,5 +1,7 @@
 package naumen.java.project.dto.analytics.contractor.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Метрики контрагентов
  *
@@ -8,8 +10,9 @@ package naumen.java.project.dto.analytics.contractor.response;
  *
  * @author Daniil Mezev
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ContractorAnalyticsMetrics(
-        long count,
-        long activeDealsCount
+        Long count,
+        Long activeDealsCount
 ) { }
 

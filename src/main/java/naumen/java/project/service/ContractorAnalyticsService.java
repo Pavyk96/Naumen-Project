@@ -36,89 +36,56 @@ public class ContractorAnalyticsService {
      * Строит отчёт по контрагентам
      */
     public ContractorAnalyticsResponse analyze(ContractorAnalyticsRequest request) {
-        List<Contractor> contractors = contractorRepository.findAllWithDeals();
-        List<Contractor> filteredContractors = applyFilters(contractors, request.filters());
-        ContractorAnalyticsSummary summary = buildSummary(filteredContractors);
-        List<ContractorAnalyticsBreakdown> breakdowns =
-                buildBreakdowns(filteredContractors, request.dimensions());
-        ContractorAnalyticsTrends trends = request.includeTrends()
-                ? buildTrends(filteredContractors)
+        ContractorAnalyticsFilters filters = request.filters();
+
+        List<String> countryIds = (filters != null && filters.countries() != null && !filters.countries().isEmpty())
+                ? filters.countries()
                 : null;
+
+        List<Long> industryIds = (filters != null && filters.industries() != null && !filters.industries().isEmpty())
+                ? filters.industries()
+                : null;
+
+        List<String> orgFormIds = (filters != null && filters.orgForms() != null && !filters.orgForms().isEmpty())
+                ? filters.orgForms()
+                : null;
+
+        AnalyticsDateRange dateRange = filters != null ? filters.dateRange() : null;
+        LocalDate fromCreateDate = extractFromCreateDate(dateRange);
+        LocalDate toCreateDate = extractToCreateDate(dateRange);
+
+        List<Contractor> contractors = contractorRepository.findWithFilters(
+                countryIds,
+                industryIds,
+                orgFormIds,
+                fromCreateDate,
+                toCreateDate
+        );
+
+        ContractorAnalyticsSummary summary = buildSummary(contractors);
+        List<ContractorAnalyticsBreakdown> breakdowns =
+                buildBreakdowns(contractors, request.dimensions(), request.metrics());
+        ContractorAnalyticsTrends trends = request.includeTrends()
+                ? buildTrends(contractors)
+                : null;
+
         return new ContractorAnalyticsResponse(summary, breakdowns, trends);
     }
 
-    /**
-     * Применяет фильтры запроса
-     */
-    private List<Contractor> applyFilters(
-            List<Contractor> contractors,
-            ContractorAnalyticsFilters filters
-    ) {
-        if (filters == null) {
-            return contractors;
+    private LocalDate extractFromCreateDate(AnalyticsDateRange dateRange) {
+        if (dateRange == null || dateRange.createDate() == null) {
+            return null;
         }
-
-        return contractors.stream()
-                .filter(contractor -> filterByCountries(contractor, filters.countries()))
-                .filter(contractor -> filterByIndustries(contractor, filters.industries()))
-                .filter(contractor -> filterByOrgForms(contractor, filters.orgForms()))
-                .filter(contractor -> filterByCreateDate(contractor, filters.dateRange()))
-                .toList();
+        LocalDateRange createDate = dateRange.createDate();
+        return createDate.from();
     }
 
-    /**
-     * Проверяет фильтр по ОПФ
-     */
-    private boolean filterByOrgForms(Contractor contractor, List<String> orgFormIds) {
-        if (orgFormIds == null || orgFormIds.isEmpty()) {
-            return true;
+    private LocalDate extractToCreateDate(AnalyticsDateRange dateRange) {
+        if (dateRange == null || dateRange.createDate() == null) {
+            return null;
         }
-        if (contractor.getOrgForm() == null) {
-            return false;
-        }
-        return orgFormIds.contains(contractor.getOrgForm().getId());
-    }
-
-    /**
-     * Проверяет фильтр по странам
-     */
-    private boolean filterByCountries(Contractor contractor, List<String> countryIds) {
-        if (countryIds == null || countryIds.isEmpty()) {
-            return true;
-        }
-        return countryIds.contains(contractor.getCountry().getId());
-    }
-
-    /**
-     * Проверяет фильтр по индустриям
-     */
-    private boolean filterByIndustries(Contractor contractor, List<Long> industryIds) {
-        if (industryIds == null || industryIds.isEmpty()) {
-            return true;
-        }
-        return industryIds.contains(contractor.getIndustry().getId());
-    }
-
-    /**
-     * Проверяет фильтр по дате создания
-     */
-    private boolean filterByCreateDate(Contractor contractor, AnalyticsDateRange analyticsDateRange) {
-        if (analyticsDateRange == null || analyticsDateRange.createDate() == null) {
-            return true;
-        }
-        if (contractor.getCreateDate() == null) {
-            return false;
-        }
-
-        LocalDateRange createDateRange = analyticsDateRange.createDate();
-        LocalDate contractorCreateDate = contractor.getCreateDate().toLocalDate();
-
-        boolean fromMatches = createDateRange.from() == null
-                || !contractorCreateDate.isBefore(createDateRange.from());
-        boolean toMatches = createDateRange.to() == null
-                || !contractorCreateDate.isAfter(createDateRange.to());
-
-        return fromMatches && toMatches;
+        LocalDateRange createDate = dateRange.createDate();
+        return createDate.to();
     }
 
     /**
@@ -158,7 +125,8 @@ public class ContractorAnalyticsService {
      */
     private List<ContractorAnalyticsBreakdown> buildBreakdowns(
             List<Contractor> contractors,
-            List<String> dimensions
+            List<String> dimensions,
+            List<String> metrics
     ) {
         if (dimensions == null || dimensions.isEmpty()) {
             return List.of();
@@ -168,10 +136,10 @@ public class ContractorAnalyticsService {
 
         for (String dimension : dimensions) {
             switch (dimension) {
-                case "country" -> breakdowns.add(buildCountryBreakdown(contractors));
-                case "industry" -> breakdowns.add(buildIndustryBreakdown(contractors));
-                case "org_form" -> breakdowns.add(buildOrgFormBreakdown(contractors));
-                case "create_year" -> breakdowns.add(buildCreateYearBreakdown(contractors));
+                case "country" -> breakdowns.add(buildCountryBreakdown(contractors, metrics));
+                case "industry" -> breakdowns.add(buildIndustryBreakdown(contractors, metrics));
+                case "org_form" -> breakdowns.add(buildOrgFormBreakdown(contractors, metrics));
+                case "create_year" -> breakdowns.add(buildCreateYearBreakdown(contractors, metrics));
                 default -> { }
             }
         }
@@ -182,7 +150,10 @@ public class ContractorAnalyticsService {
     /**
      * Строит разрез по странам
      */
-    private ContractorAnalyticsBreakdown buildCountryBreakdown(List<Contractor> contractors) {
+    private ContractorAnalyticsBreakdown buildCountryBreakdown(
+            List<Contractor> contractors,
+            List<String> metrics
+    ) {
         var contractorsByCountry = contractors.stream()
                 .collect(Collectors.groupingBy(Contractor::getCountry));
 
@@ -191,14 +162,14 @@ public class ContractorAnalyticsService {
                     var country = entry.getKey();
                     List<Contractor> groupContractors = entry.getValue();
 
-                    ContractorAnalyticsMetrics metrics = calculateMetrics(groupContractors);
+                    ContractorAnalyticsMetrics groupMetrics = calculateMetrics(groupContractors, metrics);
 
                     Map<String, Object> group = Map.of(
                             "id", country.getId(),
                             "name", country.getName()
                     );
 
-                    return new ContractorAnalyticsBreakdownData(group, metrics);
+                    return new ContractorAnalyticsBreakdownData(group, groupMetrics);
                 })
                 .toList();
 
@@ -208,7 +179,10 @@ public class ContractorAnalyticsService {
     /**
      * Строит разрез по индустриям
      */
-    private ContractorAnalyticsBreakdown buildIndustryBreakdown(List<Contractor> contractors) {
+    private ContractorAnalyticsBreakdown buildIndustryBreakdown(
+            List<Contractor> contractors,
+            List<String> metrics
+    ) {
         var contractorsByIndustry = contractors.stream()
                 .collect(Collectors.groupingBy(Contractor::getIndustry));
 
@@ -217,14 +191,14 @@ public class ContractorAnalyticsService {
                     var industry = entry.getKey();
                     List<Contractor> groupContractors = entry.getValue();
 
-                    ContractorAnalyticsMetrics metrics = calculateMetrics(groupContractors);
+                    ContractorAnalyticsMetrics groupMetrics = calculateMetrics(groupContractors, metrics);
 
                     Map<String, Object> group = Map.of(
                             "id", industry.getId(),
                             "name", industry.getName()
                     );
 
-                    return new ContractorAnalyticsBreakdownData(group, metrics);
+                    return new ContractorAnalyticsBreakdownData(group, groupMetrics);
                 })
                 .toList();
 
@@ -234,8 +208,12 @@ public class ContractorAnalyticsService {
     /**
      * Строит разрез по ОПФ
      */
-    private ContractorAnalyticsBreakdown buildOrgFormBreakdown(List<Contractor> contractors) {
+    private ContractorAnalyticsBreakdown buildOrgFormBreakdown(
+            List<Contractor> contractors,
+            List<String> metrics
+    ) {
         var contractorsByOrgForm = contractors.stream()
+                .filter(contractor -> contractor.getOrgForm() != null)
                 .collect(Collectors.groupingBy(Contractor::getOrgForm));
 
         List<ContractorAnalyticsBreakdownData> breakdownData = contractorsByOrgForm.entrySet().stream()
@@ -243,14 +221,14 @@ public class ContractorAnalyticsService {
                     var orgForm = entry.getKey();
                     List<Contractor> groupContractors = entry.getValue();
 
-                    ContractorAnalyticsMetrics metrics = calculateMetrics(groupContractors);
+                    ContractorAnalyticsMetrics groupMetrics = calculateMetrics(groupContractors, metrics);
 
                     Map<String, Object> group = Map.of(
                             "id", orgForm.getId(),
                             "name", orgForm.getName()
                     );
 
-                    return new ContractorAnalyticsBreakdownData(group, metrics);
+                    return new ContractorAnalyticsBreakdownData(group, groupMetrics);
                 })
                 .toList();
 
@@ -260,7 +238,10 @@ public class ContractorAnalyticsService {
     /**
      * Строит разрез по году создания
      */
-    private ContractorAnalyticsBreakdown buildCreateYearBreakdown(List<Contractor> contractors) {
+    private ContractorAnalyticsBreakdown buildCreateYearBreakdown(
+            List<Contractor> contractors,
+            List<String> metrics
+    ) {
         var contractorsByYear = contractors.stream()
                 .collect(Collectors.groupingBy(contractor -> contractor.getCreateDate() == null
                         ? -1
@@ -272,11 +253,11 @@ public class ContractorAnalyticsService {
                     Integer year = entry.getKey();
                     List<Contractor> groupContractors = entry.getValue();
 
-                    ContractorAnalyticsMetrics metrics = calculateMetrics(groupContractors);
+                    ContractorAnalyticsMetrics groupMetrics = calculateMetrics(groupContractors, metrics);
 
                     Map<String, Object> group = Map.of("year", year);
 
-                    return new ContractorAnalyticsBreakdownData(group, metrics);
+                    return new ContractorAnalyticsBreakdownData(group, groupMetrics);
                 })
                 .toList();
 
@@ -284,17 +265,35 @@ public class ContractorAnalyticsService {
     }
 
     /**
-     * Считает метрики группы
+     * Считает метрики группы в зависимости от запрошенных metrics
      */
-    private ContractorAnalyticsMetrics calculateMetrics(List<Contractor> contractors) {
-        long dealCount = contractors.stream()
-                .mapToLong(contractor -> contractor.getDeals().size())
-                .sum();
+    private ContractorAnalyticsMetrics calculateMetrics(
+            List<Contractor> contractors,
+            List<String> requestedMetrics
+    ) {
+        boolean needCount = requestedMetrics == null
+                || requestedMetrics.isEmpty()
+                || requestedMetrics.contains("count");
 
-        long activeDealCount = contractors.stream()
-                .flatMap(contractor -> contractor.getDeals().stream())
-                .filter(this::isActiveDeal)
-                .count();
+        boolean needActive = requestedMetrics == null
+                || requestedMetrics.isEmpty()
+                || requestedMetrics.contains("active_deals_count");
+
+        Long dealCount = null;
+        Long activeDealCount = null;
+
+        if (needCount) {
+            dealCount = contractors.stream()
+                    .mapToLong(contractor -> contractor.getDeals().size())
+                    .sum();
+        }
+
+        if (needActive) {
+            activeDealCount = contractors.stream()
+                    .flatMap(contractor -> contractor.getDeals().stream())
+                    .filter(this::isActiveDeal)
+                    .count();
+        }
 
         return new ContractorAnalyticsMetrics(dealCount, activeDealCount);
     }
