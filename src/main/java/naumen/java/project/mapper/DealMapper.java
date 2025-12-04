@@ -18,7 +18,7 @@ import java.util.Set;
 @Component
 public class DealMapper {
 
-    /** Конвертация сущности в короткий DTO-ответ */
+    /** Конвертация сущности в DTO-ответ {@link DealShortResponseDTO} */
     public DealShortResponseDTO toShortResponse(Deal entity) {
         return new DealShortResponseDTO(
                 entity.getId(),
@@ -26,7 +26,7 @@ public class DealMapper {
         );
     }
 
-    /** Конвертация сущности в детальный DTO-ответ */
+    /** Конвертация сущности в DTO-ответ {@link DealResponseDTO} */
     public DealResponseDTO toDetailResponse(Deal entity) {
         return new DealResponseDTO(
                 entity.getId(),
@@ -41,14 +41,14 @@ public class DealMapper {
         );
     }
 
-    /** Конвертация списка сущностей в список DTO-ответов */
+    /** Конвертация списка сущностей в список DTO-ответов {@link DealResponseDTO} */
     public List<DealResponseDTO> toListResponse(List<Deal> entities) {
         return entities.stream()
                 .map(this::toDetailResponse)
                 .toList();
     }
 
-    /** Преобразует контрагентов из сделки в DTO-ответ*/
+    /** Преобразует контрагентов из сделки в DTO-ответ {@link ContractorInfoForDealDTO} */
     private List<ContractorInfoForDealDTO> toListResponse(Set<Contractor> contractors) {
         if (contractors == null) {
             return List.of();

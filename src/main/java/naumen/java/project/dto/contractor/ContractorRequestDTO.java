@@ -2,31 +2,24 @@ package naumen.java.project.dto.contractor;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import naumen.java.project.validation.ValidUuid;
 
 /**
  * DTO-запрос для создания или обновления контрагента
  *
+ * @param id        Id контрагента
+ * @param name      Имя контрагента
+ * @param countryId Id страны контрагента
+ * @param industryId Id индустрии контрагента
+ * @param orgFormId Id организационно-правовой формы контрагента
+ *
  * @author Daniil Mezev
  */
 public record ContractorRequestDTO(
-        /**
-         * Id контрагента
-         */
-        @NotBlank String id,
-        /**
-         * Имя контрагента
-         */
+        @ValidUuid String id,
         @NotBlank String name,
-        /**
-         * Id страны контрагента
-         */
         @NotBlank String countryId,
-        /**
-         * Id индустрии контрагента
-         */
         @NotNull Long industryId,
-        /**
-         * Id организационно-правовой формы контрагента
-         */
         @NotNull String orgFormId
 ) { }
+

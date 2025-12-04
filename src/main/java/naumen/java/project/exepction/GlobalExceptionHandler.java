@@ -1,6 +1,5 @@
 package naumen.java.project.exepction;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import naumen.java.project.dto.ExceptionResponseDTO;
 import org.springframework.http.HttpStatus;
@@ -27,28 +26,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ExceptionResponseDTO> handleResourceNotFound(ResourceNotFoundException ex,
                                                                        HttpServletRequest request) {
-        String message = ex.getResourceName() + " с id = " + ex.getResourceId() + " не найдена";
+        String message = ex.getMessage();
 
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.NOT_FOUND,
                 message,
-                request.getRequestURI(),
-                "ENTITY_NOT_FOUND"
-        );
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
-
-    /**
-     * Обработка исключений ненайденных сущностей
-     */
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ExceptionResponseDTO> handleEntityNotFound(EntityNotFoundException ex,
-                                                                     HttpServletRequest request) {
-        ExceptionResponseDTO error = new ExceptionResponseDTO(
-                HttpStatus.NOT_FOUND,
-                "Запрашиваемый объект не найден",
                 request.getRequestURI(),
                 "ENTITY_NOT_FOUND"
         );
@@ -82,9 +64,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ExceptionResponseDTO> handleBadRequestState(RuntimeException ex,
                                                                       HttpServletRequest request) {
+        String message = (ex.getMessage() != null && !ex.getMessage().isBlank())
+                ? ex.getMessage()
+                : "Недопустимое состояние объекта";
+
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,
-                "Недопустимое состояние объекта",
+                message,
                 request.getRequestURI(),
                 "ILLEGAL_STATE"
         );
@@ -140,12 +126,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ExceptionResponseDTO> handleHandlerMethodValidation(HandlerMethodValidationException ex,
                                                                               HttpServletRequest request) {
-        String errorMessage = ex.getParameterValidationResults()
-                .stream()
-                .flatMap(result -> result.getResolvableErrors().stream())
-                .map(error -> Objects.toString(error.getDefaultMessage(), "Ошибка валидации"))
-                .findFirst()
-                .orElse("Ошибка валидации параметров");
+        String errorMessage;
+        if (ex != null && !ex.getParameterValidationResults().isEmpty()) {
+            errorMessage = ex.getParameterValidationResults()
+                    .stream()
+                    .flatMap(result -> result.getResolvableErrors().stream())
+                    .map(error -> Objects.toString(error.getDefaultMessage(), "Ошибка валидации"))
+                    .findFirst()
+                    .orElse("Ошибка валидации параметров");
+        } else {
+            errorMessage = "Ошибка валидации параметров";
+        }
 
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.BAD_REQUEST,

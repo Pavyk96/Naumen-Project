@@ -10,6 +10,7 @@ import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
 import naumen.java.project.model.DealType;
 import naumen.java.project.service.DealService;
+import naumen.java.project.validation.ValidEnum;
 import naumen.java.project.validation.ValidUuid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,9 +46,11 @@ public class DealController {
     @PostMapping("/save")
     public ResponseEntity<DealShortResponseDTO> save(@Valid @RequestBody DealRequestDTO request)
             throws ResourceNotFoundException {
-        Deal deal = new Deal();
+        Deal deal;
         if (request.id() != null) {
-            deal.setId(UUID.fromString(request.id()));
+            deal = dealService.findById(UUID.fromString(request.id()));
+        } else {
+            deal = new Deal();
         }
         deal.setDescription(request.description());
         deal.setAgreementNumber(request.agreementNumber());
@@ -57,7 +60,7 @@ public class DealController {
         deal.setType(DealType.valueOf(request.type()));
         deal.setStatus(parseDealStatus(request.status()));
 
-        Deal dealSave = dealService.createOrUpdate(deal);
+        Deal dealSave = dealService.save(deal);
         DealShortResponseDTO dealShortResponseDTO = dealMapper.toShortResponse(dealSave);
         return ResponseEntity.ok(dealShortResponseDTO);
     }
@@ -101,7 +104,8 @@ public class DealController {
     @Transactional
     @PatchMapping("/change/status/{id}/{status}")
     public ResponseEntity<DealResponseDTO> changeStatus(@PathVariable @ValidUuid String id,
-                                                        @PathVariable String status) throws ResourceNotFoundException {
+                                                        @PathVariable @ValidEnum(enumClass = DealStatus.class) String status
+    ) throws ResourceNotFoundException {
         Deal deal = dealService.changeStatus(UUID.fromString(id), DealStatus.valueOf(status));
         DealResponseDTO dealResponseDTO = dealMapper.toDetailResponse(deal);
         return ResponseEntity.ok(dealResponseDTO);
@@ -115,7 +119,7 @@ public class DealController {
         try {
             return LocalDate.parse(dateString);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Expected: yyyy-MM-dd, got: " + dateString);
+            throw new IllegalArgumentException("Невалидный формат даты. Ожидаемый формат: yyyy-MM-dd, полученные данные: " + dateString);
         }
     }
 
@@ -127,7 +131,7 @@ public class DealController {
         try {
             return LocalDateTime.parse(dateTimeString.replace("Z", ""));
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid datetime format. Expected: yyyy-MM-ddTHH:mm:ss, got: " + dateTimeString);
+            throw new IllegalArgumentException("Невалидный формат даты. Ожидаемый формат: yyyy-MM-ddTHH:mm:ss, полученные данные: " + dateTimeString);
         }
     }
 

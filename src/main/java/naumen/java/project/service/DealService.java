@@ -5,7 +5,6 @@ import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
 import naumen.java.project.repository.DealRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +15,6 @@ import java.util.UUID;
  * @author Daria
  */
 @Service
-@Transactional
 public class DealService {
 
     private final DealRepository dealRepository;
@@ -30,7 +28,11 @@ public class DealService {
         return dealRepository.save(deal);
     }
 
-    /** Возвращает сделку по идентификатору */
+    /**
+     * Возвращает сделку по идентификатору
+     *
+     * @throws ResourceNotFoundException если сделка не найдена
+     */
     public Deal findById(UUID id) throws ResourceNotFoundException {
         return dealRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -40,12 +42,19 @@ public class DealService {
     }
 
 
-    /** Возвращает все сделки */
+    /** Возвращает все сделки
+     *
+     * @throws ResourceNotFoundException если сделка не найдена
+     */
     public List<Deal> findAll() {
         return dealRepository.findAll();
     }
 
-    /** Удаляет сделку по идентификатору */
+    /** Удаляет сделку по идентификатору
+     *
+     * @throws ResourceNotFoundException если сделка не найдена
+     * @throws IllegalStateException если связь между сделкой и контрагентом существует
+     */
     public void delete(UUID id) throws ResourceNotFoundException {
         if (!dealRepository.existsById(id)) {
             throw new ResourceNotFoundException(
@@ -64,20 +73,10 @@ public class DealService {
         dealRepository.deleteById(id);
     }
 
-
-    /** Сохраняет сделку (создание или обновление) */
-    public Deal createOrUpdate(Deal deal) throws ResourceNotFoundException {
-        if (deal.getId() != null && !existsById(deal.getId())) {
-            throw new ResourceNotFoundException(
-                    "Сделка",
-                    String.valueOf(deal.getId())
-            );
-        }
-        return save(deal);
-    }
-
-
-    /** Возвращает сделку по идентификатору с контрагентами */
+    /** Возвращает сделку по идентификатору с контрагентами
+     *
+     * @throws ResourceNotFoundException если сделка не найдена
+     */
     public Deal findByIdWithContractors(UUID id) throws ResourceNotFoundException {
         return dealRepository.findWithContractorsById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -93,7 +92,10 @@ public class DealService {
         return dealRepository.findAllWithContractors();
     }
 
-    /** Меняет статус сделки */
+    /** Меняет статус сделки
+     *
+     * @throws ResourceNotFoundException если сделка не найдена
+     */
     public Deal changeStatus(UUID id, DealStatus newStatus) throws ResourceNotFoundException {
         Deal deal = findByIdWithContractors(id);
         deal.setStatus(newStatus);

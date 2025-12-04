@@ -2,10 +2,13 @@ package naumen.java.project.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Контрагент для работы со сделками
@@ -17,8 +20,9 @@ import java.util.Set;
 public class Contractor {
 
     @Id
-    @Column(name = "id", length = 36, nullable = false, unique = true)
-    private String id;
+    @GeneratedValue
+    @UuidGenerator
+    private UUID id;
 
     @NotBlank
     @Column(name = "name", length = 256, nullable = false)
@@ -39,15 +43,12 @@ public class Contractor {
     @ManyToMany(mappedBy = "contractors", fetch = FetchType.LAZY)
     private Set<Deal> deals = new HashSet<>();
 
-    private LocalDateTime createDate;
-
-    private LocalDateTime updateDate;
-
+    @Column(name = "create_date")
+    private LocalDate createDate;
 
     protected Contractor() { }
 
-    public Contractor(String id, String name, Country country, Industry industry, OrgForm orgForm) {
-        this.id = id;
+    public Contractor(String name, Country country, Industry industry, OrgForm orgForm) {
         this.name = name;
         this.country = country;
         this.industry = industry;
@@ -55,10 +56,10 @@ public class Contractor {
     }
 
     /** Возвращает идентификатор */
-    public String getId() { return id; }
+    public UUID getId() { return id; }
 
     /** Устанавливает идентификатор */
-    public void setId(String id) { this.id = id; }
+    public void setId(UUID id) { this.id = id; }
 
     /** Возвращает название */
     public String getName() { return name; }
@@ -90,28 +91,14 @@ public class Contractor {
     /**
      * Вернуть дату создания
      */
-    public LocalDateTime getCreateDate() {
+    public LocalDate getCreateDate() {
         return createDate;
-    }
-
-    /**
-     * Вернуть дату обновления
-     */
-    public LocalDateTime getUpdateDate() {
-        return updateDate;
     }
 
     /**
      * Установит дату создания
      */
-    public void setCreateDate(LocalDateTime createDate) {
+    public void setCreateDate(LocalDate createDate) {
         this.createDate = createDate;
-    }
-
-    /**
-     * Установить дату обновления
-     */
-    public void setUpdateDate(LocalDateTime updateDate) {
-        this.updateDate = updateDate;
     }
 }

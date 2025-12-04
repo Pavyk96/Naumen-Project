@@ -5,6 +5,9 @@ import java.util.List;
 /**
  * Разрез контрагентов
  *
+ * @param dimension тип разреза
+ * @param data данные разреза с метриками
+ *
  * @author Daniil Mezev
  */
 public record ContractorAnalyticsBreakdown(

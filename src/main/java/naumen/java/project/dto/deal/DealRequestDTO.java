@@ -1,28 +1,35 @@
 package naumen.java.project.dto.deal;
 
 import jakarta.validation.constraints.NotBlank;
+import naumen.java.project.model.DealStatus;
+import naumen.java.project.model.DealType;
+import naumen.java.project.validation.ValidEnum;
 import naumen.java.project.validation.ValidUuid;
 
 /**
  * DTO-запрос для создания или обновления сделки
  *
+ * @param id Уникальный идентификатор сделки
+ * @param description Описание сделки
+ * @param agreementNumber Номер договора
+ * @param agreementDate Дата договора
+ * @param openedAt Дата открытия сделки
+ * @param closedAt Дата закрытия сделки
+ * @param type Тип сделки
+ * @param status Статус сделки
+ *
  * @author Daria
  */
 public record DealRequestDTO(
-        /** Уникальный идентификатор сделки */
         @ValidUuid String id,
-        /** Описание сделки */
         @NotBlank String description,
-        /** Номер договора */
         @NotBlank String agreementNumber,
-        /** Дата договора */
         @NotBlank String agreementDate,
-        /** Дата открытия сделки */
         String openedAt,
-        /** Дата закрытия сделки */
         String closedAt,
-        /** Тип сделки */
-        @NotBlank String type,
-        /** Статус сделки */
+        @NotBlank
+        @ValidEnum(enumClass = DealType.class)
+        String type,
+        @ValidEnum(enumClass = DealStatus.class)
         String status
 ) { }

@@ -6,22 +6,23 @@ import jakarta.validation.Payload;
 import java.lang.annotation.*;
 
 /**
- * Валидирует, что строка является корректным UUID
+ * Валидирует, что строка содержит существующие значение enum
  *
  * @author Daria
  */
 @Documented
-@Constraint(validatedBy = UuidValidator.class)
+@Constraint(validatedBy = ValidEnumValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidUuid {
-
+public @interface ValidEnum {
     /** Сообщение об ошибке по умолчанию */
-    String message() default "Невалидный UUID: {validatedValue}";
-
+    String message() default "Недопустимое значение enum";
     /** Группы валидации */
     Class<?>[] groups() default {};
-
     /** Дополнительная информация */
     Class<? extends Payload>[] payload() default {};
+    /** Класс enum */
+    Class<? extends Enum<?>> enumClass();
+    /** Игнорирование регистра */
+    boolean ignoreCase() default true;
 }

@@ -5,6 +5,10 @@ import java.util.List;
 /**
  * Ответ аналитики контрагентов
  *
+ * @param summary сводные метрики
+ * @param breakdown разрезы аналитики
+ * @param trends тренды по периодам
+ *
  * @author Daniil Mezev
  */
 public record ContractorAnalyticsResponse(

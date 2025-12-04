@@ -7,11 +7,12 @@ import java.util.UUID;
 /**
  * DTO-ответ для сделки (короткая запись)
  *
+ * @param id Идентификатор сделки
+ * @param status Статус сделки
+ *
  * @author Daria
  */
 public record DealShortResponseDTO(
-        /** Идентификатор сделки */
         UUID id,
-        /** Статус сделки */
         DealStatus status
 ) {}

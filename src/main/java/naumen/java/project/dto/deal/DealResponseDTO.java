@@ -8,25 +8,26 @@ import java.util.UUID;
 /**
  * DTO-ответ для сделки с детальной информацией
  *
+ * @param id Идентификатор сделки
+ * @param description Описание сделки
+ * @param agreementNumber Номер договора
+ * @param agreementDate Дата договора
+ * @param openedAt Дата открытия сделки
+ * @param closedAt Дата закрытия сделки
+ * @param type Тип сделки
+ * @param status Статус сделки
+ * @param contractors Список контрагентов
+ *
  * @author Daria
  */
 public record DealResponseDTO(
-        /** Идентификатор сделки */
         UUID id,
-        /** Описание сделки */
         String description,
-        /** Номер договора */
         String agreementNumber,
-        /** Дата договора */
         String agreementDate,
-        /** Дата открытия сделки */
         String openedAt,
-        /** Дата закрытия сделки */
         String closedAt,
-        /** Тип сделки */
         String type,
-        /** Статус сделки */
         String status,
-        /** Список контрагентов */
         List<ContractorInfoForDealDTO> contractors
 ) { }

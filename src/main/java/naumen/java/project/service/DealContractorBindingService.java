@@ -1,6 +1,5 @@
 package naumen.java.project.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
@@ -27,8 +26,11 @@ public class DealContractorBindingService {
 
     /**
      * Добавляет контрагента к сделке
+     *
+     * @throws ResourceNotFoundException если сделка или контрагент не найдены
+     * @throws IllegalStateException если связь между сделкой и контрагентом уже существует
      */
-    public Deal addContractorToDeal(String contractorId, UUID dealId) throws ResourceNotFoundException {
+    public Deal addContractorToDeal(UUID contractorId, UUID dealId) throws ResourceNotFoundException {
         Deal deal = dealService.findByIdWithContractors(dealId);
         Contractor contractor = contractorService.findById(contractorId);
 
@@ -36,13 +38,19 @@ public class DealContractorBindingService {
             deal.addContractor(contractor);
             return dealService.save(deal);
         }
-        throw new IllegalStateException("Contractor is already exists in deal");
+        throw new IllegalStateException(
+                "Нельзя добавить контрагента с id = "
+                        + contractorId + ", так как уже существует связь"
+        );
     }
 
     /**
      * Удаляет контрагента из сделки
+     *
+     * @throws ResourceNotFoundException если сделка или контрагент не найдены
+     * @throws IllegalStateException если связь между сделкой и контрагентом не существует
      */
-    public Deal deleteContractorFromDeal(String contractorId, UUID dealId) throws ResourceNotFoundException {
+    public Deal deleteContractorFromDeal(UUID contractorId, UUID dealId) throws ResourceNotFoundException {
         Deal deal = dealService.findByIdWithContractors(dealId);
         Contractor contractor = contractorService.findById(contractorId);
 
@@ -50,13 +58,16 @@ public class DealContractorBindingService {
             deal.removeContractor(contractor);
             return dealService.save(deal);
         }
-        throw new EntityNotFoundException("Contractor not found in deal");
+        throw new IllegalStateException(
+                "Нельзя удалить контрагента с id = "
+                        + contractorId + ", так как связь не существует"
+        );
     }
 
     /**
      * Проверка на существование контрагента в сделке
      */
-    private boolean isAlreadyExists(Deal deal, String contractorId) {
+    private boolean isAlreadyExists(Deal deal, UUID contractorId) {
         return deal.getContractors().stream()
                 .anyMatch(c -> c.getId().equals(contractorId));
     }

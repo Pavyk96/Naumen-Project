@@ -35,7 +35,7 @@ class IndustryControllerTest {
     private static final String NAME_UPDATED = "Information Technology";
 
     private final IndustryService industryServiceMock;
-    private final IndustryMapper industryMapperMock;
+    private final IndustryMapper industryMapper;
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
@@ -47,12 +47,11 @@ class IndustryControllerTest {
     private IndustryRequestDTO createRequest;
     private IndustryRequestDTO updateRequest;
 
-    public IndustryControllerTest(@Mock IndustryService industryServiceMock,
-                                  @Mock IndustryMapper industryMapperMock) {
+    public IndustryControllerTest(@Mock IndustryService industryServiceMock) {
         this.industryServiceMock = industryServiceMock;
-        this.industryMapperMock = industryMapperMock;
+        this.industryMapper = new IndustryMapper();
 
-        IndustryController controller = new IndustryController(industryServiceMock, industryMapperMock);
+        IndustryController controller = new IndustryController(industryServiceMock, industryMapper);
 
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(controller)
@@ -81,7 +80,6 @@ class IndustryControllerTest {
     @Test
     void testGetAllReturnsListOfIndustries() throws Exception {
         Mockito.when(industryServiceMock.findAll()).thenReturn(List.of(industry));
-        Mockito.when(industryMapperMock.toResponse(industry)).thenReturn(industryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/industry/all"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -93,7 +91,6 @@ class IndustryControllerTest {
     @Test
     void testGetByIdReturnsIndustry() throws Exception {
         Mockito.when(industryServiceMock.findById(ID)).thenReturn(industry);
-        Mockito.when(industryMapperMock.toResponse(industry)).thenReturn(industryDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/industry/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -110,14 +107,13 @@ class IndustryControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/industry/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message")
-                        .value("Индустрия с id = " + ID + " не найдена"));
+                        .value("Индустрия с id = " + ID + " не найден(а)"));
     }
 
     /** Проверяет успешное создание индустрии */
     @Test
     void testCreateCreatesIndustry() throws Exception {
-        Mockito.when(industryServiceMock.create(Mockito.any(Industry.class))).thenReturn(industry);
-        Mockito.when(industryMapperMock.toResponse(industry)).thenReturn(industryDto);
+        Mockito.when(industryServiceMock.save(Mockito.any(Industry.class))).thenReturn(industry);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/industry")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,10 +126,9 @@ class IndustryControllerTest {
     /** Проверяет успешное обновление индустрии */
     @Test
     void testUpdateUpdatesIndustry() throws Exception {
-        Mockito.when(industryServiceMock.update(Mockito.eq(ID), Mockito.any(Industry.class)))
+        Mockito.when(industryServiceMock.findById(ID)).thenReturn(industry);
+        Mockito.when(industryServiceMock.save(Mockito.any(Industry.class)))
                 .thenReturn(industryUpdated);
-        Mockito.when(industryMapperMock.toResponse(industryUpdated))
-                .thenReturn(industryUpdatedDto);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/industry/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)

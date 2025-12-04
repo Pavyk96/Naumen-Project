@@ -56,7 +56,7 @@ public class CountryController {
     public ResponseEntity<CountryResponseDTO> create(@Valid @RequestBody CountryRequestDTO req) {
         Country toCreate = new Country(req.id(), req.name());
 
-        Country created = service.create(toCreate);
+        Country created = service.save(toCreate);
         return ResponseEntity.ok(mapper.toResponse(created));
     }
 
@@ -66,9 +66,13 @@ public class CountryController {
     public ResponseEntity<CountryResponseDTO> update(@PathVariable String id,
                                                      @Valid @RequestBody CountryRequestDTO req)
             throws ResourceNotFoundException {
-        Country toUpdate = new Country(req.id(), req.name());
 
-        Country updated = service.update(id, toUpdate);
+        Country oldCountry = service.findById(id);
+
+        oldCountry.setName(req.name());
+
+        Country updated = service.save(oldCountry);
+
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 

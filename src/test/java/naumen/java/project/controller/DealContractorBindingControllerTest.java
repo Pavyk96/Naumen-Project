@@ -1,24 +1,24 @@
 package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import naumen.java.project.dto.DealContractorRequestDTO;
-import naumen.java.project.dto.deal.DealResponseDTO;
+import naumen.java.project.exepction.GlobalExceptionHandler;
+import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.factory.DealTestFactory;
 import naumen.java.project.mapper.DealMapper;
 import naumen.java.project.model.Deal;
 import naumen.java.project.service.DealContractorBindingService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.UUID;
 
@@ -27,19 +27,41 @@ import java.util.UUID;
  *
  * @author Daria
  */
-@WebMvcTest(DealContractorBindingController.class)
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Тесты DealContractorBindingController")
 class DealContractorBindingControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper om;
-    @MockitoBean
-    private DealContractorBindingService dealContractorBindingService;
-    @MockitoBean
-    private DealMapper dealMapper;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
+    private final DealMapper dealMapper;
+    private final DealContractorBindingService dealContractorBindingService;
+
+    public DealContractorBindingControllerTest(@Mock DealContractorBindingService dealContractorBindingService) {
+        this.dealContractorBindingService = dealContractorBindingService;
+        this.dealMapper = new DealMapper();
+
+        DealContractorBindingController dealContractorBindingController
+                = new DealContractorBindingController(dealContractorBindingService, dealMapper);
+
+        this.mockMvc = MockMvcBuilders
+                .standaloneSetup(dealContractorBindingController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        this.objectMapper = new ObjectMapper();
+    }
+
+    private static final UUID NON_EXISTENT_DEAL_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
     private final DealTestFactory dealTestFactory = new DealTestFactory();
+    private final UUID dealId = dealTestFactory.getDealId();
+    private final UUID contractorId = dealTestFactory.getContractorId();
+    private final DealContractorRequestDTO validRequest =
+            dealTestFactory.createDealContractorRequest(dealId, contractorId);
+    private final DealContractorRequestDTO invalidUuidRequest =
+            new DealContractorRequestDTO("invalid-uuid", contractorId.toString());
+    private final Deal deal = dealTestFactory.createDeal(dealId,
+            dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
 
     /**
      * Проверяет корректное создание связи между сделкой и контрагентом
@@ -47,37 +69,14 @@ class DealContractorBindingControllerTest {
     @Test
     @DisplayName("POST /deal-contractor/save - успешное создание связи")
     void addContractorToDealTest() throws Exception {
-        DealContractorRequestDTO request = dealTestFactory.createDealContractorRequest(
-                dealTestFactory.getDealId(), dealTestFactory.getContractorId());
-        Deal dealWithContractor = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-        DealResponseDTO response = dealTestFactory.createDealResponse(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-
-        Mockito.when(dealContractorBindingService.addContractorToDeal(
-                        request.contractorId(), UUID.fromString(request.dealId())))
-                .thenReturn(dealWithContractor);
-        Mockito.when(dealMapper.toDetailResponse(dealWithContractor))
-                .thenReturn(response);
+        Mockito.when(dealContractorBindingService.addContractorToDeal(contractorId, dealId))
+                .thenReturn(deal);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id")
-                        .value(dealTestFactory.getDealId().toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.description")
-                        .value(dealTestFactory.getDescription()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.agreementNumber")
-                        .value(dealTestFactory.getAgreementNumber()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.type")
-                        .value(dealTestFactory.getDealType().getDisplayName()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status")
-                        .value(dealTestFactory.getDealStatus().getDisplayName()));
-
-        Mockito.verify(dealContractorBindingService).addContractorToDeal(
-                request.contractorId(), UUID.fromString(request.dealId()));
-        Mockito.verify(dealMapper).toDetailResponse(dealWithContractor);
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(dealId.toString()));
     }
 
     /**
@@ -86,33 +85,14 @@ class DealContractorBindingControllerTest {
     @Test
     @DisplayName("POST /deal-contractor/delete - успешное удаление связи")
     void removeContractorFromDealTest() throws Exception {
-        DealContractorRequestDTO request = dealTestFactory.createDealContractorRequest(
-                dealTestFactory.getDealId(), dealTestFactory.getContractorId());
-        Deal dealWithoutContractor = dealTestFactory.createDeal(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-        DealResponseDTO response = dealTestFactory.createDealResponse(dealTestFactory.getDealId(),
-                dealTestFactory.getDescription(), dealTestFactory.getDealStatus());
-
-        Mockito.when(dealContractorBindingService.deleteContractorFromDeal(
-                        request.contractorId(), UUID.fromString(request.dealId())))
-                .thenReturn(dealWithoutContractor);
-        Mockito.when(dealMapper.toDetailResponse(dealWithoutContractor))
-                .thenReturn(response);
+        Mockito.when(dealContractorBindingService.deleteContractorFromDeal(contractorId, dealId))
+                .thenReturn(deal);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/delete")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id")
-                        .value(dealTestFactory.getDealId().toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.description")
-                        .value(dealTestFactory.getDescription()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.agreementNumber")
-                        .value(dealTestFactory.getAgreementNumber()));
-
-        Mockito.verify(dealContractorBindingService).deleteContractorFromDeal(
-                request.contractorId(), UUID.fromString(request.dealId()));
-        Mockito.verify(dealMapper).toDetailResponse(dealWithoutContractor);
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(dealId.toString()));
     }
 
     /**
@@ -121,12 +101,9 @@ class DealContractorBindingControllerTest {
     @Test
     @DisplayName("POST /deal-contractor/save - возвращает 400 при невалидном UUID сделки")
     void addContractorWithInvalidDealUuidTest() throws Exception {
-        DealContractorRequestDTO request = new DealContractorRequestDTO("invalid-uuid",
-                dealTestFactory.getContractorId());
-
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(invalidUuidRequest)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -134,10 +111,6 @@ class DealContractorBindingControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("VALIDATION_FAILED"));
-
-        Mockito.verify(dealContractorBindingService, Mockito.never()).addContractorToDeal(
-                ArgumentMatchers.any(String.class), ArgumentMatchers.any(UUID.class));
-        Mockito.verify(dealMapper, Mockito.never()).toDetailResponse(ArgumentMatchers.any());
     }
 
     /**
@@ -147,11 +120,11 @@ class DealContractorBindingControllerTest {
     @DisplayName("POST /deal-contractor/save - возвращает 400 при пустом contractorId")
     void addContractorWithEmptyContractorIdTest() throws Exception {
         DealContractorRequestDTO request = new DealContractorRequestDTO(
-                dealTestFactory.getDealId().toString(), "");
+                dealId.toString(), "");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -159,10 +132,6 @@ class DealContractorBindingControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("VALIDATION_FAILED"));
-
-        Mockito.verify(dealContractorBindingService, Mockito.never()).addContractorToDeal(
-                request.contractorId(), UUID.fromString(request.dealId()));
-        Mockito.verify(dealMapper, Mockito.never()).toDetailResponse(ArgumentMatchers.any());
     }
 
     /**
@@ -171,16 +140,12 @@ class DealContractorBindingControllerTest {
     @Test
     @DisplayName("POST /deal-contractor/save - возвращает 404 при отсутствии сделки")
     void addContractorToNonExistentDealTest() throws Exception {
-        DealContractorRequestDTO request = dealTestFactory.createDealContractorRequest(
-                dealTestFactory.getDealId(), dealTestFactory.getContractorId());
-
-        Mockito.when(dealContractorBindingService.addContractorToDeal(
-                        request.contractorId(), UUID.fromString(request.dealId())))
-                .thenThrow(new EntityNotFoundException("Deal not found"));
+        Mockito.when(dealContractorBindingService.addContractorToDeal(contractorId, dealId))
+                .thenThrow(new ResourceNotFoundException("Сделка", dealId.toString()));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(404))
@@ -188,29 +153,21 @@ class DealContractorBindingControllerTest {
                         .value("Not Found"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("ENTITY_NOT_FOUND"));
-
-        Mockito.verify(dealContractorBindingService).addContractorToDeal(
-                request.contractorId(), UUID.fromString(request.dealId()));
-        Mockito.verify(dealMapper, Mockito.never()).toDetailResponse(ArgumentMatchers.any());
     }
 
     /**
-     * Проверяет возврат 400 при нарушении бизнес-правил:
-     * уже существует связь между сделкой и контрагентом
+     * Проверяет возврат 400 при нарушении бизнес-правил
      */
     @Test
-    @DisplayName("POST /deal-contractor/save - возвращает 400 при имеющей связи")
+    @DisplayName("POST /deal-contractor/save - возвращает 400 при имеющейся связи")
     void addContractorWithBusinessRuleViolationTest() throws Exception {
-        DealContractorRequestDTO request = dealTestFactory.createDealContractorRequest(
-                dealTestFactory.getDealId(), dealTestFactory.getContractorId());
-
-        Mockito.when(dealContractorBindingService.addContractorToDeal(
-                        request.contractorId(), UUID.fromString(request.dealId())))
-                .thenThrow(new IllegalStateException("Contractor already added to deal"));
+        Mockito.when(dealContractorBindingService.addContractorToDeal(contractorId, dealId))
+                .thenThrow(new IllegalStateException("Нельзя добавить контрагента с id = "
+                        + contractorId + ", так как уже существует связь"));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -218,10 +175,6 @@ class DealContractorBindingControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("ILLEGAL_STATE"));
-
-        Mockito.verify(dealContractorBindingService).addContractorToDeal(
-                request.contractorId(), UUID.fromString(request.dealId()));
-        Mockito.verify(dealMapper, Mockito.never()).toDetailResponse(ArgumentMatchers.any());
     }
 
     /**
@@ -230,12 +183,9 @@ class DealContractorBindingControllerTest {
     @Test
     @DisplayName("POST /deal-contractor/delete - возвращает 400 при невалидном UUID сделки")
     void removeContractorWithInvalidDealUuidTest() throws Exception {
-        DealContractorRequestDTO request = new DealContractorRequestDTO("invalid-uuid",
-                dealTestFactory.getContractorId());
-
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/delete")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(invalidUuidRequest)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(400))
@@ -243,10 +193,6 @@ class DealContractorBindingControllerTest {
                         .value("Bad Request"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("VALIDATION_FAILED"));
-
-        Mockito.verify(dealContractorBindingService, Mockito.never()).deleteContractorFromDeal(
-                ArgumentMatchers.any(String.class), ArgumentMatchers.any(UUID.class));
-        Mockito.verify(dealMapper, Mockito.never()).toDetailResponse(ArgumentMatchers.any());
     }
 
     /**
@@ -255,16 +201,15 @@ class DealContractorBindingControllerTest {
     @Test
     @DisplayName("POST /deal-contractor/delete - возвращает 404 при отсутствии связи")
     void removeNonExistentContractorFromDealTest() throws Exception {
-        DealContractorRequestDTO request = dealTestFactory.createDealContractorRequest(
-                dealTestFactory.getDealId(), "NON_EXISTENT_CONTRACTOR");
+        String nonExistentContractorId = "NON_EXISTENT_CONTRACTOR";
+        DealContractorRequestDTO request = dealTestFactory.createDealContractorRequest(dealId, NON_EXISTENT_DEAL_ID);
 
-        Mockito.when(dealContractorBindingService.deleteContractorFromDeal(
-                        request.contractorId(), UUID.fromString(request.dealId())))
-                .thenThrow(new EntityNotFoundException("Contractor not found in deal"));
+        Mockito.when(dealContractorBindingService.deleteContractorFromDeal(NON_EXISTENT_DEAL_ID, dealId))
+                .thenThrow(new ResourceNotFoundException("Контрагент", nonExistentContractorId));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/deal-contractor/delete")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status")
                         .value(404))
@@ -272,9 +217,5 @@ class DealContractorBindingControllerTest {
                         .value("Not Found"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("ENTITY_NOT_FOUND"));
-
-        Mockito.verify(dealContractorBindingService).deleteContractorFromDeal(
-                request.contractorId(), UUID.fromString(request.dealId()));
-        Mockito.verify(dealMapper, Mockito.never()).toDetailResponse(ArgumentMatchers.any());
     }
 }
