@@ -1,5 +1,6 @@
 package naumen.java.project.dto.analytics.contractor.request;
 
+import jakarta.validation.Valid;
 import naumen.java.project.dto.analytics.AnalyticsDateRange;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public record ContractorAnalyticsFilters(
         List<String> countries,
         List<Long> industries,
         List<String> orgForms,
+        @Valid
         AnalyticsDateRange dateRange
 ) { }
 

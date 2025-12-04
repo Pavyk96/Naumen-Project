@@ -1,5 +1,7 @@
 package naumen.java.project.dto.analytics.contractor.request;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 /**
@@ -15,6 +17,7 @@ import java.util.List;
 public record ContractorAnalyticsRequest(
         List<String> dimensions,
         List<String> metrics,
+        @Valid
         ContractorAnalyticsFilters filters,
         boolean includeTrends
 ) { }
