@@ -19,6 +19,7 @@ import naumen.java.project.service.CountryService;
 import naumen.java.project.service.IndustryService;
 import naumen.java.project.service.OrgFormService;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -86,7 +87,7 @@ public class ContractorController {
                 industry,
                 orgForm
         );
-
+        contractor.setCreateDate(LocalDate.now());
         Contractor created = contractorService.save(contractor);
 
         return ResponseEntity.ok(contractorMapper.toResponse(created));
