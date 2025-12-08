@@ -1,11 +1,7 @@
 package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import naumen.java.project.dto.CountryResponseDTO;
-import naumen.java.project.dto.IndustryResponseDTO;
-import naumen.java.project.dto.OrgFormResponseDTO;
 import naumen.java.project.dto.contractor.ContractorRequestDTO;
-import naumen.java.project.dto.contractor.ContractorResponseDTO;
 import naumen.java.project.exepction.GlobalExceptionHandler;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.ContractorMapper;
@@ -50,7 +46,8 @@ class ContractorControllerTest {
     private final CountryService countryServiceMock;
     private final IndustryService industryServiceMock;
     private final OrgFormService orgFormServiceMock;
-    private final ContractorMapper contractorMapper;
+
+    private final Contractor contractor;
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -64,7 +61,7 @@ class ContractorControllerTest {
         this.industryServiceMock = industryServiceMock;
         this.orgFormServiceMock = orgFormServiceMock;
 
-        this.contractorMapper = new ContractorMapper();
+        ContractorMapper contractorMapper = new ContractorMapper();
 
         ContractorController controller = new ContractorController(
                 contractorServiceMock,
@@ -74,42 +71,23 @@ class ContractorControllerTest {
                 orgFormServiceMock
         );
 
+        Country country = new Country(COUNTRY_ID, "Russia");
+        Industry industry = new Industry(INDUSTRY_ID, "IT");
+        OrgForm orgForm = new OrgForm(ORGFORM_ID, "ООО");
+
+        contractor = new Contractor(NAME, country, industry, orgForm);
+        contractor.setId(ID);
+
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
-    /** Создаёт тестового контрагента со связанными сущностями */
-    private Contractor createTestContractor(String name) {
-        Country country = new Country(COUNTRY_ID, "Russia");
-        Industry industry = new Industry(INDUSTRY_ID, "IT");
-        OrgForm orgForm = new OrgForm(ORGFORM_ID, "ООО");
-
-        Contractor contractor = new Contractor(name, country, industry, orgForm);
-        contractor.setId(ID);
-
-        return contractor;
-    }
-
-
-    /** Создаёт DTO ответа для тестового контрагента */
-    private ContractorResponseDTO createTestResponseDTO(String name) {
-        return new ContractorResponseDTO(
-                ID,
-                name,
-                new CountryResponseDTO(COUNTRY_ID, "Russia"),
-                new IndustryResponseDTO(INDUSTRY_ID, "IT"),
-                new OrgFormResponseDTO(ORGFORM_ID, "ООО")
-        );
-    }
-
     /** Проверяет успешное получение списка контрагентов */
     @Test
     void testGetAllReturnsListOfContractors() throws Exception {
-        Contractor entity = createTestContractor(NAME);
-
-        Mockito.when(contractorServiceMock.findAll()).thenReturn(List.of(entity));
+        Mockito.when(contractorServiceMock.findAll()).thenReturn(List.of(contractor));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/contractor/all"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -120,9 +98,7 @@ class ContractorControllerTest {
     /** Проверяет успешное получение контрагента по идентификатору */
     @Test
     void testGetContractorById() throws Exception {
-        Contractor entity = createTestContractor(NAME);
-
-        Mockito.when(contractorServiceMock.findById(ID)).thenReturn(entity);
+        Mockito.when(contractorServiceMock.findById(ID)).thenReturn(contractor);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/contractor/{id}", ID))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -152,12 +128,10 @@ class ContractorControllerTest {
         Industry industry = new Industry(INDUSTRY_ID, "IT");
         OrgForm orgForm = new OrgForm(ORGFORM_ID, "ООО");
 
-        Contractor created = createTestContractor(NAME);
-
         Mockito.when(countryServiceMock.findById(COUNTRY_ID)).thenReturn(country);
         Mockito.when(industryServiceMock.findById(INDUSTRY_ID)).thenReturn(industry);
         Mockito.when(orgFormServiceMock.findById(ORGFORM_ID)).thenReturn(orgForm);
-        Mockito.when(contractorServiceMock.save(Mockito.any(Contractor.class))).thenReturn(created);
+        Mockito.when(contractorServiceMock.save(Mockito.any(Contractor.class))).thenReturn(contractor);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/contractor")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -184,6 +158,7 @@ class ContractorControllerTest {
                         .value("Страна с id = " + COUNTRY_ID + " не найден(а)"));
     }
 
+    /** Проверяет успешное обновление контрагентов */
     @Test
     void testUpdateUpdatesContractor() throws Exception {
         ContractorRequestDTO request = new ContractorRequestDTO(String.valueOf(ID), NAME_UPDATED,
@@ -193,14 +168,14 @@ class ContractorControllerTest {
         Industry industry = new Industry(INDUSTRY_ID, "IT");
         OrgForm orgForm = new OrgForm(ORGFORM_ID, "ООО");
 
-        Contractor existing = createTestContractor(NAME);
-        Contractor updated = createTestContractor(NAME_UPDATED);
+        Contractor updateContractor = new Contractor(NAME_UPDATED, country, industry, orgForm);
+        updateContractor.setId(ID);
 
         Mockito.when(countryServiceMock.findById(COUNTRY_ID)).thenReturn(country);
         Mockito.when(industryServiceMock.findById(INDUSTRY_ID)).thenReturn(industry);
         Mockito.when(orgFormServiceMock.findById(ORGFORM_ID)).thenReturn(orgForm);
-        Mockito.when(contractorServiceMock.findById(ID)).thenReturn(existing);
-        Mockito.when(contractorServiceMock.save(existing)).thenReturn(updated);
+        Mockito.when(contractorServiceMock.findById(ID)).thenReturn(contractor);
+        Mockito.when(contractorServiceMock.save(contractor)).thenReturn(updateContractor);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/contractor/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -210,7 +185,6 @@ class ContractorControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME_UPDATED));
     }
 
-
     /** Проверяет успешное удаление контрагента */
     @Test
     void testDeleteContractor() throws Exception {
@@ -218,5 +192,4 @@ class ContractorControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string(""));
     }
-
 }
