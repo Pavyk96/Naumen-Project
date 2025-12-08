@@ -1,4 +1,4 @@
-package naumen.java.project.service.analytics;
+package naumen.java.project.service.analytics.deal;
 
 import naumen.java.project.dto.analytics.deal.response.DealAnalyticsPortfolioSummary;
 import naumen.java.project.model.Deal;

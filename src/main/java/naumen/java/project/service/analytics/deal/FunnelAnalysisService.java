@@ -1,4 +1,4 @@
-package naumen.java.project.service.analytics;
+package naumen.java.project.service.analytics.deal;
 
 import naumen.java.project.dto.analytics.deal.response.DealAnalyticsFunnelAnalysis;
 import naumen.java.project.dto.analytics.deal.response.DealAnalyticsFunnelStage;
