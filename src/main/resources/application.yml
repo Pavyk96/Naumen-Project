@@ -14,3 +14,18 @@ spring:
       ddl-auto: update
     properties:
       hibernate.format_sql: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    naumen.java.project: INFO
+
+
+yandex:
+  s3:
+    endpoint: https://storage.yandexcloud.net
+    region: ru-central1
+    bucket: final-pfroject-bucket
+    access-key: YCAJEgjW3v4k5JOYU5qU_Q7ld
+    secret-key: YCPT0Jk9-Wkvscv5T53D9aCH7aVUE1txeC1gj2nt

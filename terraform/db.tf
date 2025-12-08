@@ -32,14 +32,23 @@ resource "yandex_compute_instance" "db" {
           content: |
             #!/bin/bash
             set -xe
+
             systemctl enable docker
             systemctl start docker
+
+            # volume как в docker-compose
+            docker volume create project_pg_data || true
+
+            # убираем старый контейнер если есть
+            docker rm -f project-db || true
+
             docker run -d \
               --name project-db \
+              -p 5432:5432 \
               -e POSTGRES_DB=project \
               -e POSTGRES_USER=project \
               -e POSTGRES_PASSWORD=project \
-              -p 5432:5432 \
+              -v project_pg_data:/var/lib/postgresql/data \
               postgres:16
 
       runcmd:

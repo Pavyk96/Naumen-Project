@@ -32,14 +32,20 @@ resource "yandex_compute_instance" "app" {
           content: |
             #!/bin/bash
             set -xe
+
             systemctl enable docker
             systemctl start docker
+
+            # убиваем старый контейнер если есть
+            docker rm -f project-app || true
+
             docker run -d \
               --name project-app \
               -p 8080:8080 \
               -e SPRING_DATASOURCE_URL="jdbc:postgresql://${yandex_compute_instance.db.network_interface.0.ip_address}:5432/project" \
               -e SPRING_DATASOURCE_USERNAME=project \
               -e SPRING_DATASOURCE_PASSWORD=project \
+              -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
               payk96/project-pavlov:latest
 
       runcmd:

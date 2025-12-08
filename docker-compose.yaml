@@ -1,9 +1,7 @@
-version: "3.9"
 services:
   postgres:
     image: postgres:16
     container_name: project-postgres
-    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -21,7 +19,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/project
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://project-postgres:5432/project
       - SPRING_DATASOURCE_USERNAME=project
       - SPRING_DATASOURCE_PASSWORD=project
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
