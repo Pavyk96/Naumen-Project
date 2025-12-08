@@ -3,7 +3,7 @@ package naumen.java.project.dto.analytics.contractor.response;
 import java.util.List;
 
 /**
- * Разрез контрагентов
+ * Разрез контрагентов по параметрам
  *
  * @param dimension тип разреза
  * @param data данные разреза с метриками
