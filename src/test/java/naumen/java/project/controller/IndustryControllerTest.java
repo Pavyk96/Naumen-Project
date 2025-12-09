@@ -2,13 +2,11 @@ package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import naumen.java.project.dto.IndustryRequestDTO;
-import naumen.java.project.dto.IndustryResponseDTO;
 import naumen.java.project.exepction.GlobalExceptionHandler;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.IndustryMapper;
 import naumen.java.project.model.Industry;
 import naumen.java.project.service.IndustryService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -35,21 +33,15 @@ class IndustryControllerTest {
     private static final String NAME_UPDATED = "Information Technology";
 
     private final IndustryService industryServiceMock;
-    private final IndustryMapper industryMapper;
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
 
-    private Industry industry;
-    private Industry industryUpdated;
-    private IndustryResponseDTO industryDto;
-    private IndustryResponseDTO industryUpdatedDto;
-    private IndustryRequestDTO createRequest;
-    private IndustryRequestDTO updateRequest;
+    private final Industry industry;
 
     public IndustryControllerTest(@Mock IndustryService industryServiceMock) {
         this.industryServiceMock = industryServiceMock;
-        this.industryMapper = new IndustryMapper();
+        IndustryMapper industryMapper = new IndustryMapper();
 
         IndustryController controller = new IndustryController(industryServiceMock, industryMapper);
 
@@ -57,23 +49,8 @@ class IndustryControllerTest {
                 .standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
-
-        this.objectMapper = new ObjectMapper();
-    }
-
-    /**
-     * Инициализация переменных для тестов
-     */
-    @BeforeEach
-    void setUpData() {
         industry = new Industry(ID, NAME);
-        industryUpdated = new Industry(ID, NAME_UPDATED);
-
-        industryDto = new IndustryResponseDTO(ID, NAME);
-        industryUpdatedDto = new IndustryResponseDTO(ID, NAME_UPDATED);
-
-        createRequest = new IndustryRequestDTO(ID, NAME);
-        updateRequest = new IndustryRequestDTO(ID, NAME_UPDATED);
+        this.objectMapper = new ObjectMapper();
     }
 
     /** Проверяет успешное получение списка индустрий */
@@ -117,7 +94,7 @@ class IndustryControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/industry")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
+                        .content(objectMapper.writeValueAsString(new IndustryRequestDTO(ID, NAME))))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID.intValue()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
@@ -128,11 +105,11 @@ class IndustryControllerTest {
     void testUpdateUpdatesIndustry() throws Exception {
         Mockito.when(industryServiceMock.findById(ID)).thenReturn(industry);
         Mockito.when(industryServiceMock.save(Mockito.any(Industry.class)))
-                .thenReturn(industryUpdated);
+                .thenReturn(new Industry(ID, NAME_UPDATED));
 
         mockMvc.perform(MockMvcRequestBuilders.put("/industry/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
+                        .content(objectMapper.writeValueAsString(new IndustryRequestDTO(ID, NAME_UPDATED))))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID.intValue()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME_UPDATED));

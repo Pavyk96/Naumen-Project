@@ -35,12 +35,11 @@ class DealControllerTest {
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private final DealMapper dealMapper;
     private final DealService dealService;
 
     public DealControllerTest(@Mock DealService dealService) {
         this.dealService = dealService;
-        this.dealMapper = new DealMapper();
+        DealMapper dealMapper = new DealMapper();
 
         DealController dealController
                 = new DealController(dealService, dealMapper);

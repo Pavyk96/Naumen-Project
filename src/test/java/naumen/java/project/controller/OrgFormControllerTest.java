@@ -2,13 +2,11 @@ package naumen.java.project.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import naumen.java.project.dto.OrgFormRequestDTO;
-import naumen.java.project.dto.OrgFormResponseDTO;
 import naumen.java.project.exepction.GlobalExceptionHandler;
 import naumen.java.project.exepction.ResourceNotFoundException;
 import naumen.java.project.mapper.OrgFormMapper;
 import naumen.java.project.model.OrgForm;
 import naumen.java.project.service.OrgFormService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -35,21 +33,16 @@ class OrgFormControllerTest {
     private static final String NAME_UPDATED = "ООО (обновлено)";
 
     private final OrgFormService orgFormServiceMock;
-    private final OrgFormMapper orgFormMapper;
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
 
-    private OrgForm orgForm;
-    private OrgForm orgFormUpdated;
-    private OrgFormResponseDTO orgFormDto;
-    private OrgFormResponseDTO orgFormUpdatedDto;
-    private OrgFormRequestDTO createRequest;
-    private OrgFormRequestDTO updateRequest;
+    private final OrgForm orgForm;
+    private final OrgForm orgFormUpdated;
 
     public OrgFormControllerTest(@Mock OrgFormService orgFormServiceMock) {
         this.orgFormServiceMock = orgFormServiceMock;
-        this.orgFormMapper = new OrgFormMapper();
+        OrgFormMapper orgFormMapper = new OrgFormMapper();
 
         OrgFormController controller = new OrgFormController(orgFormServiceMock, orgFormMapper);
 
@@ -59,21 +52,9 @@ class OrgFormControllerTest {
                 .build();
 
         this.objectMapper = new ObjectMapper();
-    }
 
-    /**
-     * Инициализация переменных для тестов
-     */
-    @BeforeEach
-    void setUpData() {
         orgForm = new OrgForm(ID, NAME);
         orgFormUpdated = new OrgForm(ID, NAME_UPDATED);
-
-        orgFormDto = new OrgFormResponseDTO(ID, NAME);
-        orgFormUpdatedDto = new OrgFormResponseDTO(ID, NAME_UPDATED);
-
-        createRequest = new OrgFormRequestDTO(ID, NAME);
-        updateRequest = new OrgFormRequestDTO(ID, NAME_UPDATED);
     }
 
     /** Проверяет успешное получение списка организационно-правовых форм */
@@ -117,7 +98,7 @@ class OrgFormControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/org_form")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
+                        .content(objectMapper.writeValueAsString(new OrgFormRequestDTO(ID, NAME))))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME));
@@ -132,7 +113,7 @@ class OrgFormControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.put("/org_form/{id}", ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
+                        .content(objectMapper.writeValueAsString(new OrgFormRequestDTO(ID, NAME_UPDATED))))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(ID))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(NAME_UPDATED));

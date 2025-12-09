@@ -101,12 +101,4 @@ public class DealService {
         deal.setStatus(newStatus);
         return dealRepository.save(deal);
     }
-
-    /**
-     * Проверяет существование сделки по ID
-     */
-    public boolean existsById(UUID id) {
-        return dealRepository.existsById(id);
-    }
-
 }
