@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -40,6 +42,9 @@ public class Contractor {
 
     @ManyToMany(mappedBy = "contractors", fetch = FetchType.LAZY)
     private Set<Deal> deals = new HashSet<>();
+
+    @Column(name = "create_date")
+    private LocalDate createDate;
 
     protected Contractor() { }
 
@@ -82,4 +87,18 @@ public class Contractor {
 
     /** Возвращает сделки */
     public Set<Deal> getDeals() { return deals; }
+
+    /**
+     * Вернуть дату создания
+     */
+    public LocalDate getCreateDate() {
+        return createDate;
+    }
+
+    /**
+     * Установит дату создания
+     */
+    public void setCreateDate(LocalDate createDate) {
+        this.createDate = createDate;
+    }
 }

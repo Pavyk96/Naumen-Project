@@ -84,6 +84,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponseDTO> handleAllUncaught(Exception ex,
                                                                   HttpServletRequest request) {
+        ex.printStackTrace();
+
         ExceptionResponseDTO error = new ExceptionResponseDTO(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Внутренняя ошибка сервера",
@@ -93,6 +95,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
+
 
     /**
      * Обработка исключений валидации входных данных в dto

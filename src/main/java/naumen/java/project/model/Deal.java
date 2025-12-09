@@ -35,7 +35,7 @@ public class Deal {
     private String agreementNumber;
 
 
-    @Column(name = "agreement_date", nullable = false)
+    @Column(name = "agreement_date")
     private LocalDate agreementDate;
 
     @Column(name = "opened_at")
