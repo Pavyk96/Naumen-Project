@@ -33,12 +33,11 @@ class DealContractorBindingControllerTest {
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private final DealMapper dealMapper;
     private final DealContractorBindingService dealContractorBindingService;
 
     public DealContractorBindingControllerTest(@Mock DealContractorBindingService dealContractorBindingService) {
         this.dealContractorBindingService = dealContractorBindingService;
-        this.dealMapper = new DealMapper();
+        DealMapper dealMapper = new DealMapper();
 
         DealContractorBindingController dealContractorBindingController
                 = new DealContractorBindingController(dealContractorBindingService, dealMapper);
