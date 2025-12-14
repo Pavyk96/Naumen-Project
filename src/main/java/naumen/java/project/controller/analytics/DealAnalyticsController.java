@@ -7,10 +7,10 @@ import naumen.java.project.dto.analytics.deal.response.DealAnalyticsPortfolioSum
 import naumen.java.project.dto.analytics.deal.response.DealAnalyticsResponseDTO;
 import naumen.java.project.dto.analytics.deal.response.breakdown.DealAnalyticsBreakdown;
 import naumen.java.project.model.Deal;
-import naumen.java.project.service.analytics.deal.BreakdownService;
-import naumen.java.project.service.analytics.deal.FilterService;
-import naumen.java.project.service.analytics.deal.FunnelAnalysisService;
-import naumen.java.project.service.analytics.deal.PortfolioSummaryService;
+import naumen.java.project.service.analytics.deal.DealBreakdownService;
+import naumen.java.project.service.analytics.deal.DealFilterService;
+import naumen.java.project.service.analytics.deal.DealFunnelAnalysisService;
+import naumen.java.project.service.analytics.deal.DealPortfolioSummaryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,20 +29,20 @@ import java.util.List;
 @RequestMapping("/analytics/deal")
 public class DealAnalyticsController {
 
-    private final FilterService filterService;
-    private final PortfolioSummaryService portfolioSummaryService;
-    private final BreakdownService breakdownService;
-    private final FunnelAnalysisService funnelAnalysisService;
+    private final DealFilterService dealFilterService;
+    private final DealPortfolioSummaryService dealPortfolioSummaryService;
+    private final DealBreakdownService dealBreakdownService;
+    private final DealFunnelAnalysisService dealFunnelAnalysisService;
 
     public DealAnalyticsController(
-            FilterService filterService,
-            PortfolioSummaryService portfolioSummaryService,
-            BreakdownService breakdownService,
-            FunnelAnalysisService funnelAnalysisService) {
-        this.filterService = filterService;
-        this.portfolioSummaryService = portfolioSummaryService;
-        this.breakdownService = breakdownService;
-        this.funnelAnalysisService = funnelAnalysisService;
+            DealFilterService dealFilterService,
+            DealPortfolioSummaryService dealPortfolioSummaryService,
+            DealBreakdownService dealBreakdownService,
+            DealFunnelAnalysisService dealFunnelAnalysisService) {
+        this.dealFilterService = dealFilterService;
+        this.dealPortfolioSummaryService = dealPortfolioSummaryService;
+        this.dealBreakdownService = dealBreakdownService;
+        this.dealFunnelAnalysisService = dealFunnelAnalysisService;
     }
 
     /**
@@ -53,17 +53,17 @@ public class DealAnalyticsController {
     public ResponseEntity<DealAnalyticsResponseDTO> analyzeDeals(
             @Valid @RequestBody DealAnalyticsRequestDTO request
     ) {
-        List<Deal> filteredDeals = filterService.applyFiltersDeal(request.filters());
+        List<Deal> filteredDeals = dealFilterService.applyFiltersDeal(request.filters());
         DealAnalyticsPortfolioSummary portfolioSummary =
-                portfolioSummaryService.buildSummaryDeal(filteredDeals);
+                dealPortfolioSummaryService.buildSummaryDeal(filteredDeals);
 
         List<DealAnalyticsBreakdown> breakdowns =
                 request.dimensions() != null && !request.dimensions().isEmpty() ?
-                        breakdownService.buildBreakdownsDeal(filteredDeals, request) : null;
+                        dealBreakdownService.buildBreakdownsDeal(filteredDeals, request) : null;
 
         DealAnalyticsFunnelAnalysis funnelAnalysis =
                 request.includeFunnel() ?
-                        funnelAnalysisService.buildFunnelAnalysisDeal(filteredDeals) : null;
+                        dealFunnelAnalysisService.buildFunnelAnalysisDeal(filteredDeals) : null;
 
         DealAnalyticsResponseDTO dealAnalyticsResponseDTO = new DealAnalyticsResponseDTO(
                 portfolioSummary,

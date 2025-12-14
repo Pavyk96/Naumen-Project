@@ -9,16 +9,23 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
+ * Сервис, отвечающий за расчет итоговой сводки по портфелю сделок
+ * Предоставляет ключевые метрики, такие как общее количество сделок,
+ * количество активных сделок, процент выигрышей и средняя длительность сделок
+ *
  * @author Daria
  */
 @Service
-public class PortfolioSummaryService {
+public class DealPortfolioSummaryService {
     private final Calculator calculator;
 
-    public PortfolioSummaryService(Calculator calculator) {
+    public DealPortfolioSummaryService(Calculator calculator) {
         this.calculator = calculator;
     }
 
+    /**
+     * Строит объект сводки портфеля на основе предоставленного списка сделок
+     */
     public DealAnalyticsPortfolioSummary buildSummaryDeal(List<Deal> deals) {
         long totalDeals = deals.size();
         long activeDeals = countActiveDeals(deals);
@@ -28,9 +35,13 @@ public class PortfolioSummaryService {
         return new DealAnalyticsPortfolioSummary(totalDeals, activeDeals, winRate, avgRealDuration);
     }
 
+    /**
+     * Подсчитывает количество сделок в статусе {@link DealStatus#ACTIVE} в списке
+     */
     private long countActiveDeals(List<Deal> deals) {
         return deals.stream()
                 .filter(d -> d.getStatus() == DealStatus.ACTIVE)
                 .count();
     }
 }
+

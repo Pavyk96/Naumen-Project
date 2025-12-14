@@ -12,7 +12,7 @@ import java.lang.annotation.*;
  */
 @Documented
 @Constraint(validatedBy = ValidEnumValidator.class)
-@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidEnum {
     /** Сообщение об ошибке по умолчанию */

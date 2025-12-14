@@ -7,6 +7,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
+ * Фабрика для создания объектов метрик аналитики ({@link DealAnalyticsMetrics}).
+ * Отвечает за вычисление конкретных запрошенных метрик на основе предоставленных списков сделок,
+ * используя {@link Calculator} для сложных расчетов.
+ *
  * @author Daria
  */
 @Component
@@ -17,6 +21,9 @@ public class MetricsFactory {
         this.calculator = calculator;
     }
 
+    /**
+     * Создает объект метрик, вычисляя только те метрики, которые были запрошены
+     */
     public DealAnalyticsMetrics createMetricsDeal(List<Deal> deals,
                                                   List<Deal> allDeals,
                                                   List<String> requestedMetrics) {
@@ -39,3 +46,4 @@ public class MetricsFactory {
         return new DealAnalyticsMetrics(count, successRate, durationDays);
     }
 }
+

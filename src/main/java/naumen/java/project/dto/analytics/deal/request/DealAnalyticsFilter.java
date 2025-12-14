@@ -2,6 +2,9 @@ package naumen.java.project.dto.analytics.deal.request;
 
 import jakarta.validation.Valid;
 import naumen.java.project.dto.analytics.AnalyticsDateRange;
+import naumen.java.project.model.DealStatus;
+import naumen.java.project.model.DealType;
+import naumen.java.project.validation.ValidEnum;
 
 import java.util.List;
 
@@ -15,8 +18,8 @@ import java.util.List;
  * @author Daria
  */
 public record DealAnalyticsFilter(
-        List<String> types,
-        List<String> statuses,
+        List<@ValidEnum(enumClass = DealType.class) String> types,
+        List<@ValidEnum(enumClass = DealStatus.class) String> statuses,
         @Valid
         AnalyticsDateRange dateRange
 ) {}

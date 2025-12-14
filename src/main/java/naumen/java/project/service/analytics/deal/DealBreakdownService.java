@@ -14,13 +14,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
+ * Сервис, отвечающий за построение аналитических сводок (breakdowns)
+ * Использует стратегический подход для обработки различных типов аналитики
+ *
  * @author Daria
  */
 @Service
-public class BreakdownService {
+public class DealBreakdownService {
     private final Map<String, BreakdownStrategy> strategies;
 
-    public BreakdownService(List<BreakdownStrategy> strategyList) {
+    public DealBreakdownService(List<BreakdownStrategy> strategyList) {
         this.strategies = strategyList.stream()
                 .collect(Collectors.toMap(
                         BreakdownStrategy::getDimensionName,
@@ -28,6 +31,9 @@ public class BreakdownService {
                 ));
     }
 
+    /**
+     * Строит список аналитических сводок на основе предоставленных сделок и параметров запроса
+     */
     public List<DealAnalyticsBreakdown> buildBreakdownsDeal(List<Deal> deals,
                                                             DealAnalyticsRequestDTO request) {
         List<DealAnalyticsBreakdown> breakdowns = new ArrayList<>();
