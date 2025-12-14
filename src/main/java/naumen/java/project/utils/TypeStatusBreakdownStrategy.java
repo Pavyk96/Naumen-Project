@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Стратегия декомпозиции аналитики сделок по типу сделки и статусу.
+ * В текущей реализации фокусируется только на активных сделках для каждого типа.
+ *
  * @author Daria
  */
 @Component
@@ -32,11 +35,13 @@ public class TypeStatusBreakdownStrategy implements BreakdownStrategy {
         List<BreakdownData> data = new ArrayList<>();
 
         for (DealType type : DealType.values()) {
+            // Фильтруем только активные сделки для текущего типа
             List<Deal> typeDeals = deals.stream()
                     .filter(deal -> deal.getType() == type && deal.getStatus() == DealStatus.ACTIVE)
                     .toList();
 
             if (!typeDeals.isEmpty()) {
+                // allDeals передается как исходный список deals для расчета successRate относительно общего числа
                 DealAnalyticsMetrics resultMetrics = metricsFactory.createMetricsDeal(typeDeals, deals, metrics);
                 data.add(new BreakdownTypeStatus(
                         type.getDisplayName(),

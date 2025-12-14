@@ -17,6 +17,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * Стратегия декомпозиции аналитики сделок по временному периоду (квартал/год) и индустрии
+ * Группирует сделки, рассчитывает метрики и форматирует результат
+ *
  * @author Daria
  */
 @Component
@@ -51,6 +54,7 @@ public class TimeIndustryBreakdownStrategy implements BreakdownStrategy {
                 Industry industry = industryEntry.getKey();
                 List<Deal> industryDeals = industryEntry.getValue();
 
+                // allDeals передается как исходный список deals для расчета successRate относительно общего числа
                 DealAnalyticsMetrics resultMetrics = metricsFactory.createMetricsDeal(industryDeals, deals, metrics);
 
                 data.add(new BreakdownTimeIndustry(
@@ -64,6 +68,9 @@ public class TimeIndustryBreakdownStrategy implements BreakdownStrategy {
         return data;
     }
 
+    /**
+     * Определяет год и квартал на основе даты соглашения сделки
+     */
     private DealAnalyticsPeriodInfo getYearQuarter(Deal deal) {
         LocalDate agreementDate = deal.getAgreementDate();
         int year = agreementDate.getYear();
@@ -71,6 +78,9 @@ public class TimeIndustryBreakdownStrategy implements BreakdownStrategy {
         return new DealAnalyticsPeriodInfo(year, quarter);
     }
 
+    /**
+     * Извлекает основную индустрию первого контрагента сделки
+     */
     private Industry getPrimaryIndustry(Deal deal) {
         return deal.getContractors().stream()
                 .findFirst()

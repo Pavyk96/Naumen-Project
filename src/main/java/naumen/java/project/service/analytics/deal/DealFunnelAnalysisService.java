@@ -11,22 +11,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Сервис, отвечающий за построение воронки типов и расчет ключевых метрик
+ * на основе списка сделок
+ *
  * @author Daria
  */
 @Service
-public class FunnelAnalysisService {
+public class DealFunnelAnalysisService {
     private final Calculator calculator;
 
-    public FunnelAnalysisService(Calculator calculator) {
+    public DealFunnelAnalysisService(Calculator calculator) {
         this.calculator = calculator;
     }
 
+    /**
+     * Строит полный объект анализа воронки, включая все стадии и средний цикл
+     */
     public DealAnalyticsFunnelAnalysis buildFunnelAnalysisDeal(List<Deal> deals) {
         List<DealAnalyticsFunnelStage> stages = buildFunnelStages(deals);
         double avgSalesCycle = calculator.calculateAvgSalesCycle(deals);
         return new DealAnalyticsFunnelAnalysis(stages, avgSalesCycle);
     }
 
+    /**
+     * Генерирует список стадий воронки на основе предоставленного списка сделок
+     */
     private List<DealAnalyticsFunnelStage> buildFunnelStages(List<Deal> deals) {
         List<DealAnalyticsFunnelStage> stages = new ArrayList<>();
         long totalDeals = deals.size();
