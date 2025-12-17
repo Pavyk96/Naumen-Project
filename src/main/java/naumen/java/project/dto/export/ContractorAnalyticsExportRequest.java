@@ -23,6 +23,6 @@ public record ContractorAnalyticsExportRequest(
         List<String> metrics,
         @Valid ContractorAnalyticsFilters filters,
         boolean includeTrends,
-        @Valid ExportConfig exportConfig
+        ExportConfig exportConfig
 ) { }
 
