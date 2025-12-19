@@ -217,4 +217,11 @@ public class Deal {
         this.contractors.remove(contractor);
         contractor.getDeals().remove(this);
     }
+
+    /**
+     * Узнать активна ли сделка
+     */
+    public boolean isActive(){
+        return this.getStatus() == DealStatus.ACTIVE;
+    }
 }
