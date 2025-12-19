@@ -30,7 +30,7 @@ public class ContractorSummaryService {
                 .sum();
 
         long activeContractors = contractors.stream()
-                .filter(contractor -> contractor.getDeals().stream().anyMatch(this::isActiveDeal))
+                .filter(contractor -> contractor.getDeals().stream().anyMatch(Deal::isActive))
                 .count();
 
         double averageDealsPerContractor = totalContractors == 0
@@ -42,12 +42,5 @@ public class ContractorSummaryService {
                 averageDealsPerContractor,
                 activeContractors
         );
-    }
-
-    /**
-     * Определить активность сделки
-     */
-    private boolean isActiveDeal(Deal deal) {
-        return deal.getStatus() == DealStatus.ACTIVE;
     }
 }
