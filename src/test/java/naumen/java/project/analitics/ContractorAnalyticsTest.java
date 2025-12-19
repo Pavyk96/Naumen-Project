@@ -19,9 +19,9 @@ import java.util.List;
 import org.hamcrest.Matchers;
 
 /**
- * Интеграционные тесты для аналитики сделок
+ * Интеграционные тесты для аналитики контрагентов
  *
- * @author Daria
+ * @author Daniil Mezev
  */
 @SpringBootTest
 @AutoConfigureMockMvc
