@@ -16,9 +16,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.hamcrest.Matchers;
 
-import static org.hamcrest.Matchers.*;
-
+/**
+ * Интеграционные тесты для аналитики контрагентов
+ *
+ * @author Daniil Mezev
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 class ContractorAnalyticsTest {
@@ -29,6 +33,9 @@ class ContractorAnalyticsTest {
     @MockitoBean
     private ContractorRepository contractorRepositoryMock;
 
+    /**
+     * Проверка успешного расчёта аналитики контрагентов
+     */
     @Test
     void analyzeContractorsTest() throws Exception {
         Country countryKazakhstan = new Country("KZ", "Казахстан");
@@ -110,39 +117,39 @@ class ContractorAnalyticsTest {
 
                 // country groups - без зависимости от порядка data[]
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[*].group.id",
-                        containsInAnyOrder("USA", "KZ")))
+                        Matchers.containsInAnyOrder("USA", "KZ")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[?(@.group.id=='USA')].group.name",
-                        contains("США")))
+                        Matchers.contains("США")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[?(@.group.id=='KZ')].group.name",
-                        contains("Казахстан")))
+                        Matchers.contains("Казахстан")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[?(@.group.id=='USA')].metrics.count",
-                        contains(2)))
+                        Matchers.contains(2)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[?(@.group.id=='USA')].metrics.activeDealsCount",
-                        contains(2)))
+                        Matchers.contains(2)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[?(@.group.id=='KZ')].metrics.count",
-                        contains(1)))
+                        Matchers.contains(1)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[?(@.group.id=='KZ')].metrics.activeDealsCount",
-                        contains(1)))
+                        Matchers.contains(1)))
 
                 // industry group (обычно один элемент, но тоже без индекса на всякий)
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[*].group.id",
-                        contains(1)))
+                        Matchers.contains(1)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[*].group.name",
-                        contains("IT")))
+                        Matchers.contains("IT")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[*].metrics.count",
-                        contains(3)))
+                        Matchers.contains(3)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[*].metrics.activeDealsCount",
-                        contains(3)))
+                        Matchers.contains(3)))
 
                 // org_form group (тоже один элемент)
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[2].data[*].group.id",
-                        contains("АО")))
+                        Matchers.contains("АО")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[2].data[*].group.name",
-                        contains("Акционерное общество")))
+                        Matchers.contains("Акционерное общество")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[2].data[*].metrics.count",
-                        contains(3)))
+                        Matchers.contains(3)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[2].data[*].metrics.activeDealsCount",
-                        contains(3)))
+                        Matchers.contains(3)))
 
                 // trends
                 .andExpect(MockMvcResultMatchers.jsonPath("$.trends").exists())
@@ -159,6 +166,9 @@ class ContractorAnalyticsTest {
         );
     }
 
+    /**
+     * Проверка обработки некорректного запроса
+     */
     @Test
     void badDataRequestTest() throws Exception {
         String invalidJson = """
