@@ -15,18 +15,18 @@ import java.util.stream.Collectors;
 /**
  * Экспортер аналитики контрагентов в XLSX
  *
- * @author Daniil
+ * @author Daniil Mezev
  */
 @Service
 public class ContractorAnalyticsXlsxExporter implements ContractorAnalyticsExporter {
 
     @Override
-    public ExportFormat supports() {
-        return ExportFormat.XLSX;
+    public String getSupports() {
+        return "XLSX";
     }
 
     @Override
-    public String fileExtension() {
+    public String getFileExtension() {
         return ".xlsx";
     }
 

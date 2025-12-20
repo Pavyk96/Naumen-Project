@@ -18,7 +18,7 @@ import java.util.List;
  * @author Daniil Mezev
  */
 public record ContractorAnalyticsExportRequest(
-        ExportFormat format,
+        String format,
         List<String> dimensions,
         List<String> metrics,
         @Valid ContractorAnalyticsFilters filters,

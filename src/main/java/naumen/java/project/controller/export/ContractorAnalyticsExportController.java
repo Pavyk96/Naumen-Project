@@ -6,11 +6,13 @@ import naumen.java.project.dto.analytics.contractor.response.ContractorAnalytics
 import naumen.java.project.dto.analytics.contractor.response.ContractorAnalyticsSummary;
 import naumen.java.project.dto.analytics.contractor.response.ContractorAnalyticsTrends;
 import naumen.java.project.dto.export.ContractorAnalyticsExportRequest;
+import naumen.java.project.dto.export.ExportResult;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.service.analytics.contractor.ContractorBreakdownService;
 import naumen.java.project.service.analytics.contractor.ContractorFilterService;
 import naumen.java.project.service.analytics.contractor.ContractorSummaryService;
 import naumen.java.project.service.analytics.contractor.ContractorTrendsService;
+import naumen.java.project.service.export.contractor.ContractorAnalyticsExportService;
 import naumen.java.project.service.export.contractor.ContractorAnalyticsExporter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +24,7 @@ import java.util.List;
 /**
  * Контроллер экспорта аналитики по контрагентам
  *
- * @author Daniil
+ * @author Daniil Mezev
  */
 @RestController
 @RequestMapping("/analytics/contractor")
@@ -33,20 +35,20 @@ public class ContractorAnalyticsExportController {
     private final ContractorBreakdownService contractorBreakdownService;
     private final ContractorTrendsService contractorTrendsService;
 
-    private final List<ContractorAnalyticsExporter> exporters;
+    private final ContractorAnalyticsExportService exportService;
 
     public ContractorAnalyticsExportController(
             ContractorFilterService contractorFilterService,
             ContractorSummaryService contractorSummaryService,
             ContractorBreakdownService contractorBreakdownService,
             ContractorTrendsService contractorTrendsService,
-            List<ContractorAnalyticsExporter> exporters
+            ContractorAnalyticsExportService exportService
     ) {
         this.contractorFilterService = contractorFilterService;
         this.contractorSummaryService = contractorSummaryService;
         this.contractorBreakdownService = contractorBreakdownService;
         this.contractorTrendsService = contractorTrendsService;
-        this.exporters = exporters;
+        this.exportService = exportService;
     }
 
     /**
@@ -57,6 +59,32 @@ public class ContractorAnalyticsExportController {
     public ResponseEntity<byte[]> exportContractorAnalytics(
             @Valid @RequestBody ContractorAnalyticsExportRequest request
     ) {
+        String format = request.format();
+        if (!exportService.isSupported(format)) {
+            throw new IllegalArgumentException(
+                    "Формат экспорта '" + format + "' не поддерживается. Доступные форматы: "
+                            + exportService.getSupportedFormats()
+            );
+        }
+
+        ContractorAnalyticsResponse analytics = buildAnalytics(request);
+
+        ExportResult result = exportService.export(
+                analytics,
+                request.exportConfig().filename(),
+                format
+        );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + result.filename() + "\"")
+                .body(result.fileBytes());
+    }
+
+    /**
+     * Получить аналитику
+     */
+    private ContractorAnalyticsResponse buildAnalytics(ContractorAnalyticsExportRequest request) {
         List<Contractor> contractors = contractorFilterService.findContractors(request.filters());
 
         ContractorAnalyticsSummary summary = contractorSummaryService.buildSummary(contractors);
@@ -71,20 +99,6 @@ public class ContractorAnalyticsExportController {
                 ? contractorTrendsService.buildTrends(contractors)
                 : null;
 
-        ContractorAnalyticsResponse analytics = new ContractorAnalyticsResponse(summary, breakdowns, trends);
-
-        ContractorAnalyticsExporter exporter = exporters.stream()
-                .filter(e -> e.supports() == request.format())
-                .findFirst()
-                .get();
-
-        byte[] fileBytes = exporter.export(analytics);
-
-        String filename = request.exportConfig().filename() + exporter.fileExtension();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .body(fileBytes);
+        return new ContractorAnalyticsResponse(summary, breakdowns, trends);
     }
 }

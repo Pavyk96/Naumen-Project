@@ -24,12 +24,12 @@ import java.util.stream.Collectors;
 public class ContractorAnalyticsPdfExporter implements ContractorAnalyticsExporter {
 
     @Override
-    public ExportFormat supports() {
-        return ExportFormat.PDF;
+    public String getSupports() {
+        return "PDF";
     }
 
     @Override
-    public String fileExtension() {
+    public String getFileExtension() {
         return ".pdf";
     }
 

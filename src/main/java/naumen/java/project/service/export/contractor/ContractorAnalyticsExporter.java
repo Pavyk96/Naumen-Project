@@ -11,14 +11,14 @@ import naumen.java.project.dto.export.ExportFormat;
 public interface ContractorAnalyticsExporter {
 
     /**
-     * Формат экспорта, который поддерживает реализация
+     * Вернуть формат экспорта, который поддерживает реализация
      */
-    ExportFormat supports();
+    String getSupports();
 
     /**
-     * Расширение файла для данного формата (например .pdf, .xlsx).
+     * Вернуть расширение файла для данного формата
      */
-    String fileExtension();
+    String getFileExtension();
 
     /**
      * Сформировать файл экспорта для переданной аналитики

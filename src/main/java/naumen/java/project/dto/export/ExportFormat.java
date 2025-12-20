@@ -13,6 +13,10 @@ public enum ExportFormat {
     /**
      * Формат экспорта в PDF
      */
-    PDF
+    PDF,
+    /**
+     * тест
+     */
+    TEST
 }
 
