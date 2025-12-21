@@ -57,7 +57,7 @@ class DealAnalyticsTest {
                 "1",
                 LocalDate.parse("2025-09-01"),
                 LocalDateTime.parse("2025-09-01T10:00:00"),
-                null,
+                LocalDateTime.parse("2025-11-01T10:00:00"),
                 DealType.CREDIT,
                 DealStatus.ACTIVE
         );
@@ -81,7 +81,7 @@ class DealAnalyticsTest {
                 "3",
                 LocalDate.parse("2025-07-01"),
                 LocalDateTime.parse("2025-07-01T10:00:00"),
-                null,
+                LocalDateTime.parse("2025-12-01T10:00:00"),
                 DealType.LEASING,
                 DealStatus.DRAFT
         );
@@ -92,7 +92,7 @@ class DealAnalyticsTest {
                 "4",
                 LocalDate.parse("2025-10-01"),
                 LocalDateTime.parse("2025-10-01T10:00:00"),
-                null,
+                LocalDateTime.parse("2025-11-01T10:00:00"),
                 DealType.LEASING,
                 DealStatus.DRAFT
         );
@@ -140,7 +140,7 @@ class DealAnalyticsTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.portfolioSummary.totalDeals").value(4))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.portfolioSummary.activeDeals").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.portfolioSummary.winRate").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.portfolioSummary.avgRealDuration").value(95))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.portfolioSummary.avgRealDuration").value(68))
 
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown").isArray())
 
@@ -149,7 +149,7 @@ class DealAnalyticsTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[0].status").value("Активная"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[0].metrics.count").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[0].metrics.successRate").value(1.0 / 4.0))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[0].metrics.durationDays").value(106))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[0].data[0].metrics.durationDays").value(61))
 
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].dimension").value("timeIndustry"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[0].period.year").value(2025))
@@ -166,7 +166,7 @@ class DealAnalyticsTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[1].industry.name").value("IT"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[1].metrics.count").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[1].metrics.successRate").value(1.0 / 4.0))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[1].metrics.durationDays").value(106))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.breakdown[1].data[1].metrics.durationDays").value(61))
 
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages").isArray())
@@ -174,19 +174,19 @@ class DealAnalyticsTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[0].stage").value("Черновик"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[0].count").value(2))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[0].conversionRate").value(2.0 / 4.0))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[0].avgDurationDays").value(122))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[0].avgDurationDays").value(92))
 
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[1].stage").value("Активная"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[1].count").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[1].conversionRate").value(1.0 / 4.0))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[1].avgDurationDays").value(106))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[1].avgDurationDays").value(61))
 
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[3].stage").value("Утвержденная"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[3].count").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[3].conversionRate").value(1.0 / 4.0))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.stages[3].avgDurationDays").value(30))
 
-                .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.avgSalesCycle").value(30.0));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.funnelAnalysis.avgSalesCycle").value(68.75));
 
         Mockito.verify(dealRepository).findDealsWithFilters(
                 Mockito.eq(List.of(DealType.CREDIT, DealType.LEASING)),

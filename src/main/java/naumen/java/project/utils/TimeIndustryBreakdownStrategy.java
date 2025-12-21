@@ -4,7 +4,6 @@ import naumen.java.project.dto.analytics.deal.response.DealAnalyticsIndustryInfo
 import naumen.java.project.dto.analytics.deal.response.DealAnalyticsMetrics;
 import naumen.java.project.dto.analytics.deal.response.DealAnalyticsPeriodInfo;
 import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownData;
-import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownTimeIndustry;
 import naumen.java.project.model.Contractor;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.Industry;
@@ -24,6 +23,14 @@ import java.util.stream.Collectors;
  */
 @Component
 public class TimeIndustryBreakdownStrategy implements BreakdownStrategy {
+    /** Количество месяцев в одном квартале */
+    private static final int MONTHS_PER_QUARTER = 3;
+
+    /** Смещение для корректного расчета квартала (перевод из 1-12 в 0-11) */
+    private static final int MONTH_INDEX_OFFSET = 1;
+
+    /** Базовое смещение для получения номера квартала */
+    private static final int QUARTER_BASE_OFFSET = 1;
     private final MetricsFactory metricsFactory;
 
     public TimeIndustryBreakdownStrategy(MetricsFactory metricsFactory) {
@@ -57,9 +64,11 @@ public class TimeIndustryBreakdownStrategy implements BreakdownStrategy {
                 // allDeals передается как исходный список deals для расчета successRate относительно общего числа
                 DealAnalyticsMetrics resultMetrics = metricsFactory.createMetricsDeal(industryDeals, deals, metrics);
 
-                data.add(new BreakdownTimeIndustry(
+                data.add(new BreakdownData(
                         new DealAnalyticsPeriodInfo(periodEntryKey.year(), periodEntryKey.quarter()),
                         new DealAnalyticsIndustryInfo(industry.getId(), industry.getName()),
+                        null,
+                        null,
                         resultMetrics
                 ));
             }
@@ -74,10 +83,9 @@ public class TimeIndustryBreakdownStrategy implements BreakdownStrategy {
     private DealAnalyticsPeriodInfo getYearQuarter(Deal deal) {
         LocalDate agreementDate = deal.getAgreementDate();
         int year = agreementDate.getYear();
-        int quarter = (agreementDate.getMonthValue() - 1) / 3 + 1;
+        int quarter = (agreementDate.getMonthValue() - MONTH_INDEX_OFFSET) / MONTHS_PER_QUARTER + QUARTER_BASE_OFFSET;
         return new DealAnalyticsPeriodInfo(year, quarter);
     }
-
     /**
      * Извлекает основную индустрию первого контрагента сделки
      */
