@@ -2,7 +2,6 @@ package naumen.java.project.utils;
 
 import naumen.java.project.dto.analytics.deal.response.DealAnalyticsMetrics;
 import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownData;
-import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownTypeStatus;
 import naumen.java.project.model.Deal;
 import naumen.java.project.model.DealStatus;
 import naumen.java.project.model.DealType;
@@ -43,7 +42,9 @@ public class TypeStatusBreakdownStrategy implements BreakdownStrategy {
             if (!typeDeals.isEmpty()) {
                 // allDeals передается как исходный список deals для расчета successRate относительно общего числа
                 DealAnalyticsMetrics resultMetrics = metricsFactory.createMetricsDeal(typeDeals, deals, metrics);
-                data.add(new BreakdownTypeStatus(
+                data.add(new BreakdownData(
+                        null,
+                        null,
                         type.getDisplayName(),
                         DealStatus.ACTIVE.getDisplayName(),
                         resultMetrics
