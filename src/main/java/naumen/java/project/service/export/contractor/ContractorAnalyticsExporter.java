@@ -1,6 +1,7 @@
 package naumen.java.project.service.export.contractor;
 
 import naumen.java.project.dto.analytics.contractor.response.ContractorAnalyticsResponse;
+import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
 
 /**
@@ -9,19 +10,13 @@ import naumen.java.project.dto.export.ExportFormat;
  * @author Daniil
  */
 public interface ContractorAnalyticsExporter {
+    /**
+     * Вернуть формат, который поддерживает экспортер
+     */
+    ExportFormat getSupport();
 
     /**
-     * Вернуть формат экспорта, который поддерживает реализация
+     * Сформировать файл экспорта
      */
-    String getSupports();
-
-    /**
-     * Вернуть расширение файла для данного формата
-     */
-    String getFileExtension();
-
-    /**
-     * Сформировать файл экспорта для переданной аналитики
-     */
-    byte[] export(ContractorAnalyticsResponse analytics);
+    ExportFile export(String baseFilename, ContractorAnalyticsResponse analytics);
 }

@@ -1,74 +1,85 @@
 package naumen.java.project.service.export.contractor;
 
+import naumen.java.project.dto.analytics.contractor.request.ContractorAnalyticsFilters;
 import naumen.java.project.dto.analytics.contractor.response.ContractorAnalyticsResponse;
-import naumen.java.project.dto.export.ExportResult;
+import naumen.java.project.dto.export.ExportConfig;
+import naumen.java.project.dto.export.ExportFile;
+import naumen.java.project.dto.export.ExportFormat;
+import naumen.java.project.service.analytics.contractor.ContractorAnalyticsService;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
- * Сервис для эспорта аналитики по контрагентам
+ * Сервис экспорта аналитики контрагентов.
+ * Выбирает нужного экспортера по формату и формирует файл.
  *
- * @author Daniil Mezev
+ * @author Daniil
  */
 @Service
 public class ContractorAnalyticsExportService {
 
-    private final Map<String, ContractorAnalyticsExporter> exporters;
+    private final ContractorAnalyticsService contractorAnalyticsService;
+    private final Map<ExportFormat, ContractorAnalyticsExporter> exporters;
 
     /**
-     * Зарегистрировать экспортеры
+     * Создать сервис и зарегистрировать доступные экспортеры.
+     *
+     * @param contractorAnalyticsService сервис построения аналитики
+     * @param exporters список реализаций экспортеров
      */
-    public ContractorAnalyticsExportService(List<ContractorAnalyticsExporter> exporters) {
-        Map<String, ContractorAnalyticsExporter> map = new HashMap<>();
-
-        for (ContractorAnalyticsExporter exporter : exporters) {
-            String format = exporter.getSupports();
-            if (map.containsKey(format)) {
-                throw new IllegalStateException("Дубликат экспортера для формата: " + format);
-            }
-            map.put(format, exporter);
-        }
-
-        this.exporters = map;
+    public ContractorAnalyticsExportService(
+            ContractorAnalyticsService contractorAnalyticsService,
+            List<ContractorAnalyticsExporter> exporters
+    ) {
+        this.contractorAnalyticsService = contractorAnalyticsService;
+        this.exporters = exporters.stream()
+                .collect(Collectors.toMap(
+                        ContractorAnalyticsExporter::getSupport,
+                        Function.identity(),
+                        (format, exporter) -> {
+                            throw new IllegalStateException(
+                                    "Дубликат экспортера для формата: " + exporter.getSupport()
+                            );
+                        }
+                ));
     }
 
     /**
-     * Проверить на возможность экспорта в указанный формат
+     * Экспортировать аналитику контрагентов в файл заданного формата.
+     * Сначала проверяет поддержку формата, затем строит аналитику и формирует файл.
+     *
+     * @param exportConfig настройки экспорта (формат, имя файла)
+     * @param filters фильтры аналитики
+     * @param dimensions разрезы аналитики
+     * @param metrics метрики аналитики
+     * @param includeTrends включать ли тренды
+     *
+     * @return сформированный файл
      */
-    public boolean isSupported(String format) {
-        return exporters.containsKey(format);
-    }
+    public ExportFile export(
+            ExportConfig exportConfig,
+            ContractorAnalyticsFilters filters,
+            List<String> dimensions,
+            List<String> metrics,
+            boolean includeTrends
+    ) {
+        ExportFormat format = exportConfig.exportFormat();
 
-    /**
-     * Вернуть возможные форматы экспорта
-     */
-    public String getSupportedFormats() {
-        return exporters.keySet().stream()
-                .sorted()
-                .collect(java.util.stream.Collectors.joining(", "));
-    }
-
-    /**
-     * Экспорт аналитики в заданный формат
-     * @param analytics Готовая аналитика по контрагентам
-     * @param baseFilename Название итогового файла
-     * @param format Формат итогового файла
-     */
-    public ExportResult export(ContractorAnalyticsResponse analytics, String baseFilename, String format) {
         ContractorAnalyticsExporter exporter = exporters.get(format);
         if (exporter == null) {
-            String available = String.join(", ", exporters.keySet());
             throw new IllegalArgumentException(
-                    "Формат экспорта '" + format + "' не поддерживается. Доступные форматы: " + available
+                    "Формат экспорта " + format + " не поддерживается. Доступные форматы: " + exporters.keySet()
             );
         }
 
-        byte[] fileBytes = exporter.export(analytics);
-        String filename = baseFilename + exporter.getFileExtension();
+        ContractorAnalyticsResponse analytics = contractorAnalyticsService.analyze(
+                filters, dimensions, metrics, includeTrends
+        );
 
-        return new ExportResult(fileBytes, filename);
+        return exporter.export(exportConfig.filename(), analytics);
     }
 }
