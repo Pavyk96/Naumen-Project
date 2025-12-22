@@ -20,14 +20,22 @@ import java.util.UUID;
  * @author Daria
  */
 public interface DealRepository extends JpaRepository<Deal, UUID> {
-    /** Загружает сделки с контрагентами через EntityGraph */
+    /**
+     * Загружает сделки с контрагентами через EntityGraph
+     */
     @EntityGraph(attributePaths = "contractors")
     Optional<Deal> findWithContractorsById(UUID id);
 
+    /**
+     * Извлекает все существующие сделки, инициализируя список контрагентов
+     */
     @EntityGraph(attributePaths = "contractors")
     @Query("SELECT d FROM Deal d")
     List<Deal> findAllWithContractors();
 
+    /**
+     * Выполняет поиск сделок по набору фильтров с глубокой загрузкой связанных данных
+     */
     @Query("SELECT d FROM Deal d " +
             "LEFT JOIN FETCH d.contractors c " +
             "LEFT JOIN FETCH c.industry " +
@@ -46,4 +54,5 @@ public interface DealRepository extends JpaRepository<Deal, UUID> {
             @Param("agreementFrom") LocalDate agreementFrom,
             @Param("agreementTo") LocalDate agreementTo
     );
+
 }

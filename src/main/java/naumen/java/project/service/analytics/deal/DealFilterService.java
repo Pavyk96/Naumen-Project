@@ -53,9 +53,9 @@ public class DealFilterService {
      * Использует все доступные типы, если фильтр пуст
      */
     private List<DealType> getDealTypes(DealAnalyticsFilter filters) {
-        return filters.types() != null && !filters.types().isEmpty() ?
-                filters.types().stream().map(DealType::valueOf).toList() :
-                List.of(DealType.values());
+        return filters.types() != null && !filters.types().isEmpty()
+                ? filters.types().stream().map(DealType::valueOf).toList()
+                : List.of(DealType.values());
     }
 
     /**
@@ -63,9 +63,9 @@ public class DealFilterService {
      * Использует все доступные статусы, если фильтр пуст
      */
     private List<DealStatus> getDealStatuses(DealAnalyticsFilter filters) {
-        return filters.statuses() != null && !filters.statuses().isEmpty() ?
-                filters.statuses().stream().map(DealStatus::valueOf).toList() :
-                List.of(DealStatus.values());
+        return filters.statuses() != null && !filters.statuses().isEmpty()
+                ? filters.statuses().stream().map(DealStatus::valueOf).toList()
+                : List.of(DealStatus.values());
     }
 
     /**
