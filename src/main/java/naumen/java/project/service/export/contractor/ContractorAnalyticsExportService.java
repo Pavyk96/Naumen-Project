@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * Сервис экспорта аналитики контрагентов.
  * Выбирает нужного экспортера по формату и формирует файл.
  *
- * @author Daniil
+ * @author Daniil Mezev
  */
 @Service
 public class ContractorAnalyticsExportService {
@@ -49,8 +49,7 @@ public class ContractorAnalyticsExportService {
     }
 
     /**
-     * Экспортировать аналитику контрагентов в файл заданного формата.
-     * Сначала проверяет поддержку формата, затем строит аналитику и формирует файл.
+     * Экспортировать аналитику контрагентов в файл заданного формата
      *
      * @param exportConfig настройки экспорта (формат, имя файла)
      * @param filters фильтры аналитики

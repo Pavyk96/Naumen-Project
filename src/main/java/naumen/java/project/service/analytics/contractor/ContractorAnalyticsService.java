@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Сервис построения аналитики по контрагентам
+ * Сервис фасад построения аналитики по контрагентам
  *
- * @author Daniil
+ * @author Daniil Mezev
  */
 @Service
 public class ContractorAnalyticsService {
