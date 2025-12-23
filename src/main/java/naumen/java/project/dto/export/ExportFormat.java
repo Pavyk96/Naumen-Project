@@ -9,10 +9,24 @@ public enum ExportFormat {
     /**
      * Формат экспорта для EXEL
      */
-    XLSX,
+    XLSX(".xlsx"),
     /**
      * Формат экспорта в PDF
      */
-    PDF
+    PDF(".pdf");
+
+    private final String displayName;
+
+    ExportFormat(String displayName) {
+        this.displayName = displayName;
+    }
+
+    /**
+     * Возвращает форматы в удобном виде
+     */
+    public String getDisplayName() {
+        return displayName;
+    }
+
 }
 

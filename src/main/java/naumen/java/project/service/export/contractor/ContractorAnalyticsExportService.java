@@ -79,6 +79,6 @@ public class ContractorAnalyticsExportService {
                 filters, dimensions, metrics, includeTrends
         );
 
-        return exporter.export(exportConfig.filename(), analytics);
+        return exporter.export(exportConfig.filename() + format.getDisplayName(), analytics);
     }
 }

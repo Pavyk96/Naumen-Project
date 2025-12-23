@@ -1,11 +1,11 @@
-package naumen.java.project.service.export.deal;
+package naumen.java.project.service.export.deal.exportImpl;
 
 import naumen.java.project.dto.analytics.deal.response.*;
 import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownData;
-import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownTimeIndustry;
-import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownTypeStatus;
 import naumen.java.project.dto.analytics.deal.response.breakdown.DealAnalyticsBreakdown;
+import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
+import naumen.java.project.service.export.deal.DealAnalyticsExporter;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -25,17 +25,12 @@ import java.util.List;
 public class DealAnalyticsXlsxExporter implements DealAnalyticsExporter {
 
     @Override
-    public ExportFormat supports() {
+    public ExportFormat getSupport() {
         return ExportFormat.XLSX;
     }
 
     @Override
-    public String fileExtension() {
-        return ".xlsx";
-    }
-
-    @Override
-    public byte[] export(DealAnalyticsResponseDTO analytics) {
+    public ExportFile export(String baseFilename, DealAnalyticsResponseDTO analytics) {
         if (analytics == null) {
             throw new IllegalArgumentException("Данные для экспорта не могут быть null");
         }
@@ -48,7 +43,7 @@ public class DealAnalyticsXlsxExporter implements DealAnalyticsExporter {
             writeFunnelSheet(workbook, analytics.funnelAnalysis());
 
             workbook.write(out);
-            return out.toByteArray();
+            return new ExportFile(baseFilename, out.toByteArray());
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при формировании XLSX отчета в памяти", e);
         }
@@ -114,19 +109,20 @@ public class DealAnalyticsXlsxExporter implements DealAnalyticsExporter {
                 Row row = sheet.createRow(rowIndex++);
                 row.createCell(0).setCellValue(breakdown.dimension());
 
-                if (data instanceof BreakdownTypeStatus typeStatusData) {
-                    row.createCell(1).setCellValue(typeStatusData.type());
-                    row.createCell(2).setCellValue(typeStatusData.status());
-                    writeMetricsToRow(row, 6, typeStatusData.metrics());
-                } else if (data instanceof BreakdownTimeIndustry timeIndustryData) {
-                    if (timeIndustryData.period() != null) {
-                        row.createCell(3).setCellValue(timeIndustryData.period().year());
-                        row.createCell(4).setCellValue(timeIndustryData.period().quarter());
+                if (data.type() != null && data.status() != null) {
+                    row.createCell(1).setCellValue(data.type());
+                    row.createCell(2).setCellValue(data.status());
+                } else {
+                    if (data.period() != null) {
+                        row.createCell(3).setCellValue(data.period().year());
+                        row.createCell(4).setCellValue(data.period().quarter());
                     }
-                    if (timeIndustryData.industry() != null) {
-                        row.createCell(5).setCellValue(timeIndustryData.industry().name());
+                    if (data.industry() != null) {
+                        row.createCell(5).setCellValue(data.industry().name());
                     }
-                    writeMetricsToRow(row, 6, timeIndustryData.metrics());
+                }
+                if (data.metrics() != null) {
+                    writeMetricsToRow(row, 6, data.metrics());
                 }
             }
         }
