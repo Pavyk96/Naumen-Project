@@ -22,8 +22,6 @@ import java.util.stream.Collectors;
 @Service
 public class ContractorAnalyticsXlsxExporter implements ContractorAnalyticsExporter {
 
-    private static final String EXTENSION = ".xlsx";
-
     @Override
     public ExportFormat getSupport() {
         return ExportFormat.XLSX;
@@ -43,8 +41,7 @@ public class ContractorAnalyticsXlsxExporter implements ContractorAnalyticsExpor
 
             workbook.write(out);
 
-            String fileName = baseFilename + EXTENSION;
-            return new ExportFile(fileName, out.toByteArray());
+            return new ExportFile(baseFilename, out.toByteArray());
         } catch (IOException e) {
             throw new RuntimeException("Ошибка формирования XLSX отчета", e);
         }
