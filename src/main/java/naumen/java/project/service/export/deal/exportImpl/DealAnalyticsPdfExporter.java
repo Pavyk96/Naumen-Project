@@ -1,11 +1,11 @@
-package naumen.java.project.service.export.deal;
+package naumen.java.project.service.export.deal.exportImpl;
 
 import naumen.java.project.dto.analytics.deal.response.*;
 import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownData;
-import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownTimeIndustry;
-import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownTypeStatus;
 import naumen.java.project.dto.analytics.deal.response.breakdown.DealAnalyticsBreakdown;
+import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
+import naumen.java.project.service.export.deal.DealAnalyticsExporter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -27,17 +27,12 @@ import java.util.List;
 public class DealAnalyticsPdfExporter implements DealAnalyticsExporter {
 
     @Override
-    public ExportFormat supports() {
+    public ExportFormat getSupport() {
         return ExportFormat.PDF;
     }
 
     @Override
-    public String fileExtension() {
-        return ".pdf";
-    }
-
-    @Override
-    public byte[] export(DealAnalyticsResponseDTO analytics) {
+    public ExportFile export(String baseFilename, DealAnalyticsResponseDTO analytics) {
         if (analytics == null) {
             throw new IllegalArgumentException("Данные для экспорта не могут быть пустыми");
         }
@@ -70,7 +65,7 @@ public class DealAnalyticsPdfExporter implements DealAnalyticsExporter {
             }
 
             document.save(out);
-            return out.toByteArray();
+            return new ExportFile(baseFilename, out.toByteArray());
         } catch (IOException e) {
             throw new RuntimeException("Ошибка формирования PDF отчета", e);
         }
@@ -125,26 +120,23 @@ public class DealAnalyticsPdfExporter implements DealAnalyticsExporter {
                 for (BreakdownData data : breakdown.data()) {
                     if (data == null) continue;
 
-                    if (data instanceof BreakdownTypeStatus typeStatusData) {
-                        line(cs, "  Тип: " + typeStatusData.type() + ", Статус: " + typeStatusData.status());
-                        if (typeStatusData.metrics() != null) {
-                            writeMetrics(cs, typeStatusData.metrics(), 4);
-                        }
-                    } else if (data instanceof BreakdownTimeIndustry timeIndustryData) {
-                        String periodStr = (timeIndustryData.period() != null)
-                                ? timeIndustryData.period().year() + " Q" + timeIndustryData.period().quarter()
+                    if (data.type() != null && data.status() != null) {
+                        line(cs, "  Тип: " + data.type() + ", Статус: " + data.status());
+                    } else {
+                        String periodStr = (data.period() != null)
+                                ? data.period().year() + " Q" + data.period().quarter()
                                 : "н/д";
 
-                        String industryStr = (timeIndustryData.industry() != null)
-                                ? timeIndustryData.industry().name()
+                        String industryStr = (data.industry() != null)
+                                ? data.industry().name()
                                 : "н/д";
 
                         line(cs, "  Период: " + periodStr);
                         line(cs, "  Отрасль: " + industryStr);
 
-                        if (timeIndustryData.metrics() != null) {
-                            writeMetrics(cs, timeIndustryData.metrics(), 4);
-                        }
+                    }
+                    if (data.metrics() != null) {
+                        writeMetrics(cs, data.metrics(), 4);
                     }
                     line(cs, "");
                 }
