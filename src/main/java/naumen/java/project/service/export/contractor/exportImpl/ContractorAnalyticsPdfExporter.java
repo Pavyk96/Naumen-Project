@@ -1,54 +1,51 @@
-package naumen.java.project.service.export.contractor;
+package naumen.java.project.service.export.contractor.exportImpl;
 
 import naumen.java.project.dto.analytics.contractor.response.*;
+import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
+import naumen.java.project.service.export.contractor.ContractorAnalyticsExporter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType0Font; // +++
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream; // +++
+import java.io.InputStream;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Экспортер аналитики контрагентов в PDF
+ * Экспортер аналитики контрагентов в PDF.
  *
  * @author Daniil
  */
 @Service
 public class ContractorAnalyticsPdfExporter implements ContractorAnalyticsExporter {
 
+    private static final String EXTENSION = ".pdf";
+
     @Override
-    public ExportFormat supports() {
+    public ExportFormat getSupport() {
         return ExportFormat.PDF;
     }
 
     @Override
-    public String fileExtension() {
-        return ".pdf";
-    }
-
-
-    @Override
-    public byte[] export(ContractorAnalyticsResponse analytics) {
+    public ExportFile export(String baseFilename, ContractorAnalyticsResponse analytics) {
         try (PDDocument document = new PDDocument();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
 
-            // +++ Загружаем Unicode-шрифт из resources
             PDType0Font font = loadFont(document);
 
             try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
                 cs.beginText();
-                try { // +++ чтобы endText вызывался всегда
-                    cs.setFont(font, 12); // +++ вместо Helvetica
+                try {
+                    cs.setFont(font, 12);
                     cs.setLeading(14f);
                     cs.newLineAtOffset(50, 770);
 
@@ -64,18 +61,26 @@ public class ContractorAnalyticsPdfExporter implements ContractorAnalyticsExport
                         writeTrends(cs, analytics.trends());
                     }
                 } finally {
-                    cs.endText(); // +++ гарантированно
+                    cs.endText();
                 }
             }
 
             document.save(out);
-            return out.toByteArray();
+
+            String fileName = baseFilename + EXTENSION;
+            return new ExportFile(fileName, out.toByteArray());
         } catch (IOException e) {
             throw new RuntimeException("Ошибка формирования PDF отчета", e);
         }
     }
 
-    // +++ Новый метод загрузки шрифта
+    /**
+     * Загрузить Unicode-шрифт из ресурсов приложения
+     *
+     * @param document PDF документ
+     * @return загруженный шрифт
+     * @throws IOException ошибка чтения шрифта
+     */
     private PDType0Font loadFont(PDDocument document) throws IOException {
         try (InputStream fontStream = getClass().getResourceAsStream("/fonts/DejaVuSans.ttf")) {
             if (fontStream == null) {
@@ -85,6 +90,13 @@ public class ContractorAnalyticsPdfExporter implements ContractorAnalyticsExport
         }
     }
 
+    /**
+     * Записать блок сводных метрик в PDF
+     *
+     * @param cs поток контента страницы
+     * @param summary сводные метрики
+     * @throws IOException ошибка записи в PDF
+     */
     private void writeSummary(PDPageContentStream cs, ContractorAnalyticsSummary summary) throws IOException {
         line(cs, "Summary");
         line(cs, "total_contractors: " + summary.totalContractors());
@@ -92,6 +104,13 @@ public class ContractorAnalyticsPdfExporter implements ContractorAnalyticsExport
         line(cs, "active_contractors: " + summary.activeContractors());
     }
 
+    /**
+     * Записать блок разрезов аналитики в PDF
+     *
+     * @param cs поток контента страницы
+     * @param breakdowns список разрезов
+     * @throws IOException ошибка записи в PDF
+     */
     private void writeBreakdowns(PDPageContentStream cs, java.util.List<ContractorAnalyticsBreakdown> breakdowns)
             throws IOException {
         line(cs, "Breakdowns");
@@ -109,6 +128,13 @@ public class ContractorAnalyticsPdfExporter implements ContractorAnalyticsExport
         }
     }
 
+    /**
+     * Записать блок трендов аналитики в PDF
+     *
+     * @param cs поток контента страницы
+     * @param trends тренды аналитики
+     * @throws IOException ошибка записи в PDF
+     */
     private void writeTrends(PDPageContentStream cs, ContractorAnalyticsTrends trends) throws IOException {
         line(cs, "Trends");
         for (ContractorMonthlyGrowth growth : trends.monthlyGrowth()) {
@@ -116,6 +142,12 @@ public class ContractorAnalyticsPdfExporter implements ContractorAnalyticsExport
         }
     }
 
+    /**
+     * Преобразовать группу (map ключ-значение) в строку вида key=value
+     *
+     * @param group группа измерений
+     * @return строковое представление группы
+     */
     private String stringifyGroup(Map<String, Object> group) {
         if (group == null || group.isEmpty()) {
             return "";
@@ -126,6 +158,13 @@ public class ContractorAnalyticsPdfExporter implements ContractorAnalyticsExport
                 .collect(Collectors.joining(", "));
     }
 
+    /**
+     * Вывести одну строку текста и перейти на новую строку
+     *
+     * @param cs поток контента страницы
+     * @param text текст строки
+     * @throws IOException ошибка записи в PDF
+     */
     private void line(PDPageContentStream cs, String text) throws IOException {
         cs.showText(text);
         cs.newLine();
