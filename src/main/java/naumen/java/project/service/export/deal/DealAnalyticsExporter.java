@@ -1,6 +1,7 @@
 package naumen.java.project.service.export.deal;
 
 import naumen.java.project.dto.analytics.deal.response.DealAnalyticsResponseDTO;
+import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
 
 /**
@@ -13,15 +14,10 @@ public interface DealAnalyticsExporter {
     /**
      * Формат экспорта, который поддерживает реализация
      */
-    ExportFormat supports();
-
-    /**
-     * Расширение файла для данного формата (например .pdf, .xlsx).
-     */
-    String fileExtension();
+    ExportFormat getSupport();
 
     /**
      * Сформировать файл экспорта для переданной аналитики
      */
-    byte[] export(DealAnalyticsResponseDTO analytics);
+    ExportFile export(String baseFilename, DealAnalyticsResponseDTO analytics);
 }

@@ -3,12 +3,7 @@ package naumen.java.project.service.analytics.contractor;
 import naumen.java.project.dto.analytics.contractor.response.ContractorAnalyticsBreakdown;
 import naumen.java.project.dto.analytics.contractor.response.ContractorAnalyticsBreakdownData;
 import naumen.java.project.dto.analytics.contractor.response.ContractorAnalyticsMetrics;
-import naumen.java.project.model.Contractor;
-import naumen.java.project.model.Country;
-import naumen.java.project.model.Deal;
-import naumen.java.project.model.DealStatus;
-import naumen.java.project.model.Industry;
-import naumen.java.project.model.OrgForm;
+import naumen.java.project.model.*;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -222,17 +217,10 @@ public class ContractorBreakdownService {
         if (needActive) {
             activeDealCount = contractors.stream()
                     .flatMap(contractor -> contractor.getDeals().stream())
-                    .filter(this::isActiveDeal)
+                    .filter(Deal::isActive)
                     .count();
         }
 
         return new ContractorAnalyticsMetrics(dealCount, activeDealCount);
-    }
-
-    /**
-     * Определяет, является ли сделка активной
-     */
-    private boolean isActiveDeal(Deal deal) {
-        return deal.getStatus() == DealStatus.ACTIVE;
     }
 }
