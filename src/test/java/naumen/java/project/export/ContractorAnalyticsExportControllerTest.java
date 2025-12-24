@@ -26,11 +26,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
+import org.junit.jupiter.api.Assertions;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
 
 /**
  * Интеграционные тесты для экспорта аналитики
@@ -119,40 +122,40 @@ class ContractorAnalyticsExportControllerTest {
                 """;
 
         MvcResult result = mockMvc.perform(
-                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        MockMvcRequestBuilders
                                 .post("/analytics/contractor/export")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestJson)
                 )
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.header()
                         .string(HttpHeaders.CONTENT_TYPE, "application/octet-stream"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                .andExpect(MockMvcResultMatchers.header()
                         .string(HttpHeaders.CONTENT_DISPOSITION,
                                 Matchers.containsString("attachment; filename=\"contractor_analytics.xlsx\"")))
                 .andReturn();
 
         byte[] bytes = result.getResponse().getContentAsByteArray();
-        org.junit.jupiter.api.Assertions.assertTrue(bytes.length > 0);
-        org.junit.jupiter.api.Assertions.assertEquals((byte) 0x50, bytes[0]);
-        org.junit.jupiter.api.Assertions.assertEquals((byte) 0x4B, bytes[1]);
+        Assertions.assertTrue(bytes.length > 0);
+        Assertions.assertEquals((byte) 0x50, bytes[0]);
+        Assertions.assertEquals((byte) 0x4B, bytes[1]);
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
             Sheet summary = workbook.getSheet("Summary");
-            org.junit.jupiter.api.Assertions.assertNotNull(summary);
+            Assertions.assertNotNull(summary);
 
             Row header = summary.getRow(0);
-            org.junit.jupiter.api.Assertions.assertEquals("total_contractors", header.getCell(0).getStringCellValue());
-            org.junit.jupiter.api.Assertions.assertEquals("avg_deals_per_contractor", header.getCell(1).getStringCellValue());
-            org.junit.jupiter.api.Assertions.assertEquals("active_contractors", header.getCell(2).getStringCellValue());
+            Assertions.assertEquals("total_contractors", header.getCell(0).getStringCellValue());
+            Assertions.assertEquals("avg_deals_per_contractor", header.getCell(1).getStringCellValue());
+            Assertions.assertEquals("active_contractors", header.getCell(2).getStringCellValue());
 
             Row values = summary.getRow(1);
-            org.junit.jupiter.api.Assertions.assertEquals(3d, values.getCell(0).getNumericCellValue());
-            org.junit.jupiter.api.Assertions.assertEquals(1.0d, values.getCell(1).getNumericCellValue());
-            org.junit.jupiter.api.Assertions.assertEquals(3d, values.getCell(2).getNumericCellValue());
+            Assertions.assertEquals(3d, values.getCell(0).getNumericCellValue());
+            Assertions.assertEquals(1.0d, values.getCell(1).getNumericCellValue());
+            Assertions.assertEquals(3d, values.getCell(2).getNumericCellValue());
 
             Sheet breakdowns = workbook.getSheet("Breakdowns");
-            org.junit.jupiter.api.Assertions.assertNotNull(breakdowns);
+            Assertions.assertNotNull(breakdowns);
 
             boolean hasKz = false;
             boolean hasUsa = false;
@@ -167,25 +170,25 @@ class ContractorAnalyticsExportControllerTest {
 
                 if ("country".equals(dim) && group.contains("id=KZ")) {
                     hasKz = true;
-                    org.junit.jupiter.api.Assertions.assertEquals(1d, r.getCell(2).getNumericCellValue());
-                    org.junit.jupiter.api.Assertions.assertEquals(1d, r.getCell(3).getNumericCellValue());
+                    Assertions.assertEquals(1d, r.getCell(2).getNumericCellValue());
+                    Assertions.assertEquals(1d, r.getCell(3).getNumericCellValue());
                 }
                 if ("country".equals(dim) && group.contains("id=USA")) {
                     hasUsa = true;
-                    org.junit.jupiter.api.Assertions.assertEquals(2d, r.getCell(2).getNumericCellValue());
-                    org.junit.jupiter.api.Assertions.assertEquals(2d, r.getCell(3).getNumericCellValue());
+                    Assertions.assertEquals(2d, r.getCell(2).getNumericCellValue());
+                    Assertions.assertEquals(2d, r.getCell(3).getNumericCellValue());
                 }
             }
 
-            org.junit.jupiter.api.Assertions.assertTrue(hasKz);
-            org.junit.jupiter.api.Assertions.assertTrue(hasUsa);
+            Assertions.assertTrue(hasKz);
+            Assertions.assertTrue(hasUsa);
 
             Sheet trends = workbook.getSheet("Trends");
-            org.junit.jupiter.api.Assertions.assertNotNull(trends);
+            Assertions.assertNotNull(trends);
 
             Row tRow = trends.getRow(1);
-            org.junit.jupiter.api.Assertions.assertEquals("2025-12", tRow.getCell(0).getStringCellValue());
-            org.junit.jupiter.api.Assertions.assertEquals(3d, tRow.getCell(1).getNumericCellValue());
+            Assertions.assertEquals("2025-12", tRow.getCell(0).getStringCellValue());
+            Assertions.assertEquals(3d, tRow.getCell(1).getNumericCellValue());
         }
     }
 
@@ -219,31 +222,31 @@ class ContractorAnalyticsExportControllerTest {
                 """;
 
         MvcResult result = mockMvc.perform(
-                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        MockMvcRequestBuilders
                                 .post("/analytics/contractor/export")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestJson)
                 )
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.header()
                         .string(HttpHeaders.CONTENT_DISPOSITION,
                                 Matchers.containsString("attachment; filename=\"contractor_analytics.pdf\"")))
                 .andReturn();
 
         byte[] bytes = result.getResponse().getContentAsByteArray();
-        org.junit.jupiter.api.Assertions.assertTrue(bytes.length > 0);
+        Assertions.assertTrue(bytes.length > 0);
 
         String sig = new String(bytes, 0, Math.min(5, bytes.length), StandardCharsets.US_ASCII);
-        org.junit.jupiter.api.Assertions.assertTrue(sig.startsWith("%PDF-"));
+        Assertions.assertTrue(sig.startsWith("%PDF-"));
 
         try (PDDocument document = PDDocument.load(bytes)) {
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
 
-            org.junit.jupiter.api.Assertions.assertTrue(text.contains("Contractor analytics report"));
-            org.junit.jupiter.api.Assertions.assertTrue(text.contains("total_contractors: 3"));
-            org.junit.jupiter.api.Assertions.assertTrue(text.contains("id=KZ"));
-            org.junit.jupiter.api.Assertions.assertTrue(text.contains("2025-12: 3"));
+            Assertions.assertTrue(text.contains("Contractor analytics report"));
+            Assertions.assertTrue(text.contains("total_contractors: 3"));
+            Assertions.assertTrue(text.contains("id=KZ"));
+            Assertions.assertTrue(text.contains("2025-12: 3"));
         }
     }
 
@@ -268,22 +271,22 @@ class ContractorAnalyticsExportControllerTest {
             """;
 
         mockMvc.perform(
-                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        MockMvcRequestBuilders
                                 .post("/analytics/contractor/export")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestJson)
                 )
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.status").value(400))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.error").value("Bad Request"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.message")
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(400))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
                         .value(Matchers.containsString("Формат экспорта 'ZIP' не поддерживается")))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.message")
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
                         .value(Matchers.containsString("Допустимые значения:")))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.path")
+                .andExpect(MockMvcResultMatchers.jsonPath("$.path")
                         .value("/analytics/contractor/export"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.errorCode")
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode")
                         .value("UNSUPPORTED_EXPORT_FORMAT"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.timestamp").exists());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").exists());
     }
 }
