@@ -27,6 +27,5 @@ public enum ExportFormat {
     public String getDisplayName() {
         return displayName;
     }
-
 }
 
