@@ -12,7 +12,7 @@ import java.util.UUID;
  * @author Daria
  */
 @Component
-public class UuidValidator implements ConstraintValidator<ValidUuid, String> {
+public class ValidUuidValidator implements ConstraintValidator<ValidUuid, String> {
 
     private String message;
 

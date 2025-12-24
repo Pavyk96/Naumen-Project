@@ -35,7 +35,7 @@ public class Deal {
     private String agreementNumber;
 
 
-    @Column(name = "agreement_date", nullable = false)
+    @Column(name = "agreement_date")
     private LocalDate agreementDate;
 
     @Column(name = "opened_at")
@@ -216,5 +216,12 @@ public class Deal {
     public void removeContractor(Contractor contractor) {
         this.contractors.remove(contractor);
         contractor.getDeals().remove(this);
+    }
+
+    /**
+     * Узнать активна ли сделка
+     */
+    public boolean isActive(){
+        return this.getStatus() == DealStatus.ACTIVE;
     }
 }

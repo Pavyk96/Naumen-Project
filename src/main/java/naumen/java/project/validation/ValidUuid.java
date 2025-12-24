@@ -11,7 +11,7 @@ import java.lang.annotation.*;
  * @author Daria
  */
 @Documented
-@Constraint(validatedBy = UuidValidator.class)
+@Constraint(validatedBy = ValidUuidValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidUuid {
