@@ -59,7 +59,7 @@ public class ContractorAnalyticsServiceTest {
      * Тест на корректность и последовательность вызовов сервисов аналитики, включая тренды
      */
     @Test
-    void analyze_includeTrendsTrue_callsServicesInOrder_withCorrectArgs() {
+    void сontractorAnalyticsTest() {
         ContractorAnalyticsFilters filters = Mockito.mock(ContractorAnalyticsFilters.class);
         List<String> dimensions = List.of("city", "segment");
         List<String> metrics = List.of("count", "revenue");

@@ -194,6 +194,7 @@ class ContractorAnalyticsExportControllerTest {
 
     /**
      * Проверка выгрузки PDF и ключевых строк в документе
+     * Проверяю структуру, наличие ключевых метрик, и их ключевые значения
      */
     @Test
     void exportPdf() throws Exception {
