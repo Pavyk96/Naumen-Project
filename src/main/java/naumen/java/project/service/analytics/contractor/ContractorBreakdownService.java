@@ -222,17 +222,10 @@ public class ContractorBreakdownService {
         if (needActive) {
             activeDealCount = contractors.stream()
                     .flatMap(contractor -> contractor.getDeals().stream())
-                    .filter(this::isActiveDeal)
+                    .filter(Deal::isActive)
                     .count();
         }
 
         return new ContractorAnalyticsMetrics(dealCount, activeDealCount);
-    }
-
-    /**
-     * Определяет, является ли сделка активной
-     */
-    private boolean isActiveDeal(Deal deal) {
-        return deal.getStatus() == DealStatus.ACTIVE;
     }
 }

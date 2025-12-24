@@ -40,7 +40,7 @@ public class DealPortfolioSummaryService {
      */
     private long countActiveDeals(List<Deal> deals) {
         return deals.stream()
-                .filter(d -> d.getStatus() == DealStatus.ACTIVE)
+                .filter(Deal::isActive)
                 .count();
     }
 }

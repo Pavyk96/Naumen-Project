@@ -36,7 +36,7 @@ public class TypeStatusBreakdownStrategy implements BreakdownStrategy {
         for (DealType type : DealType.values()) {
             // Фильтруем только активные сделки для текущего типа
             List<Deal> typeDeals = deals.stream()
-                    .filter(deal -> deal.getType() == type && deal.getStatus() == DealStatus.ACTIVE)
+                    .filter(deal -> deal.getType() == type && deal.isActive())
                     .toList();
 
             if (!typeDeals.isEmpty()) {
