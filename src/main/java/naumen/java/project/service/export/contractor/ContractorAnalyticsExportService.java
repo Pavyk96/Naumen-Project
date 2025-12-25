@@ -6,16 +6,18 @@ import naumen.java.project.dto.export.ExportConfig;
 import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
 import naumen.java.project.service.analytics.contractor.ContractorAnalyticsService;
+import naumen.java.project.validation.ExportFormatValidator;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Сервис экспорта аналитики контрагентов.
- * Выбирает нужного экспортера по формату и формирует файл.
+ * Сервис экспорта аналитики контрагентов
+ * Выбирает нужного экспортера по формату и формирует файл
  *
  * @author Daniil Mezev
  */
@@ -26,14 +28,15 @@ public class ContractorAnalyticsExportService {
     private final Map<ExportFormat, ContractorAnalyticsExporter> exporters;
 
     /**
-     * Создать сервис и зарегистрировать доступные экспортеры.
+     * Создать сервис и зарегистрировать доступные экспортеры
      *
      * @param contractorAnalyticsService сервис построения аналитики
      * @param exporters список реализаций экспортеров
      */
     public ContractorAnalyticsExportService(
             ContractorAnalyticsService contractorAnalyticsService,
-            List<ContractorAnalyticsExporter> exporters
+            List<ContractorAnalyticsExporter> exporters,
+            ExportFormatValidator exportFormatValidator
     ) {
         this.contractorAnalyticsService = contractorAnalyticsService;
         this.exporters = exporters.stream()
@@ -42,10 +45,12 @@ public class ContractorAnalyticsExportService {
                         Function.identity(),
                         (format, exporter) -> {
                             throw new IllegalStateException(
-                                    "Дубликат экспортера для формата: " + exporter.getSupport()
+                                    "Дубликат экспортера для формата: " + format.getSupport()
                             );
                         }
                 ));
+
+        exportFormatValidator.validateAllFormatsSupported(this.exporters.keySet());
     }
 
     /**
@@ -66,19 +71,15 @@ public class ContractorAnalyticsExportService {
             List<String> metrics,
             boolean includeTrends
     ) {
-        ExportFormat format = exportConfig.exportFormat();
-
-        ContractorAnalyticsExporter exporter = exporters.get(format);
-        if (exporter == null) {
-            throw new IllegalArgumentException(
-                    "Формат экспорта " + format + " не поддерживается. Доступные форматы: " + exporters.keySet()
-            );
-        }
-
         ContractorAnalyticsResponse analytics = contractorAnalyticsService.analyze(
                 filters, dimensions, metrics, includeTrends
         );
 
-        return exporter.export(exportConfig.filename() + format.getDisplayName(), analytics);
+        ContractorAnalyticsExporter exporter = exporters.get(exportConfig.exportFormat());
+
+        return exporter.export(
+                exportConfig.filename() + exportConfig.exportFormat().getDisplayName(),
+                analytics
+        );
     }
 }

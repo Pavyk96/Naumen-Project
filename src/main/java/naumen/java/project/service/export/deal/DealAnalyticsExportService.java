@@ -6,8 +6,10 @@ import naumen.java.project.dto.export.ExportConfig;
 import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
 import naumen.java.project.service.analytics.deal.DealAnalyticsService;
+import naumen.java.project.validation.ExportFormatValidator;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -27,7 +29,8 @@ public class DealAnalyticsExportService {
 
     public DealAnalyticsExportService(
             DealAnalyticsService dealAnalyticsService,
-            List<DealAnalyticsExporter> exporters
+            List<DealAnalyticsExporter> exporters,
+            ExportFormatValidator exportFormatValidator
     ) {
         this.dealAnalyticsService = dealAnalyticsService;
         this.exporters = exporters.stream()
@@ -40,6 +43,8 @@ public class DealAnalyticsExportService {
                             );
                         }
                 ));
+
+        exportFormatValidator.validateAllFormatsSupported(this.exporters.keySet());
     }
 
     /**
@@ -52,19 +57,15 @@ public class DealAnalyticsExportService {
             List<String> metrics,
             boolean includeFunnel
     ) {
-        ExportFormat format = exportConfig.exportFormat();
-
-        DealAnalyticsExporter exporter = exporters.get(format);
-        if (exporter == null) {
-            throw new IllegalArgumentException(
-                    "Формат экспорта " + format + " не поддерживается. Доступные форматы: " + exporters.keySet()
-            );
-        }
-
         DealAnalyticsResponseDTO analytics = dealAnalyticsService.analyze(
                 filters, dimensions, metrics, includeFunnel
         );
 
-        return exporter.export(exportConfig.filename() + format.getDisplayName(), analytics);
+        DealAnalyticsExporter exporter = exporters.get(exportConfig.exportFormat());
+
+        return exporter.export(
+                exportConfig.filename() + exportConfig.exportFormat().getDisplayName(),
+                analytics
+        );
     }
 }
