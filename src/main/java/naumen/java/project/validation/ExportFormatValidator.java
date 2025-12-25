@@ -1,6 +1,7 @@
 package naumen.java.project.validation;
 
 import naumen.java.project.dto.export.ExportFormat;
+import org.springframework.stereotype.Component;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -10,6 +11,7 @@ import java.util.Set;
  *
  * @author Daniil Mezev
  */
+@Component
 public class ExportFormatValidator {
 
     /**
