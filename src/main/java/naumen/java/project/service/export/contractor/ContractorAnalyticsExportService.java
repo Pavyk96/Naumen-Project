@@ -41,9 +41,9 @@ public class ContractorAnalyticsExportService {
                 .collect(Collectors.toMap(
                         ContractorAnalyticsExporter::getSupport,
                         Function.identity(),
-                        (e1, e2) -> {
+                        (format, exporter) -> {
                             throw new IllegalStateException(
-                                    "Дубликат экспортера для формата: " + e1.getSupport()
+                                    "Дубликат экспортера для формата: " + format.getSupport()
                             );
                         }
                 ));
