@@ -8,6 +8,7 @@ import naumen.java.project.dto.export.ExportFormat;
 import naumen.java.project.service.analytics.contractor.ContractorAnalyticsService;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -40,12 +41,28 @@ public class ContractorAnalyticsExportService {
                 .collect(Collectors.toMap(
                         ContractorAnalyticsExporter::getSupport,
                         Function.identity(),
-                        (format, exporter) -> {
+                        (e1, e2) -> {
                             throw new IllegalStateException(
-                                    "Дубликат экспортера для формата: " + exporter.getSupport()
+                                    "Дубликат экспортера для формата: " + e1.getSupport()
                             );
                         }
                 ));
+
+        validateAllFormatsSupported();
+    }
+
+    /**
+     * Проверить, что для всех значений ExportFormat существует экспортер
+     */
+    private void validateAllFormatsSupported() {
+        EnumSet<ExportFormat> missingFormats = EnumSet.allOf(ExportFormat.class);
+        missingFormats.removeAll(exporters.keySet());
+
+        if (!missingFormats.isEmpty()) {
+            throw new IllegalStateException(
+                    "Не реализованы экспортеры для форматов: " + missingFormats
+            );
+        }
     }
 
     /**
@@ -66,19 +83,15 @@ public class ContractorAnalyticsExportService {
             List<String> metrics,
             boolean includeTrends
     ) {
-        ExportFormat format = exportConfig.exportFormat();
-
-        ContractorAnalyticsExporter exporter = exporters.get(format);
-        if (exporter == null) {
-            throw new IllegalArgumentException(
-                    "Формат экспорта " + format + " не поддерживается. Доступные форматы: " + exporters.keySet()
-            );
-        }
-
         ContractorAnalyticsResponse analytics = contractorAnalyticsService.analyze(
                 filters, dimensions, metrics, includeTrends
         );
 
-        return exporter.export(exportConfig.filename() + format.getDisplayName(), analytics);
+        ContractorAnalyticsExporter exporter = exporters.get(exportConfig.exportFormat());
+
+        return exporter.export(
+                exportConfig.filename() + exportConfig.exportFormat().getDisplayName(),
+                analytics
+        );
     }
 }

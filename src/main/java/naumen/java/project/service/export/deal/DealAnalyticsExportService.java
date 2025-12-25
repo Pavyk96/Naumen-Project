@@ -8,6 +8,7 @@ import naumen.java.project.dto.export.ExportFormat;
 import naumen.java.project.service.analytics.deal.DealAnalyticsService;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -40,6 +41,22 @@ public class DealAnalyticsExportService {
                             );
                         }
                 ));
+
+        validateAllFormatsSupported();
+    }
+
+    /**
+     * Проверить, что для всех значений ExportFormat существует экспортер.
+     */
+    private void validateAllFormatsSupported() {
+        EnumSet<ExportFormat> missingFormats = EnumSet.allOf(ExportFormat.class);
+        missingFormats.removeAll(exporters.keySet());
+
+        if (!missingFormats.isEmpty()) {
+            throw new IllegalStateException(
+                    "Не реализованы экспортеры для форматов: " + missingFormats
+            );
+        }
     }
 
     /**
@@ -52,19 +69,15 @@ public class DealAnalyticsExportService {
             List<String> metrics,
             boolean includeFunnel
     ) {
-        ExportFormat format = exportConfig.exportFormat();
-
-        DealAnalyticsExporter exporter = exporters.get(format);
-        if (exporter == null) {
-            throw new IllegalArgumentException(
-                    "Формат экспорта " + format + " не поддерживается. Доступные форматы: " + exporters.keySet()
-            );
-        }
-
         DealAnalyticsResponseDTO analytics = dealAnalyticsService.analyze(
                 filters, dimensions, metrics, includeFunnel
         );
 
-        return exporter.export(exportConfig.filename() + format.getDisplayName(), analytics);
+        DealAnalyticsExporter exporter = exporters.get(exportConfig.exportFormat());
+
+        return exporter.export(
+                exportConfig.filename() + exportConfig.exportFormat().getDisplayName(),
+                analytics
+        );
     }
 }
