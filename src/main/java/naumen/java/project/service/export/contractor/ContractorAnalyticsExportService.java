@@ -6,6 +6,7 @@ import naumen.java.project.dto.export.ExportConfig;
 import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
 import naumen.java.project.service.analytics.contractor.ContractorAnalyticsService;
+import naumen.java.project.validation.ExportFormatValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.EnumSet;
@@ -15,8 +16,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Сервис экспорта аналитики контрагентов.
- * Выбирает нужного экспортера по формату и формирует файл.
+ * Сервис экспорта аналитики контрагентов
+ * Выбирает нужного экспортера по формату и формирует файл
  *
  * @author Daniil Mezev
  */
@@ -27,14 +28,15 @@ public class ContractorAnalyticsExportService {
     private final Map<ExportFormat, ContractorAnalyticsExporter> exporters;
 
     /**
-     * Создать сервис и зарегистрировать доступные экспортеры.
+     * Создать сервис и зарегистрировать доступные экспортеры
      *
      * @param contractorAnalyticsService сервис построения аналитики
      * @param exporters список реализаций экспортеров
      */
     public ContractorAnalyticsExportService(
             ContractorAnalyticsService contractorAnalyticsService,
-            List<ContractorAnalyticsExporter> exporters
+            List<ContractorAnalyticsExporter> exporters,
+            ExportFormatValidator exportFormatValidator
     ) {
         this.contractorAnalyticsService = contractorAnalyticsService;
         this.exporters = exporters.stream()
@@ -48,21 +50,7 @@ public class ContractorAnalyticsExportService {
                         }
                 ));
 
-        validateAllFormatsSupported();
-    }
-
-    /**
-     * Проверить, что для всех значений ExportFormat существует экспортер
-     */
-    private void validateAllFormatsSupported() {
-        EnumSet<ExportFormat> missingFormats = EnumSet.allOf(ExportFormat.class);
-        missingFormats.removeAll(exporters.keySet());
-
-        if (!missingFormats.isEmpty()) {
-            throw new IllegalStateException(
-                    "Не реализованы экспортеры для форматов: " + missingFormats
-            );
-        }
+        exportFormatValidator.validateAllFormatsSupported(this.exporters.keySet());
     }
 
     /**

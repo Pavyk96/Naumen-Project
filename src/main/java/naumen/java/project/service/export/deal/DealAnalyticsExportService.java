@@ -6,6 +6,7 @@ import naumen.java.project.dto.export.ExportConfig;
 import naumen.java.project.dto.export.ExportFile;
 import naumen.java.project.dto.export.ExportFormat;
 import naumen.java.project.service.analytics.deal.DealAnalyticsService;
+import naumen.java.project.validation.ExportFormatValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.EnumSet;
@@ -28,7 +29,8 @@ public class DealAnalyticsExportService {
 
     public DealAnalyticsExportService(
             DealAnalyticsService dealAnalyticsService,
-            List<DealAnalyticsExporter> exporters
+            List<DealAnalyticsExporter> exporters,
+            ExportFormatValidator exportFormatValidator
     ) {
         this.dealAnalyticsService = dealAnalyticsService;
         this.exporters = exporters.stream()
@@ -42,21 +44,7 @@ public class DealAnalyticsExportService {
                         }
                 ));
 
-        validateAllFormatsSupported();
-    }
-
-    /**
-     * Проверить, что для всех значений ExportFormat существует экспортер.
-     */
-    private void validateAllFormatsSupported() {
-        EnumSet<ExportFormat> missingFormats = EnumSet.allOf(ExportFormat.class);
-        missingFormats.removeAll(exporters.keySet());
-
-        if (!missingFormats.isEmpty()) {
-            throw new IllegalStateException(
-                    "Не реализованы экспортеры для форматов: " + missingFormats
-            );
-        }
+        exportFormatValidator.validateAllFormatsSupported(this.exporters.keySet());
     }
 
     /**
