@@ -1,6 +1,5 @@
 package naumen.java.project.service.analytics.deal;
 
-import naumen.java.project.dto.analytics.deal.request.DealAnalyticsRequestDTO;
 import naumen.java.project.dto.analytics.deal.response.breakdown.BreakdownData;
 import naumen.java.project.dto.analytics.deal.response.breakdown.DealAnalyticsBreakdown;
 import naumen.java.project.model.Deal;
@@ -35,13 +34,14 @@ public class DealBreakdownService {
      * Строит список аналитических сводок на основе предоставленных сделок и параметров запроса
      */
     public List<DealAnalyticsBreakdown> buildBreakdownsDeal(List<Deal> deals,
-                                                            DealAnalyticsRequestDTO request) {
+                                                            List<String> dimensions,
+                                                            List<String> metrics) {
         List<DealAnalyticsBreakdown> breakdowns = new ArrayList<>();
 
-        for (String dimension : request.dimensions()) {
+        for (String dimension : dimensions) {
             BreakdownStrategy strategy = strategies.get(dimension);
             if (strategy != null) {
-                List<BreakdownData> data = strategy.buildBreakdown(deals, request.metrics());
+                List<BreakdownData> data = strategy.buildBreakdown(deals, metrics);
                 breakdowns.add(new DealAnalyticsBreakdown(dimension, data));
             }
         }
